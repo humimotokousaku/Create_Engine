@@ -11,9 +11,13 @@ ConstantBuffer<Material> gMaterial : register(b0);
 Texture2D<float32_t4> gTexture : register(t0);
 SamplerState gSampler : register(s0);
 
+const static float kScale = 10.0f;
+
 struct PixelShaderOutput {
 	float32_t4 color : SV_TARGET0;
+	float32_t4 highColor : SV_TARGET1;
 };
+
 
 // ガウスブラー
 float4 GaussianBlur(float2 uv)
@@ -24,12 +28,14 @@ float4 GaussianBlur(float2 uv)
 
 	float4 blurredColor = float4(0.0f, 0.0f, 0.0f, 0.0f);
 
-	for (int i = -4; i <= 4; ++i)
-	{
+	for (int i = -4; i <= 4; ++i) {
 		for (int j = -4; j <= 4; ++j)
 		{
 			float2 offset = texelSize * float2(i, j) * blurAmount;
-			blurredColor += gTexture.Sample(gSampler, uv + offset);
+			float4 sampleColor = gTexture.Sample(gSampler, uv + offset);
+			float brightness = dot(sampleColor.rgb, float3(0.299, 0.587, 0.114));
+			float b = step(0.3f, brightness);
+			blurredColor += (sampleColor * b);
 		}
 	}
 
@@ -44,18 +50,14 @@ PixelShaderOutput main(VertexShaderOutput input) {
 
 	// RGBカラー値をグレースケールに変換
 	float brightness = dot(textureColor.rgb, float3(0.299, 0.587, 0.114));
-
-	//if (brightness >= 0.1f) 
-	//{	// ガウスブラーとグレースケールを足す
-	//	output.color = GaussianBlur(input.texcoord) + float4(brightness, brightness, brightness, 1);
-	//}
-	//else {
-	//	output.color = float4(textureColor.rgb, 1);
-	//}
+	//float brightness = dot(textureColor.rgb, float3(0.2126, 0.7152, 0.0722));
 
 
-	output.color = GaussianBlur(input.texcoord) + float4(brightness, brightness, brightness, 0);
-	output.color.a = 1.0;
-	//output.color = float4(textureColor.rgb, 1);
+	// ブルーム
+	//output.color = GaussianBlur(input.texcoord);
+	output.color = GaussianBlur(input.texcoord) + float4(textureColor.rgb, 1);
+	output.highColor = GaussianBlur(input.texcoord) + float4(textureColor.rgb, 1);
+
+
 	return output;
 }

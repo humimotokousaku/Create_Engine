@@ -18,7 +18,8 @@ void TitleScene::Initialize() {
 	particleTexture_ = TextureManager::GetInstance()->GetSrvIndex("Engine/resources/circle.png");
 
 	// objモデル
-	ModelManager::GetInstance()->LoadModel("plane.obj");
+	//ModelManager::GetInstance()->LoadModel("plane.obj");
+	ModelManager::GetInstance()->LoadModel("test_plane.gltf");
 	ModelManager::GetInstance()->LoadModel("axis.obj");
 	ModelManager::GetInstance()->LoadModel("block.obj");
 
@@ -55,8 +56,9 @@ void TitleScene::Initialize() {
 	// 平面
 	plane_ = std::make_unique<Object3D>();
 	plane_->Initialize();
-	plane_->SetModel("plane.obj");
+	plane_->SetModel("test_plane.gltf");
 	plane_->SetCamera(camera_.get());
+	plane_->model_->materialData_->color = { 1,1,1,1 };
 	// 立体的な線
 	axis_ = std::make_unique<Object3D>();
 	axis_->Initialize();
@@ -64,8 +66,8 @@ void TitleScene::Initialize() {
 	axis_->SetCamera(camera_.get());
 
 	// アニメーション
-	//anim_ = std::make_unique<Animation>();
-	//anim_->SetAnimData(&plane_->worldTransform.translation_, Vector3{ 0,0,0 }, Vector3{ 10,0,0 }, 60, "PlaneAnim0", Easings::EaseOutBack);
+	anim_ = std::make_unique<Animation>();
+	anim_->SetAnimData(&plane_->worldTransform.transform.translate, Vector3{ 0,0,0 }, Vector3{ 10,0,0 }, 60, "PlaneAnim0", Easings::EaseOutBack);
 	//anim_->SetAnimData(&plane_->worldTransform.translation_, Vector3{ 10,0,0 }, Vector3{ 0,0,0 }, 60, "PlaneAnim1", Easings::EaseOutBack);
 	//anim_->SetAnimData(&plane_->worldTransform.translation_, Vector3{ 0,0,0 }, Vector3{ 0,5,0 }, 120, "PlaneAnim2", Easings::EaseOutBack);
 	//anim_->SetAnimData(&plane_->worldTransform.translation_, Vector3{ 0,5,0 }, Vector3{ 0,0,0 }, 120, "PlaneAnim3", Easings::EaseOutBack);
@@ -144,7 +146,11 @@ void TitleScene::Update() {
 	// 当たり判定
 	collisionManager_->CheckAllCollisions();
 
-#ifdef USE_IMGUI
+	ImGui::Begin("axis");
+	ImGui::ColorEdit4("color", &axis_->model_->materialData_->color.x);
+	ImGui::End();
+
+#ifdef _DEBUG
 	ImGui::Begin("Animation");
 	//ImGui::Text("isStart:%d", anim_->GetIsStart());
 	ImGui::End();
@@ -155,9 +161,12 @@ void TitleScene::Update() {
 	//ImGui::End();
 	ImGui::Begin("plane");
 	ImGui::DragFloat3("translation", &plane_->worldTransform.transform.translate.x, 0.01f, -100, 100);
+	ImGui::DragFloat3("scale", &plane_->worldTransform.transform.scale.x, 0.01f, -100, 100);
 	ImGui::End();
 	ImGui::Begin("axis");
 	ImGui::DragFloat3("translation", &axis_->worldTransform.transform.translate.x, 0.01f, -100, 100);
+	ImGui::DragFloat3("scale", &axis_->worldTransform.transform.scale.x, 0.01f, -100, 100);
+	ImGui::DragFloat3("rotate", &axis_->worldTransform.transform.rotate.x, 0.01f, -6.28f, 6.28f);
 	ImGui::End();
 
 	//sprite_->ImGuiAdjustParameter();

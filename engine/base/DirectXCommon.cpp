@@ -97,7 +97,8 @@ void DirectXCommon::PreDraw() {
 	D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle = GetCPUDescriptorHandle(dsvDescriptorHeap_.Get(), descriptorSizeRTV, 0);//dsvDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
 	commandList_.Get()->OMSetRenderTargets(1, &rtvHandles_[backBufferIndex_], false, &dsvHandle);
 	// 指定した色で画面全体をクリアする
-	float clearColor[] = { 0.1f, 0.25f, 0.5f, 1.0f }; // 青っぽい色。RGBAの順
+	float clearColor[] = { 0, 0, 0, 1.0f }; // 青っぽい色。RGBAの順
+	//float clearColor[] = { 0.1f, 0.25f, 0.5f, 1.0f }; // 青っぽい色。RGBAの順
 	commandList_.Get()->ClearRenderTargetView(rtvHandles_[backBufferIndex_], clearColor, 0, nullptr);
 
 	// 指定した深度で画面全体をクリアする

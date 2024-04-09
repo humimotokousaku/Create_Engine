@@ -103,11 +103,6 @@ void Framework::Run() {
 			Draw();
 			postEffect_->PostDrawScene();
 
-			// 1パス目を描画
-			//postEffect_2->PreDrawScene();
-			//postEffect_->Draw();
-			//postEffect_2->PostDrawScene();
-
 			// 2パス目を描画
 			// DirectXCommon
 			directXCommon_->PreDraw();

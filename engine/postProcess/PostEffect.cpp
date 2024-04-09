@@ -25,27 +25,24 @@ void PostEffect::Initialize() {
 
 	// テクスチャバッファの作成
 	texBuff_.resource = CreateTextureBufferResource();
-	//texBuff_[1].resource = CreateTextureBufferResource();
-	//	highIntensityTexBuff_.resource = CreateTextureBufferResource();
+	highIntensityTexBuff_.resource = CreateTextureBufferResource();
 
 #pragma region SRV
 	// ノーマル
 	texBuff_ = CreateSRV(texBuff_);
-	//texBuff_[1] = CreateSRV(texBuff_[1]);
 	// 高輝度
-	//highIntensityTexBuff_ = CreateSRV(highIntensityTexBuff_);
+	highIntensityTexBuff_ = CreateSRV(highIntensityTexBuff_);
 #pragma endregion
 
 #pragma region RTV
 	// RTV用のデスクリプタヒープ
-	descHeapRTV_ = CreateRTVDescriptorHeap(directXCommon_->GetDevice(), D3D12_DESCRIPTOR_HEAP_TYPE_RTV, POSTEFFECT_COUNT, false).Get();
+	descHeapRTV_ = CreateRTVDescriptorHeap(directXCommon_->GetDevice(), D3D12_DESCRIPTOR_HEAP_TYPE_RTV, 2, false).Get();
 
 	// RTVの作成
 	// 何も加工しない
 	CreateRTV(texBuff_, 0);
-	//CreateRTV(texBuff_[1], 1);
 	// 高輝度テクスチャ
-	//CreateRTV(highIntensityTexBuff_, 1);
+	CreateRTV(highIntensityTexBuff_, 1);
 #pragma endregion
 
 #pragma region DSV
@@ -120,20 +117,43 @@ void PostEffect::Draw() {
 
 	// 描画(DrawCall/ドローコール)。6頂点で1つのインスタンス
 	directXCommon_->GetCommandList()->DrawIndexedInstanced(6, 1, 0, 0, 0);
+
+
+
+	//directXCommon_->GetCommandList()->SetGraphicsRootSignature(postEffectPSO_->GetRootSignature().Get());
+	//directXCommon_->GetCommandList()->SetPipelineState(postEffectPSO_->GetGraphicsPipelineState().Get()); // PSOを設定
+	//directXCommon_->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+	//// VBVを設定
+	//directXCommon_->GetCommandList()->IASetVertexBuffers(0, 1, &vertexBufferView_);
+	//directXCommon_->GetCommandList()->IASetIndexBuffer(&indexBufferView_);
+
+	//// material
+	//directXCommon_->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialResource_.Get()->GetGPUVirtualAddress());
+	////// texture
+	//SrvManager::GetInstance()->SetGraphicsRootDesctiptorTable(1, highIntensityTexBuff_.srvIndex);
+	//// worldTransform
+	//directXCommon_->GetCommandList()->SetGraphicsRootConstantBufferView(2, worldTransform_.constBuff_->GetGPUVirtualAddress());
+	//// viewProjection
+	//directXCommon_->GetCommandList()->SetGraphicsRootConstantBufferView(3, camera_->GetViewProjection().constBuff_->GetGPUVirtualAddress());
+
+	//// 描画(DrawCall/ドローコール)。6頂点で1つのインスタンス
+	//directXCommon_->GetCommandList()->DrawIndexedInstanced(6, 1, 0, 0, 0);
 }
 
 void PostEffect::PreDrawScene() {
 	// バリアを張る
 	SetBarrier(texBuff_.resource, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_RENDER_TARGET, 1);
-	//SetBarrier(texBuff_[1].resource, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_RENDER_TARGET, 1);
-	//SetBarrier(highIntensityTexBuff_.resource, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_RENDER_TARGET, 1);
+	SetBarrier(highIntensityTexBuff_.resource, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_RENDER_TARGET, 1);
 
 	// 深度ステンシルビューのデスクリプタヒープのハンドルを取得
 	const uint32_t descriptorSizeRTV = directXCommon_->GetDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
 
 	D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle = GetCPUDescriptorHandle(descHeapDSV_.Get(), descriptorSizeRTV, 0);
 	// レンダーターゲットをセット
-	directXCommon_->GetCommandList()->OMSetRenderTargets(1, &rtvHandles_, false, &dsvHandle);
+	//directXCommon_->GetCommandList()->OMSetRenderTargets(1, &rtvHandles_[NORMAL], false, &dsvHandle);
+	//directXCommon_->GetCommandList()->OMSetRenderTargets(1, &rtvHandles_[HIGHINTENSITY], false, &dsvHandle);
+	directXCommon_->GetCommandList()->OMSetRenderTargets(2, rtvHandles_, false, &dsvHandle);
 
 	// ビューポートの設定
 	D3D12_VIEWPORT viewport = CD3DX12_VIEWPORT(0.0f, 0.0f, WinApp::kClientWidth_, WinApp::kClientHeight_);
@@ -143,8 +163,8 @@ void PostEffect::PreDrawScene() {
 	directXCommon_->GetCommandList()->RSSetScissorRects(1, &scissor);
 
 	// 全画面クリア
-	directXCommon_->GetCommandList()->ClearRenderTargetView(rtvHandles_, clearColor_, 0, nullptr);
-	//directXCommon_->GetCommandList()->ClearRenderTargetView(rtvHandles_[HIGHINTENSITY], clearColor_, 0, nullptr);
+	directXCommon_->GetCommandList()->ClearRenderTargetView(rtvHandles_[NORMAL], clearColor_, 0, nullptr);
+	directXCommon_->GetCommandList()->ClearRenderTargetView(rtvHandles_[HIGHINTENSITY], clearColor_, 0, nullptr);
 	// 深度バッファのクリア
 	directXCommon_->GetCommandList()->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
 }
@@ -152,8 +172,7 @@ void PostEffect::PreDrawScene() {
 void PostEffect::PostDrawScene() {
 	// バリアの変更
 	SetBarrier(texBuff_.resource, D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, 1);
-	//SetBarrier(texBuff_[1].resource, D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, 2);
-	//	SetBarrier(highIntensityTexBuff_.resource, D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, 1);
+	SetBarrier(highIntensityTexBuff_.resource, D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, 1);
 }
 
 void PostEffect::SpriteInitialize(RenderingTextureData texData) {
@@ -383,11 +402,11 @@ void PostEffect::CreateRTV(RenderingTextureData texData, uint32_t index) {
 
 	// デスクリプタヒープにRTV作成
 	const uint32_t descriptorSizeRTV = directXCommon_->GetDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
-	rtvHandles_ = GetCPUDescriptorHandle(descHeapRTV_.Get(), descriptorSizeRTV, index);
+	rtvHandles_[index] = GetCPUDescriptorHandle(descHeapRTV_.Get(), descriptorSizeRTV, index);
 	directXCommon_->GetDevice()->CreateRenderTargetView(
 		texData.resource.Get(),
 		&renderTargetViewDesc,
-		rtvHandles_
+		rtvHandles_[index]
 	);
 }
 

@@ -81,7 +81,7 @@
       <LanguageStandard>stdcpp20</LanguageStandard>
       <TreatWarningAsError>false</TreatWarningAsError>
       <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
-      <AdditionalIncludeDirectories>$(ProjectDir)Project\Scene;$(ProjectDir)Engine\Utility;$(ProjectDir)Engine\Math;$(ProjectDir)Engine\Manager;$(ProjectDir)Engine\Components;$(ProjectDir)Engine\Base;$(ProjectDir)Engine\Components\Model;$(ProjectDir)Engine\Components\Input;$(ProjectDir)Engine\Components\Audio;$(ProjectDir)Engine\Components\Camera;$(ProjectDir)Engine\Components\Light;$(ProjectDir)Engine\PostProcess;$(ProjectDir)Engine\Components\Particle;$(ProjectDir)Engine\Pso;$(ProjectDir)Project;$(ProjectDir)Engine\Components\3D;$(ProjectDir)Engine\Components\2D;$(ProjectDir)Engine\Components\3D\Primitive;$(ProjectDir)Engine\Components\2D\Primitive;$(ProjectDir)Engine\Components\Animation;$(ProjectDir)Project\Collision;$(ProjectDir)Project\GameObject;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)Project\Scene;$(ProjectDir)Engine\Utility;$(ProjectDir)Engine\Math;$(ProjectDir)Engine\Manager;$(ProjectDir)Engine\Components;$(ProjectDir)Engine\Base;$(ProjectDir)Engine\Components\Model;$(ProjectDir)Engine\Components\Input;$(ProjectDir)Engine\Components\Audio;$(ProjectDir)Engine\Components\Camera;$(ProjectDir)Engine\Components\Light;$(ProjectDir)Engine\PostProcess;$(ProjectDir)Engine\Components\Particle;$(ProjectDir)Engine\Pso;$(ProjectDir)Project;$(ProjectDir)Engine\Components\3D;$(ProjectDir)Engine\Components\2D;$(ProjectDir)Engine\Components\3D\Primitive;$(ProjectDir)Engine\Components\2D\Primitive;$(ProjectDir)Engine\Components\Animation;$(ProjectDir)Project\Collision;$(ProjectDir)Project\GameObject;$(ProjectDir)externals\assimp\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
@@ -89,8 +89,8 @@
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <TreatLinkerWarningAsErrors>true</TreatLinkerWarningAsErrors>
-      <AdditionalDependencies>xinput.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>xinput.lib;assimp-vc143-mtd.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(ProjectDir)externals\assimp\lib\Debug;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <PostBuildEvent>
       <Command>copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxcompiler.dll" 
@@ -108,7 +108,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" </Command>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <TreatWarningAsError>false</TreatWarningAsError>
       <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
-      <AdditionalIncludeDirectories>$(ProjectDir)Project\Scene;$(ProjectDir)Engine\Utility;$(ProjectDir)Engine\Math;$(ProjectDir)Engine\Manager;$(ProjectDir)Engine\Components;$(ProjectDir)Engine\Base;$(ProjectDir)Engine\Components\Model;$(ProjectDir)Engine\Components\Input;$(ProjectDir)Engine\Components\Audio;$(ProjectDir)Engine\Components\Camera;$(ProjectDir)Engine\Components\Light;$(ProjectDir)Engine\PostProcess;$(ProjectDir)Engine\Components\Particle;$(ProjectDir)Engine\Pso;$(ProjectDir)Project;$(ProjectDir)Engine\Components\3D;$(ProjectDir)Engine\Components\2D;$(ProjectDir)Engine\Components\3D\Primitive;$(ProjectDir)Engine\Components\2D\Primitive;$(ProjectDir)Engine\Components\Animation;$(ProjectDir)Project\Collision;$(ProjectDir)Project\GameObject;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)Project\Scene;$(ProjectDir)Engine\Utility;$(ProjectDir)Engine\Math;$(ProjectDir)Engine\Manager;$(ProjectDir)Engine\Components;$(ProjectDir)Engine\Base;$(ProjectDir)Engine\Components\Model;$(ProjectDir)Engine\Components\Input;$(ProjectDir)Engine\Components\Audio;$(ProjectDir)Engine\Components\Camera;$(ProjectDir)Engine\Components\Light;$(ProjectDir)Engine\PostProcess;$(ProjectDir)Engine\Components\Particle;$(ProjectDir)Engine\Pso;$(ProjectDir)Project;$(ProjectDir)Engine\Components\3D;$(ProjectDir)Engine\Components\2D;$(ProjectDir)Engine\Components\3D\Primitive;$(ProjectDir)Engine\Components\2D\Primitive;$(ProjectDir)Engine\Components\Animation;$(ProjectDir)Project\Collision;$(ProjectDir)Project\GameObject;$(ProjectDir)externals\assimp\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <Optimization>MinSpace</Optimization>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
@@ -119,8 +119,8 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" </Command>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <TreatLinkerWarningAsErrors>true</TreatLinkerWarningAsErrors>
-      <AdditionalDependencies>xinput.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>xinput.lib;assimp-vc143-mt.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(ProjectDir)externals\assimp\lib\Release;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <PostBuildEvent>
       <Command>copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxcompiler.dll" 
@@ -138,7 +138,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" </Command>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <TreatWarningAsError>false</TreatWarningAsError>
       <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
-      <AdditionalIncludeDirectories>$(ProjectDir)Project\Scene;$(ProjectDir)Engine\Utility;$(ProjectDir)Engine\Math;$(ProjectDir)Engine\Manager;$(ProjectDir)Engine\Components;$(ProjectDir)Engine\Base;$(ProjectDir)Engine\Components\Model;$(ProjectDir)Engine\Components\Input;$(ProjectDir)Engine\Components\Audio;$(ProjectDir)Engine\Components\Camera;$(ProjectDir)Engine\Components\Light;$(ProjectDir)Engine\PostProcess;$(ProjectDir)Engine\Components\Particle;$(ProjectDir)Engine\Pso;$(ProjectDir)Project;$(ProjectDir)Engine\Components\3D;$(ProjectDir)Engine\Components\2D;$(ProjectDir)Engine\Components\3D\Primitive;$(ProjectDir)Engine\Components\2D\Primitive;$(ProjectDir)Engine\Components\Animation;$(ProjectDir)Project\Collision;$(ProjectDir)Project\GameObject;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)Project\Scene;$(ProjectDir)Engine\Utility;$(ProjectDir)Engine\Math;$(ProjectDir)Engine\Manager;$(ProjectDir)Engine\Components;$(ProjectDir)Engine\Base;$(ProjectDir)Engine\Components\Model;$(ProjectDir)Engine\Components\Input;$(ProjectDir)Engine\Components\Audio;$(ProjectDir)Engine\Components\Camera;$(ProjectDir)Engine\Components\Light;$(ProjectDir)Engine\PostProcess;$(ProjectDir)Engine\Components\Particle;$(ProjectDir)Engine\Pso;$(ProjectDir)Project;$(ProjectDir)Engine\Components\3D;$(ProjectDir)Engine\Components\2D;$(ProjectDir)Engine\Components\3D\Primitive;$(ProjectDir)Engine\Components\2D\Primitive;$(ProjectDir)Engine\Components\Animation;$(ProjectDir)Project\Collision;$(ProjectDir)Project\GameObject;$(ProjectDir)externals\assimp\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <Optimization>MinSpace</Optimization>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>

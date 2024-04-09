@@ -262,8 +262,9 @@ void PostEffectPSO::CreatePSO() {
 	graphicsPipelineStateDescs_.RasterizerState = rasterizerDesc_; // rasterizerState
 
 	// 書き込むRTVの情報
-	graphicsPipelineStateDescs_.NumRenderTargets = 1;
+	graphicsPipelineStateDescs_.NumRenderTargets = 2;
 	graphicsPipelineStateDescs_.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;
+	graphicsPipelineStateDescs_.RTVFormats[1] = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;
 
 	// 利用するトポロ時（形状）のタイプ。三角形
 	graphicsPipelineStateDescs_.PrimitiveTopologyType =

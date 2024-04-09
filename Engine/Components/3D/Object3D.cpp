@@ -16,6 +16,8 @@ void Object3D::Draw(uint32_t textureNum) {
 		camera_->Update();
 	}
 
+	// nodeを含み計算
+	worldTransform.matWorld_ = Multiply(model_->GetModelData().rootNode.localMatrix, worldTransform.matWorld_);
 	// ワールド座標の更新
 	worldTransform.UpdateMatrix();
 

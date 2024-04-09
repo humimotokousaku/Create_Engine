@@ -5,6 +5,7 @@
 #include <string>
 #include <sstream>
 #include <stdint.h>
+#include <assimp/scene.h>
 
 struct TransformationMatrix {
 	Matrix4x4 matWorld;
@@ -35,13 +36,16 @@ struct MaterialData {
 
 MaterialData LoadMaterialTemplateFile(const std::string& directoryPath, const std::string& filename);
 
-//struct Node {
-//	Matrix4x4 localMatrix;
-//	std::string name;
-//	std::vector<Node> children;
-//};
+struct Node {
+	Matrix4x4 localMatrix;
+	std::string name;
+	std::vector<Node> children;
+};
+
+Node ReadNode(aiNode* node);
 
 struct ModelData {
 	std::vector<VertexData> vertices;
 	MaterialData material;
+	Node rootNode;
 };

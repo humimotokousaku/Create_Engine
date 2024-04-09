@@ -42,9 +42,10 @@ private:
 public:
 	// ワールド座標
 	//WorldTransform worldTransform;
-private:
 	// Material
 	Material* materialData_;
+private:
+
 	Microsoft::WRL::ComPtr<ID3D12Resource> materialResource_;
 	Transform uvTransform_;
 	Matrix4x4 uvTransformMatrix_;

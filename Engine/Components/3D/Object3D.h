@@ -47,7 +47,7 @@ public:
 public:
 	WorldTransform worldTransform;
 	Camera* camera_;
-
-private:
 	Model* model_;
+private:
+
 };
