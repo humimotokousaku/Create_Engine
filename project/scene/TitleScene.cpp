@@ -19,7 +19,7 @@ void TitleScene::Initialize() {
 
 	// objモデル
 	//ModelManager::GetInstance()->LoadModel("plane.obj");
-	ModelManager::GetInstance()->LoadModel("test_plane.gltf");
+	ModelManager::GetInstance()->LoadModel("testPlane.gltf");
 	ModelManager::GetInstance()->LoadModel("axis.obj");
 	ModelManager::GetInstance()->LoadModel("block.obj");
 
@@ -56,7 +56,7 @@ void TitleScene::Initialize() {
 	// 平面
 	plane_ = std::make_unique<Object3D>();
 	plane_->Initialize();
-	plane_->SetModel("test_plane.gltf");
+	plane_->SetModel("testPlane.gltf");
 	plane_->SetCamera(camera_.get());
 	plane_->model_->materialData_->color = { 1,1,1,1 };
 	// 立体的な線
@@ -162,6 +162,7 @@ void TitleScene::Update() {
 	ImGui::Begin("plane");
 	ImGui::DragFloat3("translation", &plane_->worldTransform.transform.translate.x, 0.01f, -100, 100);
 	ImGui::DragFloat3("scale", &plane_->worldTransform.transform.scale.x, 0.01f, -100, 100);
+	ImGui::DragFloat3("rotate", &plane_->worldTransform.transform.rotate.x, 0.01f, -6.28f, 6.28f);
 	ImGui::End();
 	ImGui::Begin("axis");
 	ImGui::DragFloat3("translation", &axis_->worldTransform.transform.translate.x, 0.01f, -100, 100);

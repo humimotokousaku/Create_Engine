@@ -16,10 +16,11 @@ void Object3D::Draw(uint32_t textureNum) {
 		camera_->Update();
 	}
 
-	// nodeを含み計算
-	worldTransform.matWorld_ = Multiply(model_->GetModelData().rootNode.localMatrix, worldTransform.matWorld_);
 	// ワールド座標の更新
 	worldTransform.UpdateMatrix();
+	// nodeを含み計算
+	worldTransform.matWorld_ = Multiply(model_->GetModelData().rootNode.localMatrix, worldTransform.matWorld_);
+	worldTransform.TransferMatrix();
 
 	/// コマンドを積む
 	// RootSignatureを設定。PSOに設定しているけど別途設定が必要
