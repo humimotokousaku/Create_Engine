@@ -51,7 +51,7 @@ void Model::Draw(const ViewProjection& viewProjection, uint32_t textureHandle) {
 	Vector3 translate = CalculateValue(rootNodeAnimation.translate.keyframes, animationTime_);
 	Quaternion rotateQ = CalculateValue(rootNodeAnimation.rotate.keyframes, animationTime_);
 	Vector3 rotate = RotateVector(Vector3{ 1,1,1 }, rotateQ);
-	Vector3 scale = CalculateValue(rootNodeAnimation.scale.keyframes, animationTime_);
+	Vector3 scale = { 1,1,1 };//CalculateValue(rootNodeAnimation.scale.keyframes, animationTime_);
 	animationLocalMatrix_ = MakeAffineMatrix(scale, rotate, translate);
 #pragma endregion
 

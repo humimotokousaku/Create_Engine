@@ -23,7 +23,6 @@ void ModelManager::LoadModel(const std::string& filePath) {
 
 	// モデル生成とファイル読み込み
 	std::unique_ptr<Model> model = std::make_unique<Model>();
-	//model.reset(Model::CreateModelFromObj("engine/resources", filePath));
 	model->Initialize("engine/resources", filePath);
 
 	// モデルをmapコンテナに格納

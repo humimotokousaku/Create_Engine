@@ -38,14 +38,14 @@ struct MaterialData {
 MaterialData LoadMaterialTemplateFile(const std::string& directoryPath, const std::string& filename);
 
 #pragma region ノード
-struct KeyframeVector3 {
-	Vector3 value;
-	float time;
-};
-struct KeyframeQuaternion {
-	Quaternion value;
-	float time;
-};
+//struct KeyframeVector3 {
+//	Vector3 value;
+//	float time;
+//};
+//struct KeyframeQuaternion {
+//	Quaternion value;
+//	float time;
+//};
 
 template<typename tValue>
 struct Keyframe {
