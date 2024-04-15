@@ -312,6 +312,12 @@
     <ClCompile Include="Engine\Pso\PostEffectPSO.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
+    <ClCompile Include="Engine\postProcess\PostEffectManager.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="Engine\math\Quaternion.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="externals\ImGui\imconfig.h">
@@ -488,6 +494,12 @@
     <ClInclude Include="Engine\Pso\PostEffectPSO.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
+    <ClInclude Include="Engine\postProcess\PostEffectManager.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="Engine\math\Quaternion.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Text Include="externals\ImGui\LICENSE.txt">
@@ -527,5 +539,8 @@
     </FxCompile>
     <FxCompile Include="Engine\resources\sharder\PostEffectTestVS.hlsl" />
     <FxCompile Include="Engine\resources\sharder\PostEffectTestPS.hlsl" />
+    <FxCompile Include="Engine\resources\sharder\BlurPS.hlsl" />
+    <FxCompile Include="Engine\resources\sharder\HighIntensityPS.hlsl" />
+    <FxCompile Include="Engine\resources\sharder\BloomPS.hlsl" />
   </ItemGroup>
 </Project>

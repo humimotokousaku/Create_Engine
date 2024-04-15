@@ -19,7 +19,7 @@ void Object3D::Draw(uint32_t textureNum) {
 	// ワールド座標の更新
 	worldTransform.UpdateMatrix();
 	// nodeを含み計算
-	worldTransform.matWorld_ = Multiply(model_->GetModelData().rootNode.localMatrix, worldTransform.matWorld_);
+	worldTransform.matWorld_ = Multiply(model_->GetAnimationMatrix(), Multiply(model_->GetModelData().rootNode.localMatrix, worldTransform.matWorld_));
 	worldTransform.TransferMatrix();
 
 	/// コマンドを積む

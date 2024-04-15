@@ -14,6 +14,7 @@
 void Model::Initialize(const std::string& directoryPath, const std::string& filename) {
 	// モデルの読み込み
 	modelData_ = LoadObjFile(directoryPath, filename);
+	animation_ = LoadAnimationFile(directoryPath, filename);
 
 	CreateVertexResource();
 	CreateVertexBufferView();
@@ -43,6 +44,16 @@ void Model::Initialize(const std::string& directoryPath, const std::string& file
 }
 
 void Model::Draw(const ViewProjection& viewProjection, uint32_t textureHandle) {
+#pragma region アニメーション
+	animationTime_ += 1.0f / 60.0f;
+	animationTime_ = std::fmod(animationTime_, animation_.duration);
+	NodeAnimation& rootNodeAnimation = animation_.nodeAnimations[modelData_.rootNode.name];
+	Vector3 translate = CalculateValue(rootNodeAnimation.translate.keyframes, animationTime_);
+	Quaternion rotateQ = CalculateValue(rootNodeAnimation.rotate.keyframes, animationTime_);
+	Vector3 rotate = RotateVector(Vector3{ 1,1,1 }, rotateQ);
+	Vector3 scale = CalculateValue(rootNodeAnimation.scale.keyframes, animationTime_);
+	animationLocalMatrix_ = MakeAffineMatrix(scale, rotate, translate);
+#pragma endregion
 
 	//// 形状を設定
 	DirectXCommon::GetInstance()->GetCommandList()->IASetVertexBuffers(0, 1, &vertexBufferView_); // VBVを設定

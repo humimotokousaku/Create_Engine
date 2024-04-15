@@ -5,6 +5,31 @@
 #include "TextureManager.h"
 #include <dxcapi.h>
 
+/// <summary>
+/// 使用できるポストエフェクトの種類
+/// </summary>
+enum PostEffectType {
+	NORMAL,
+	HIGHINTENSITY,
+	BLUR,
+	COUNT
+};
+
+// 構造体
+// ブラー
+struct BlurData {
+	uint32_t isActive;  // 使用するか
+	float strength;  // ブラーの強さ
+};
+// 高輝度
+struct HighIntensityData {
+	uint32_t isActive;	 // 使用するか
+	float threshold;  // 閾値
+};
+
+/// <summary>
+/// ポストエフェクトのPSO
+/// </summary>
 class PostEffectPSO
 {
 public:
@@ -30,8 +55,8 @@ public:
 	/// 
 
 	// Getter
-	Microsoft::WRL::ComPtr<ID3D12PipelineState> GetGraphicsPipelineState() { return graphicsPipelineState_; }
-	Microsoft::WRL::ComPtr<ID3D12RootSignature> GetRootSignature() { return rootSignature_; }
+	Microsoft::WRL::ComPtr<ID3D12PipelineState>* GetGraphicsPipelineState() { return graphicsPipelineState_; }
+	Microsoft::WRL::ComPtr<ID3D12RootSignature>* GetRootSignature() { return rootSignature_; }
 
 private:// プライベートな関数
 	// DXCの初期化
@@ -94,24 +119,24 @@ private:
 
 	ID3DBlob* errorBlob_;
 
-	Microsoft::WRL::ComPtr<ID3D12RootSignature> rootSignature_;
-	D3D12_INPUT_ELEMENT_DESC inputElementDescs_[2];
-	D3D12_INPUT_LAYOUT_DESC inputLayoutDesc_;
-	D3D12_ROOT_SIGNATURE_DESC descriptionRootSignature_;
-	ID3DBlob* signatureBlob_;
+	Microsoft::WRL::ComPtr<ID3D12RootSignature> rootSignature_[COUNT];
+	D3D12_INPUT_ELEMENT_DESC inputElementDescs_[COUNT][2];
+	D3D12_INPUT_LAYOUT_DESC inputLayoutDesc_[COUNT];
+	D3D12_ROOT_SIGNATURE_DESC descriptionRootSignature_[COUNT];
+	ID3DBlob* signatureBlob_[COUNT];
 
-	D3D12_RASTERIZER_DESC rasterizerDesc_;
-	D3D12_GRAPHICS_PIPELINE_STATE_DESC graphicsPipelineStateDescs_;
+	D3D12_RASTERIZER_DESC rasterizerDesc_[COUNT];
+	D3D12_GRAPHICS_PIPELINE_STATE_DESC graphicsPipelineStateDescs_[COUNT];
 	D3D12_BLEND_DESC blendDesc_;
-	Microsoft::WRL::ComPtr<ID3D12PipelineState> graphicsPipelineState_;
-	D3D12_ROOT_PARAMETER rootParameters_[4];
-	D3D12_DESCRIPTOR_RANGE descriptorRange_[1];
+	Microsoft::WRL::ComPtr<ID3D12PipelineState> graphicsPipelineState_[COUNT];
+	D3D12_ROOT_PARAMETER rootParameters_[COUNT][4];
+	D3D12_DESCRIPTOR_RANGE descriptorRange_[COUNT][1];
 
-	D3D12_STATIC_SAMPLER_DESC staticSamplers_[1];
+	D3D12_STATIC_SAMPLER_DESC staticSamplers_[COUNT][1];
 
 	// 通常
-	IDxcBlob* vertexShaderBlob_;
-	IDxcBlob* pixelShaderBlob_;
+	IDxcBlob* vertexShaderBlob_[COUNT];
+	IDxcBlob* pixelShaderBlob_[COUNT];
 
 	D3D12_VIEWPORT viewport_;
 	D3D12_RECT scissorRect_;

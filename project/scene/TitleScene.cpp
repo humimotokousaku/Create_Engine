@@ -19,6 +19,7 @@ void TitleScene::Initialize() {
 
 	// objモデル
 	//ModelManager::GetInstance()->LoadModel("plane.obj");
+	//ModelManager::GetInstance()->LoadModel("AnimatedCube/AnimatedCube.gltf");
 	ModelManager::GetInstance()->LoadModel("testPlane.gltf");
 	ModelManager::GetInstance()->LoadModel("axis.obj");
 	ModelManager::GetInstance()->LoadModel("block.obj");
@@ -53,12 +54,18 @@ void TitleScene::Initialize() {
 
 	sprite_2.reset(Sprite::Create("Engine/resources/monsterBall.png"));
 
+
+
+
 	// 平面
 	plane_ = std::make_unique<Object3D>();
 	plane_->Initialize();
 	plane_->SetModel("testPlane.gltf");
 	plane_->SetCamera(camera_.get());
 	plane_->model_->materialData_->color = { 1,1,1,1 };
+
+
+
 	// 立体的な線
 	axis_ = std::make_unique<Object3D>();
 	axis_->Initialize();
@@ -198,19 +205,19 @@ void TitleScene::Update() {
 void TitleScene::Draw() {
 
 #pragma region パーティクル以外の処理
-	axis_->Draw(uvcheckerTexture_);
+	//axis_->Draw(uvcheckerTexture_);
 	plane_->Draw(uvcheckerTexture_);
 	//testWater_->Draw(world_, viewProjection_);
-	player_->Draw(uvcheckerTexture_);
+	//player_->Draw(uvcheckerTexture_);
 	for (int i = 0; i < 2; i++) {
-		enemy_[i]->Draw(monsterBallTexture_);
+		//enemy_[i]->Draw(monsterBallTexture_);
 	}
 	sprite_->Draw();
 	//sprite_2->Draw();
 #pragma endregion
 
-	particles_->Draw(particleTexture_);
-	particles_1->Draw(particleTexture_);
+	//particles_->Draw(particleTexture_);
+	//particles_1->Draw(particleTexture_);
 }
 
 void TitleScene::Finalize() {

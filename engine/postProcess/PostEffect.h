@@ -14,18 +14,13 @@ private:// 構造体
 		D3D12_GPU_DESCRIPTOR_HANDLE srvHandleGPU;
 	};
 
-	enum PostEffectType {
-		NORMAL,
-		HIGHINTENSITY,
-		POSTEFFECT_COUNT
-	};
 public:
 	/// <summary>
 	/// コンストラクタ
 	/// </summary>
 	PostEffect();
 	
-	static PostEffect* GetInstance();
+	//static PostEffect* GetInstance();
 
 	/// <summary>
 	/// 初期化
@@ -40,7 +35,7 @@ public:
 	/// <summary>
 	/// 描画処理
 	/// </summary>
-	void Draw();
+	void Draw(uint32_t psoNum);
 
 	/// <summary>
 	/// 描画前処理
@@ -61,7 +56,21 @@ public:
 
 	D3D12_GPU_DESCRIPTOR_HANDLE GetGPUDescriptorHandle(const Microsoft::WRL::ComPtr<ID3D12DescriptorHeap>& descriptorHeap, uint32_t descriptorSize, uint32_t index);
 
-private:
+#pragma region Getter
+	// ブラーの情報を取得
+	BlurData* GetBlurData() { return blurData_; }
+	// 高輝度の情報を取得
+	HighIntensityData* GetHighIntensityData() { return highIntensityData_; }
+#pragma endregion
+
+#pragma region Setter
+	// ブラーの情報を設定
+	void SetBlurData(BlurData* blurData) { blurData_ = blurData; }
+	// 高輝度の情報を設定
+	void SetHighIntensityData(HighIntensityData* highIntensityData) { highIntensityData_ = highIntensityData; }
+#pragma endregion
+
+private:// プライベートなメンバ関数
 	Microsoft::WRL::ComPtr<ID3D12Resource> CreateBufferResource(const Microsoft::WRL::ComPtr<ID3D12Device>& device, size_t sizeInBytes);
 
 	void CreateVertexResource();
@@ -103,15 +112,22 @@ private:// パブリックな変数
 	// テクスチャバッファ
 	RenderingTextureData texBuff_;
 	// 高輝度テクスチャ
-	RenderingTextureData highIntensityTexBuff_;
+	//RenderingTextureData highIntensityTexBuff_;
 
 	// 深度バッファ
 	Microsoft::WRL::ComPtr<ID3D12Resource> depthBuff_;
 	// RTV用のデスクリプタヒープ
 	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> descHeapRTV_;
-	D3D12_CPU_DESCRIPTOR_HANDLE rtvHandles_[2];
+	D3D12_CPU_DESCRIPTOR_HANDLE rtvHandles_[1];
 	// DSV用のデスクリプタヒープ
 	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> descHeapDSV_;
+
+	// ブラーの情報
+	BlurData* blurData_;
+	Microsoft::WRL::ComPtr<ID3D12Resource> blurResource_;
+	// 高輝度の情報
+	HighIntensityData* highIntensityData_;
+	Microsoft::WRL::ComPtr<ID3D12Resource> highIntensityResource_;
 
 #pragma region スプライト
 	// カメラ

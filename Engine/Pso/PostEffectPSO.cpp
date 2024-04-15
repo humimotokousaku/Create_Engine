@@ -122,81 +122,91 @@ IDxcBlob* PostEffectPSO::CompileShader(
 }
 
 void PostEffectPSO::CreateDescriptorRange() {
-	descriptorRange_[0].BaseShaderRegister = 0;
-	descriptorRange_[0].NumDescriptors = 1;
-	descriptorRange_[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
-	descriptorRange_[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+	for (int i = 0; i < COUNT; i++) {
+		descriptorRange_[i][0].BaseShaderRegister = 0;
+		descriptorRange_[i][0].NumDescriptors = 1;
+		descriptorRange_[i][0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+		descriptorRange_[i][0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+	}
 }
 
 void PostEffectPSO::SettingSampler() {
-	staticSamplers_[0].Filter = D3D12_FILTER_MIN_MAG_MIP_LINEAR;
-	staticSamplers_[0].AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
-	staticSamplers_[0].AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
-	staticSamplers_[0].AddressW = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
-	staticSamplers_[0].ComparisonFunc = D3D12_COMPARISON_FUNC_NEVER;
-	staticSamplers_[0].MaxLOD = D3D12_FLOAT32_MAX;
-	staticSamplers_[0].ShaderRegister = 0;
-	staticSamplers_[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
-	descriptionRootSignature_.pStaticSamplers = staticSamplers_;
-	descriptionRootSignature_.NumStaticSamplers = _countof(staticSamplers_);
+	for (int i = 0; i < COUNT; i++) {
+		staticSamplers_[i][0].Filter = D3D12_FILTER_MIN_MAG_MIP_LINEAR;
+		staticSamplers_[i][0].AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+		staticSamplers_[i][0].AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+		staticSamplers_[i][0].AddressW = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+		staticSamplers_[i][0].ComparisonFunc = D3D12_COMPARISON_FUNC_NEVER;
+		staticSamplers_[i][0].MaxLOD = D3D12_FLOAT32_MAX;
+		staticSamplers_[i][0].ShaderRegister = 0;
+		staticSamplers_[i][0].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+		descriptionRootSignature_[i].pStaticSamplers = staticSamplers_[i];
+		descriptionRootSignature_[i].NumStaticSamplers = _countof(staticSamplers_[i]);
+	}
 }
 
 void PostEffectPSO::CreateRootParameter() {
-	// material
-	rootParameters_[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
-	rootParameters_[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
-	rootParameters_[0].Descriptor.ShaderRegister = 0;
-	// texture
-	rootParameters_[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
-	rootParameters_[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
-	rootParameters_[1].DescriptorTable.pDescriptorRanges = descriptorRange_;
-	rootParameters_[1].DescriptorTable.NumDescriptorRanges = _countof(descriptorRange_);
-	// worldTransform
-	rootParameters_[2].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
-	rootParameters_[2].ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;
-	rootParameters_[2].Descriptor.ShaderRegister = 0;
-	// viewProjection
-	rootParameters_[3].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
-	rootParameters_[3].ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;
-	rootParameters_[3].Descriptor.ShaderRegister = 1;
+	for (int i = 0; i < COUNT; i++) {
+		// material
+		rootParameters_[i][0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
+		rootParameters_[i][0].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+		rootParameters_[i][0].Descriptor.ShaderRegister = 0;
+		// texture
+		rootParameters_[i][1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+		rootParameters_[i][1].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+		rootParameters_[i][1].DescriptorTable.pDescriptorRanges = descriptorRange_[i];
+		rootParameters_[i][1].DescriptorTable.NumDescriptorRanges = _countof(descriptorRange_[i]);
+		// worldTransform
+		rootParameters_[i][2].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
+		rootParameters_[i][2].ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;
+		rootParameters_[i][2].Descriptor.ShaderRegister = 0;
+		// viewProjection
+		rootParameters_[i][3].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
+		rootParameters_[i][3].ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;
+		rootParameters_[i][3].Descriptor.ShaderRegister = 1;
 
-	CreateDescriptorRange();
-	descriptionRootSignature_.pParameters = rootParameters_;
-	descriptionRootSignature_.NumParameters = _countof(rootParameters_);
+		CreateDescriptorRange();
+		descriptionRootSignature_[i].pParameters = rootParameters_[i];
+		descriptionRootSignature_[i].NumParameters = _countof(rootParameters_[i]);
+	}
 }
 
 void PostEffectPSO::CreateRootSignature() {
 	HRESULT hr;
-	descriptionRootSignature_.Flags =
-		D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
-	// rootParameter生成
-	CreateRootParameter();
-	// samplerの設定
-	SettingSampler();
-	// シリアライズしてバイナリにする
-	hr = D3D12SerializeRootSignature(&descriptionRootSignature_,
-		D3D_ROOT_SIGNATURE_VERSION_1, &signatureBlob_, &errorBlob_);
-	if (FAILED(hr)) {
-		WinApp::Log(reinterpret_cast<char*>(errorBlob_->GetBufferPointer()));
-		assert(false);
+	for (int i = 0; i < COUNT; i++) {
+		descriptionRootSignature_[i].Flags =
+			D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
+		// rootParameter生成
+		CreateRootParameter();
+		// samplerの設定
+		SettingSampler();
+		// シリアライズしてバイナリにする
+		hr = D3D12SerializeRootSignature(&descriptionRootSignature_[i],
+			D3D_ROOT_SIGNATURE_VERSION_1, &signatureBlob_[i], &errorBlob_);
+		if (FAILED(hr)) {
+			WinApp::Log(reinterpret_cast<char*>(errorBlob_->GetBufferPointer()));
+			assert(false);
+		}
+		// バイナリをもとに生成
+		hr = DirectXCommon::GetInstance()->GetDevice()->CreateRootSignature(0, signatureBlob_[i]->GetBufferPointer(),
+			signatureBlob_[i]->GetBufferSize(), IID_PPV_ARGS(&rootSignature_[i]));
+		assert(SUCCEEDED(hr));
 	}
-	// バイナリをもとに生成
-	hr = DirectXCommon::GetInstance()->GetDevice()->CreateRootSignature(0, signatureBlob_->GetBufferPointer(),
-		signatureBlob_->GetBufferSize(), IID_PPV_ARGS(&rootSignature_));
-	assert(SUCCEEDED(hr));
 }
 
 void PostEffectPSO::SettingInputLayout() {
-	inputElementDescs_[0].SemanticName = "POSITION";
-	inputElementDescs_[0].SemanticIndex = 0;
-	inputElementDescs_[0].Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
-	inputElementDescs_[0].AlignedByteOffset = D3D12_APPEND_ALIGNED_ELEMENT;
-	inputElementDescs_[1].SemanticName = "TEXCOORD";
-	inputElementDescs_[1].SemanticIndex = 0;
-	inputElementDescs_[1].Format = DXGI_FORMAT_R32G32_FLOAT;
-	inputElementDescs_[1].AlignedByteOffset = D3D12_APPEND_ALIGNED_ELEMENT;
-	inputLayoutDesc_.pInputElementDescs = inputElementDescs_;
-	inputLayoutDesc_.NumElements = _countof(inputElementDescs_);
+	for (int i = 0; i < COUNT; i++) {
+		inputElementDescs_[i][0].SemanticName = "POSITION";
+		inputElementDescs_[i][0].SemanticIndex = 0;
+		inputElementDescs_[i][0].Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
+		inputElementDescs_[i][0].AlignedByteOffset = D3D12_APPEND_ALIGNED_ELEMENT;
+		inputElementDescs_[i][1].SemanticName = "TEXCOORD";
+		inputElementDescs_[i][1].SemanticIndex = 0;
+		inputElementDescs_[i][1].Format = DXGI_FORMAT_R32G32_FLOAT;
+		inputElementDescs_[i][1].AlignedByteOffset = D3D12_APPEND_ALIGNED_ELEMENT;
+		inputLayoutDesc_[i].pInputElementDescs = inputElementDescs_[i];
+		inputLayoutDesc_[i].NumElements = _countof(inputElementDescs_[i]);
+	}
 }
 
 void PostEffectPSO::SettingBlendState() {
@@ -218,67 +228,84 @@ void PostEffectPSO::SettingBlendState() {
 }
 
 void PostEffectPSO::SettingRasterizerState() {
-	// 裏面(時計回り)を表示しない
-	rasterizerDesc_.CullMode = D3D12_CULL_MODE_BACK;
-	// 三角形の中を塗りつぶす
-	rasterizerDesc_.FillMode = D3D12_FILL_MODE_SOLID;
+	for (int i = 0; i < COUNT; i++) {
+		// 裏面(時計回り)を表示しない
+		rasterizerDesc_[i].CullMode = D3D12_CULL_MODE_BACK;
+		// 三角形の中を塗りつぶす
+		rasterizerDesc_[i].FillMode = D3D12_FILL_MODE_SOLID;
+	}
 }
 
 void PostEffectPSO::PixelSharder() {
 	// 通常
-	pixelShaderBlob_ = CompileShader(L"engine/resources/sharder/PostEffectTestPS.hlsl",
+	pixelShaderBlob_[0] = CompileShader(L"engine/resources/sharder/PostEffectTestPS.hlsl",
 		L"ps_6_0", dxcUtils_, dxcCompiler_, includeHandler_);
 	assert(pixelShaderBlob_ != nullptr);
+	// 高輝度
+	pixelShaderBlob_[1] = CompileShader(L"engine/resources/sharder/HighIntensityPS.hlsl",
+		L"ps_6_0", dxcUtils_, dxcCompiler_, includeHandler_);
+	assert(pixelShaderBlob_ != nullptr);
+	// ブラー
+	pixelShaderBlob_[2] = CompileShader(L"engine/resources/sharder/BlurPS.hlsl",
+		L"ps_6_0", dxcUtils_, dxcCompiler_, includeHandler_);
+	assert(pixelShaderBlob_ != nullptr);
+	//// ブルーム
+	//pixelShaderBlob_[3] = CompileShader(L"engine/resources/sharder/BloomPS.hlsl",
+	//	L"ps_6_0", dxcUtils_, dxcCompiler_, includeHandler_);
+	//assert(pixelShaderBlob_ != nullptr);
 }
 
 void PostEffectPSO::VertexSharder() {
-	// Shaderをコンパイルする
-	vertexShaderBlob_ = CompileShader(L"engine/resources/sharder/PostEffectTestVS.hlsl",
-		L"vs_6_0", dxcUtils_, dxcCompiler_, includeHandler_);
-	assert(vertexShaderBlob_ != nullptr);
+	for (int i = 0; i < 3; i++) {
+		// Shaderをコンパイルする
+		vertexShaderBlob_[i] = CompileShader(L"engine/resources/sharder/PostEffectTestVS.hlsl",
+			L"vs_6_0", dxcUtils_, dxcCompiler_, includeHandler_);
+		assert(vertexShaderBlob_ != nullptr);
+	}
 }
 
 void PostEffectPSO::CreatePSO() {
-	graphicsPipelineStateDescs_.pRootSignature = rootSignature_.Get(); // rootSignature
-	graphicsPipelineStateDescs_.InputLayout = inputLayoutDesc_; // InputLayout
+	for (int i = 0; i < COUNT; i++) {
+		graphicsPipelineStateDescs_[i].pRootSignature = rootSignature_[i].Get(); // rootSignature
+		graphicsPipelineStateDescs_[i].InputLayout = inputLayoutDesc_[i]; // InputLayout
 
-	graphicsPipelineStateDescs_.VS = { vertexShaderBlob_->GetBufferPointer(),
-	vertexShaderBlob_->GetBufferSize() }; // vertexShader
-	graphicsPipelineStateDescs_.PS = { pixelShaderBlob_->GetBufferPointer(),
-	pixelShaderBlob_->GetBufferSize() }; // pixelShader
+		graphicsPipelineStateDescs_[i].VS = { vertexShaderBlob_[i]->GetBufferPointer(),
+		vertexShaderBlob_[i]->GetBufferSize() }; // vertexShader
+		graphicsPipelineStateDescs_[i].PS = { pixelShaderBlob_[i]->GetBufferPointer(),
+		pixelShaderBlob_[i]->GetBufferSize() }; // pixelShader
 
-	// DepthStencilの設定
-	D3D12_DEPTH_STENCIL_DESC depthStencilDesc{};
-	// Depthの機能を有効化する
-	depthStencilDesc.DepthEnable = true;
-	// 書き込みをします
-	depthStencilDesc.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ZERO;
-	// 比較関数はLessEqual。つまり、近ければ描画される
-	depthStencilDesc.DepthFunc = D3D12_COMPARISON_FUNC_LESS_EQUAL;
-	graphicsPipelineStateDescs_.DepthStencilState = depthStencilDesc;
-	graphicsPipelineStateDescs_.DSVFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
+		// DepthStencilの設定
+		D3D12_DEPTH_STENCIL_DESC depthStencilDesc{};
+		// Depthの機能を有効化する
+		depthStencilDesc.DepthEnable = true;
+		// 書き込みをします
+		depthStencilDesc.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ZERO;
+		// 比較関数はLessEqual。つまり、近ければ描画される
+		depthStencilDesc.DepthFunc = D3D12_COMPARISON_FUNC_LESS_EQUAL;
+		graphicsPipelineStateDescs_[i].DepthStencilState = depthStencilDesc;
+		graphicsPipelineStateDescs_[i].DSVFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
 
-	graphicsPipelineStateDescs_.BlendState = blendDesc_; // blendState
-	graphicsPipelineStateDescs_.RasterizerState = rasterizerDesc_; // rasterizerState
+		graphicsPipelineStateDescs_[i].BlendState = blendDesc_; // blendState
+		graphicsPipelineStateDescs_[i].RasterizerState = rasterizerDesc_[i]; // rasterizerState
 
-	// 書き込むRTVの情報
-	graphicsPipelineStateDescs_.NumRenderTargets = 2;
-	graphicsPipelineStateDescs_.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;
-	graphicsPipelineStateDescs_.RTVFormats[1] = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;
+		// 書き込むRTVの情報
+		graphicsPipelineStateDescs_[i].NumRenderTargets = 1;
+		graphicsPipelineStateDescs_[i].RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;
 
-	// 利用するトポロ時（形状）のタイプ。三角形
-	graphicsPipelineStateDescs_.PrimitiveTopologyType =
-		D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+		// 利用するトポロ時（形状）のタイプ。三角形
+		graphicsPipelineStateDescs_[i].PrimitiveTopologyType =
+			D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
 
-	// どのように画面に色を打ち込むかの設定（気にしなくてよい）
-	graphicsPipelineStateDescs_.SampleDesc.Count = 1;
-	graphicsPipelineStateDescs_.SampleMask = D3D12_DEFAULT_SAMPLE_MASK;
+		// どのように画面に色を打ち込むかの設定（気にしなくてよい）
+		graphicsPipelineStateDescs_[i].SampleDesc.Count = 1;
+		graphicsPipelineStateDescs_[i].SampleMask = D3D12_DEFAULT_SAMPLE_MASK;
 
-	// 実際に生成
-	HRESULT hr;
-	hr = DirectXCommon::GetInstance()->GetDevice()->CreateGraphicsPipelineState(&graphicsPipelineStateDescs_,
-		IID_PPV_ARGS(&graphicsPipelineState_));
-	assert(SUCCEEDED(hr));
+		// 実際に生成
+		HRESULT hr;
+		hr = DirectXCommon::GetInstance()->GetDevice()->CreateGraphicsPipelineState(&graphicsPipelineStateDescs_[i],
+			IID_PPV_ARGS(&graphicsPipelineState_[i]));
+		assert(SUCCEEDED(hr));
+	}
 }
 
 void PostEffectPSO::PSO() {

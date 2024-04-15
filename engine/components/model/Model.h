@@ -25,6 +25,9 @@ public:
 	// モデルデータ
 	ModelData GetModelData() { return modelData_; }
 
+	// アニメーションの行列
+	Matrix4x4 GetAnimationMatrix() { return animationLocalMatrix_; }
+
 	/// Setter
 	void SetIsLighting(bool isActive) { materialData_->enableLighting = isActive; }
 
@@ -40,8 +43,6 @@ private:
 	ModelData LoadObjFile(const std::string& directoryPath, const std::string& filename);
 
 public:
-	// ワールド座標
-	//WorldTransform worldTransform;
 	// Material
 	Material* materialData_;
 private:
@@ -55,6 +56,9 @@ private:
 	VertexData* vertexData_;
 
 	ModelData modelData_;
+	Motion animation_;
+	float animationTime_ = 0.0f;
+	Matrix4x4 animationLocalMatrix_;
 
 	// カメラ
 	Microsoft::WRL::ComPtr<ID3D12Resource> cameraPosResource_;

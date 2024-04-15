@@ -15,7 +15,6 @@ const static float kScale = 10.0f;
 
 struct PixelShaderOutput {
 	float32_t4 color : SV_TARGET0;
-	float32_t4 highColor : SV_TARGET1;
 };
 
 
@@ -55,9 +54,7 @@ PixelShaderOutput main(VertexShaderOutput input) {
 
 	// ブルーム
 	//output.color = GaussianBlur(input.texcoord);
-	output.color = GaussianBlur(input.texcoord) + float4(textureColor.rgb, 1);
-	output.highColor = GaussianBlur(input.texcoord) + float4(textureColor.rgb, 1);
-
+	output.color = /*GaussianBlur(input.texcoord) + */float4(textureColor.rgb, 1);
 
 	return output;
 }

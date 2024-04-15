@@ -24,6 +24,7 @@
 #include "Audio.h"
 #include "ModelManager.h"
 #include "PostEffect.h"
+#include "PostEffectManager.h"
 
 class Framework {
 public:
@@ -80,8 +81,7 @@ protected:
 	LinePSO* linePSO_;
 	PostEffectPSO* postEffectPSO_;
 
-	PostEffect* postEffect_;
-	PostEffect* postEffect_2;
+	PostEffectManager* postEffectManager_;
 
 	// components
 	DirectionalLight* directionalLight_;

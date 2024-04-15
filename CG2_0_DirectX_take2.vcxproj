@@ -159,6 +159,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" </Command>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Engine\Pso\PostEffectPSO.cpp" />
+    <ClCompile Include="Engine\postProcess\PostEffectManager.cpp" />
     <ClCompile Include="Project\GameObject\Enemy.cpp" />
     <ClCompile Include="Engine\Components\Animation\Animation.cpp" />
     <ClCompile Include="Engine\Components\3D\Primitive\Plane.cpp" />
@@ -211,9 +212,11 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" </Command>
     <ClCompile Include="engine\Components\model\ModelManager.cpp" />
     <ClCompile Include="Engine\Components\3D\Object3D.cpp" />
     <ClCompile Include="Engine\Base\SrvManager.cpp" />
+    <ClCompile Include="Engine\math\Quaternion.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Engine\Pso\PostEffectPSO.h" />
+    <ClInclude Include="Engine\postProcess\PostEffectManager.h" />
     <ClInclude Include="Project\GameObject\Enemy.h" />
     <ClInclude Include="Engine\Components\Animation\Animation.h" />
     <ClInclude Include="Engine\Components\3D\Primitive\Plane.h" />
@@ -271,6 +274,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" </Command>
     <ClInclude Include="engine\Components\model\ModelManager.h" />
     <ClInclude Include="Engine\Components\3D\Object3D.h" />
     <ClInclude Include="Engine\Base\SrvManager.h" />
+    <ClInclude Include="Engine\math\Quaternion.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="externals\ImGui\LICENSE.txt" />
@@ -303,6 +307,30 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" </Command>
     </None>
   </ItemGroup>
   <ItemGroup>
+    <FxCompile Include="Engine\resources\sharder\BloomPS.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Demo|x64'">Pixel</ShaderType>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Demo|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </FxCompile>
+    <FxCompile Include="Engine\resources\sharder\BlurPS.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Demo|x64'">Pixel</ShaderType>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Demo|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </FxCompile>
+    <FxCompile Include="Engine\resources\sharder\HighIntensityPS.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Demo|x64'">Pixel</ShaderType>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Demo|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </FxCompile>
     <FxCompile Include="engine\resources\sharder\LinePS.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Pixel</ShaderType>
