@@ -15,6 +15,7 @@ void Model::Initialize(const std::string& directoryPath, const std::string& file
 	// モデルの読み込み
 	modelData_ = LoadObjFile(directoryPath, filename);
 	animation_ = LoadAnimationFile(directoryPath, filename);
+	skeleton_ = CreateSkeleton(modelData_.rootNode);
 
 	CreateVertexResource();
 	CreateVertexBufferView();
@@ -47,15 +48,17 @@ void Model::Draw(const ViewProjection& viewProjection, uint32_t textureHandle) {
 #pragma region アニメーション
 	animationTime_ += 1.0f / 60.0f;
 	animationTime_ = std::fmod(animationTime_, animation_.duration);
-	NodeAnimation& rootNodeAnimation = animation_.nodeAnimations[modelData_.rootNode.name];
-	Vector3 translate = CalculateValue(rootNodeAnimation.translate.keyframes, animationTime_);
-	Quaternion rotateQ = CalculateValue(rootNodeAnimation.rotate.keyframes, animationTime_);
-	Vector3 rotate = RotateVector(Vector3{ 1,1,1 }, rotateQ);
-	Vector3 scale = { 1,1,1 };//CalculateValue(rootNodeAnimation.scale.keyframes, animationTime_);
-	animationLocalMatrix_ = MakeAffineMatrix(scale, rotate, translate);
+	//NodeAnimation& rootNodeAnimation = animation_.nodeAnimations[modelData_.rootNode.name];
+	//Vector3 translate = CalculateValue(rootNodeAnimation.translate.keyframes, animationTime_);
+	//Quaternion rotate = CalculateValue(rootNodeAnimation.rotate.keyframes, animationTime_);
+	//Vector3 scale = { 1,1,1 };
+	//animationLocalMatrix_ = MakeAffineMatrix(scale, rotate, translate);
+
+	ApplyAnimation(skeleton_, animation_, animationTime_);
+	SkeletonUpdate(skeleton_);
 #pragma endregion
 
-	//// 形状を設定
+	// 形状を設定
 	DirectXCommon::GetInstance()->GetCommandList()->IASetVertexBuffers(0, 1, &vertexBufferView_); // VBVを設定
 
 	/// CBVの設定

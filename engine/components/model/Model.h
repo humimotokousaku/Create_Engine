@@ -45,6 +45,8 @@ private:
 public:
 	// Material
 	Material* materialData_;
+	Matrix4x4 animationLocalMatrix_;
+	Matrix4x4 skeletonSpaceMatrix;
 private:
 
 	Microsoft::WRL::ComPtr<ID3D12Resource> materialResource_;
@@ -57,8 +59,8 @@ private:
 
 	ModelData modelData_;
 	Motion animation_;
+	Skeleton skeleton_;
 	float animationTime_ = 0.0f;
-	Matrix4x4 animationLocalMatrix_;
 
 	// カメラ
 	Microsoft::WRL::ComPtr<ID3D12Resource> cameraPosResource_;

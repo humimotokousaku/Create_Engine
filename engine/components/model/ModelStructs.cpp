@@ -69,7 +69,10 @@ Motion LoadAnimationFile(const std::string& directoryPath, const std::string& fi
 }
 
 Vector3 CalculateValue(const std::vector<KeyframeVector3>& keyframes, float time) {
-	assert(!keyframes.empty());
+	if (keyframes.empty()) {
+		return Vector3{ 1,1,1 };
+	}
+	//assert(!keyframes.empty());
 	// キーが一つか、時刻がキーフレーム前なら最初の値にする
 	if (keyframes.size() == 1 || time <= keyframes[0].time) {
 		return keyframes[0].value;
@@ -109,13 +112,16 @@ Quaternion CalculateValue(const std::vector<KeyframeQuaternion>& keyframes, floa
 
 Node ReadNode(aiNode* node) {
 	Node result;
-	aiMatrix4x4 aiLoclMatrix = node->mTransformation;
-	aiLoclMatrix.Transpose();
-	for (int i = 0; i < 4; i++) {
-		for (int j = 0; j < 4; j++) {
-			result.localMatrix.m[i][j] = aiLoclMatrix[i][j];
-		}
-	}
+	aiVector3D scale;
+	aiVector3D translate;
+	aiQuaternion rotate;
+
+	node->mTransformation.Decompose(scale, rotate, translate);
+	result.transform.scale = { scale.x, scale.y, scale.z };
+	result.transform.rotate = { rotate.x, -rotate.y, -rotate.z,rotate.x };
+	result.transform.translate = { -translate.x, translate.y, translate.z };
+	result.localMatrix = MakeAffineMatrix(result.transform.scale, result.transform.rotate, result.transform.translate);
+
 	result.name = node->mName.C_Str();
 	result.children.resize(node->mNumChildren);
 	for (uint32_t childIndex = 0; childIndex < node->mNumChildren; ++childIndex) {
@@ -124,4 +130,55 @@ Node ReadNode(aiNode* node) {
 	}
 
 	return result;
+}
+
+int32_t CreateJoint(const Node& node, const std::optional<int32_t>& parent, std::vector<Joint>& joints) {
+	Joint joint;
+	joint.name = node.name;
+	joint.localMatrix = node.localMatrix;
+	joint.skeletonSpaceMatrix = MakeIdentity4x4();
+	joint.transform = node.transform;
+	joint.index = int32_t(joints.size());
+	joint.parent = parent;
+	joints.push_back(joint);
+	for (const Node& child : node.children) {
+		int32_t childIndex = CreateJoint(child, joint.index, joints);
+		joints[joint.index].children.push_back(childIndex);
+	}
+
+	return joint.index;
+}
+
+Skeleton CreateSkeleton(const Node& rootNode) {
+	Skeleton skeleton;
+	skeleton.root = CreateJoint(rootNode, {}, skeleton.joints);
+
+	// 名前とindexのマッピング
+	for (const Joint& joint : skeleton.joints) {
+		skeleton.jointMap.emplace(joint.name, joint.index);
+	}
+
+	return skeleton;
+}
+void SkeletonUpdate(Skeleton& skeleton) {
+	for (Joint& joint : skeleton.joints) {
+		joint.localMatrix = MakeAffineMatrix(joint.transform.scale, joint.transform.rotate, joint.transform.translate);
+		if (joint.parent) {
+			joint.skeletonSpaceMatrix = Multiply(joint.localMatrix, skeleton.joints[*joint.parent].skeletonSpaceMatrix);
+		}
+		else {
+			joint.skeletonSpaceMatrix = joint.localMatrix;
+		}
+	}
+}
+
+void ApplyAnimation(Skeleton& skeleton, const Motion& animation, float animationTime) {
+	for (Joint& joint : skeleton.joints) {
+		if (auto it = animation.nodeAnimations.find(joint.name); it != animation.nodeAnimations.end()) {
+			const NodeAnimation& rootNodeAnimation = (*it).second;
+			joint.transform.translate = CalculateValue(rootNodeAnimation.translate.keyframes, animationTime);
+			joint.transform.rotate = CalculateValue(rootNodeAnimation.rotate.keyframes, animationTime);
+			joint.transform.scale = CalculateValue(rootNodeAnimation.scale.keyframes, animationTime);
+		}
+	}
 }

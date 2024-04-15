@@ -1,6 +1,7 @@
 #pragma once
 #include "MathStructs.h"
 #include <map>
+#include <optional>
 #include <vector>
 #include <fstream>
 #include <string>
@@ -15,6 +16,16 @@ struct TransformationMatrix {
 struct Transform {
 	Vector3 scale;
 	Vector3 rotate;
+	Vector3 translate;
+};
+struct EulerTransform {
+	Vector3 scale;
+	Vector3 rotate;
+	Vector3 translate;
+};
+struct QuaternionTransform {
+	Vector3 scale;
+	Quaternion rotate;
 	Vector3 translate;
 };
 
@@ -38,15 +49,6 @@ struct MaterialData {
 MaterialData LoadMaterialTemplateFile(const std::string& directoryPath, const std::string& filename);
 
 #pragma region ノード
-//struct KeyframeVector3 {
-//	Vector3 value;
-//	float time;
-//};
-//struct KeyframeQuaternion {
-//	Quaternion value;
-//	float time;
-//};
-
 template<typename tValue>
 struct Keyframe {
 	float time;
@@ -79,6 +81,7 @@ Quaternion CalculateValue(const std::vector<KeyframeQuaternion>& keyframes, floa
 
 // ノード
 struct Node {
+	QuaternionTransform transform;
 	Matrix4x4 localMatrix;
 	std::string name;
 	std::vector<Node> children;
@@ -86,6 +89,32 @@ struct Node {
 // ノードの読み込み
 Node ReadNode(aiNode* node);
 #pragma endregion
+
+#pragma region SkeletonとJoint
+struct Joint {
+	QuaternionTransform transform;
+	Matrix4x4 localMatrix;
+	Matrix4x4 skeletonSpaceMatrix;
+	std::string name;
+	std::vector<int32_t> children;
+	int32_t index;
+	std::optional<int32_t> parent;
+};
+// Jointを作成
+int32_t CreateJoint(const Node& node, const std::optional<int32_t>& parent, std::vector<Joint>& joints);
+
+struct Skeleton {
+	int32_t root;
+	std::map<std::string, int32_t> jointMap;
+	std::vector<Joint> joints;
+};
+// スケルトンを作成
+Skeleton CreateSkeleton(const Node& rootNode);
+// スケルトンの更新処理
+void SkeletonUpdate(Skeleton& skeleton);
+#pragma endregion
+// スケルトンに対してアニメーションを適用
+void ApplyAnimation(Skeleton& skeleton, const Motion& animation, float animationTime);
 
 struct ModelData {
 	std::vector<VertexData> vertices;

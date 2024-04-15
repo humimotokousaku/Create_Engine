@@ -16,10 +16,9 @@ void TitleScene::Initialize() {
 	uvcheckerTexture_ = TextureManager::GetInstance()->GetSrvIndex("Engine/resources/uvChecker.png");
 	monsterBallTexture_ = TextureManager::GetInstance()->GetSrvIndex("Engine/resources/monsterBall.png");
 	particleTexture_ = TextureManager::GetInstance()->GetSrvIndex("Engine/resources/circle.png");
-
 	// objモデル
 	//ModelManager::GetInstance()->LoadModel("plane.obj");
-	ModelManager::GetInstance()->LoadModel("AnimatedCube/AnimatedCube.gltf");
+	ModelManager::GetInstance()->LoadModel("Human/walk.gltf");
 	//ModelManager::GetInstance()->LoadModel("testPlane.gltf");
 	//ModelManager::GetInstance()->LoadModel("axis.obj");
 	//ModelManager::GetInstance()->LoadModel("block.obj");
@@ -60,69 +59,13 @@ void TitleScene::Initialize() {
 	// 平面
 	plane_ = std::make_unique<Object3D>();
 	plane_->Initialize();
-	plane_->SetModel("AnimatedCube/AnimatedCube.gltf");
+	plane_->SetModel("Human/walk.gltf");
 	plane_->SetCamera(camera_.get());
 	plane_->model_->materialData_->color = { 1,1,1,1 };
-
-
-
-	// 立体的な線
-	/*axis_ = std::make_unique<Object3D>();
-	axis_->Initialize();
-	axis_->SetModel("axis.obj");
-	axis_->SetCamera(camera_.get());*/
 
 	// アニメーション
 	anim_ = std::make_unique<Animation>();
 	anim_->SetAnimData(&plane_->worldTransform.transform.translate, Vector3{ 0,0,0 }, Vector3{ 10,0,0 }, 60, "PlaneAnim0", Easings::EaseOutBack);
-	//anim_->SetAnimData(&plane_->worldTransform.translation_, Vector3{ 10,0,0 }, Vector3{ 0,0,0 }, 60, "PlaneAnim1", Easings::EaseOutBack);
-	//anim_->SetAnimData(&plane_->worldTransform.translation_, Vector3{ 0,0,0 }, Vector3{ 0,5,0 }, 120, "PlaneAnim2", Easings::EaseOutBack);
-	//anim_->SetAnimData(&plane_->worldTransform.translation_, Vector3{ 0,5,0 }, Vector3{ 0,0,0 }, 120, "PlaneAnim3", Easings::EaseOutBack);
-
-//	// 自機
-//	player_ = std::make_unique<Player>();
-//	player_->Initialize(camera_.get());
-//	// 敵
-//	for (int i = 0; i < 2; i++) {
-//		enemy_[i] = std::make_unique<Enemy>();
-//		enemy_[i]->Initialize(camera_.get());
-//	}
-//
-//	// 当たり判定
-//	collisionManager_ = std::make_unique<CollisionManager>();
-//	collisionManager_->SetColliderList(player_.get());
-//	for (int i = 0; i < 2; i++) {
-//		collisionManager_->SetColliderList(enemy_[i].get());
-//	}
-//
-//#pragma region 各オブジェクトのOBBを設定
-//	// OBB
-//	OBB obb;
-//	obb.m_Pos = { 0,0,0 };
-//	obb.m_fLength = { 1,1,1 };
-//	obb.m_NormaDirect[0] = { 1,0,0 };
-//	obb.m_NormaDirect[1] = { 0,1,0 };
-//	obb.m_NormaDirect[2] = { 0,0,1 };
-//	// Enemy用
-//	OBB obbA;
-//	obbA.m_Pos = { 10,0,0 };
-//	obbA.m_fLength = { 1,1,1 };
-//	obbA.m_NormaDirect[0] = { 1,0,0 };
-//	obbA.m_NormaDirect[1] = { 0,1,0 };
-//	obbA.m_NormaDirect[2] = { 0,0,1 };
-//	OBB obbB;
-//	obbB.m_Pos = { -10,0,0 };
-//	obbB.m_fLength = { 1,1,1 };
-//	obbB.m_NormaDirect[0] = { 1,0,0 };
-//	obbB.m_NormaDirect[1] = { 0,1,0 };
-//	obbB.m_NormaDirect[2] = { 0,0,1 };
-//
-//	player_->SetOBB(obb);
-//	enemy_[0]->SetOBB(obbA);
-//	enemy_[0]->SetWorldPosition(obbA.m_Pos);
-//	enemy_[1]->SetOBB(obbB);
-//	enemy_[1]->SetWorldPosition(obbB.m_Pos);
-//#pragma endregion
 
 #pragma endregion
 }
