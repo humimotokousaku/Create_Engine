@@ -87,15 +87,22 @@ private:// プライベートなメンバ関数
 	Microsoft::WRL::ComPtr<ID3D12Resource> CreateTextureBufferResource();
 
 	// SRVの作成
-	RenderingTextureData CreateSRV(RenderingTextureData texData);
+	void CreateSRV(RenderingTextureData texData);
 
 	// RTVの作成
-	void CreateRTV(RenderingTextureData texData, uint32_t index);
+	void CreateRTV();
 
 	// バリアを張る
 	void SetBarrier(Microsoft::WRL::ComPtr<ID3D12Resource> texBuff, D3D12_RESOURCE_STATES beforeState, D3D12_RESOURCE_STATES afterState, UINT numBarrier);
 
 	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> CreateRTVDescriptorHeap(const Microsoft::WRL::ComPtr<ID3D12Device>& device, D3D12_DESCRIPTOR_HEAP_TYPE heapType, UINT numDescriptors, bool shaderVisible);
+
+
+
+
+	// RenderTextureの生成
+	Microsoft::WRL::ComPtr<ID3D12Resource> CreateRenderTextureResource(Microsoft::WRL::ComPtr<ID3D12Device> device, uint32_t width, uint32_t height, DXGI_FORMAT format, const Vector4& clearColor);
+
 
 public:// 定数
 	// 画面クリアカラー
@@ -118,7 +125,7 @@ private:// パブリックな変数
 	Microsoft::WRL::ComPtr<ID3D12Resource> depthBuff_;
 	// RTV用のデスクリプタヒープ
 	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> descHeapRTV_;
-	D3D12_CPU_DESCRIPTOR_HANDLE rtvHandles_[1];
+	D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle_;
 	// DSV用のデスクリプタヒープ
 	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> descHeapDSV_;
 

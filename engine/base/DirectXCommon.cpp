@@ -44,8 +44,6 @@ void DirectXCommon::Initialize(HWND hwnd) {
 	GetSwapChainResources();
 
 	/// DescriptorHeapの作成
-	// SRV
-	//srvDescriptorHeap_ = CreateDescriptorHeap(device_.Get(), D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, kMaxSRVCount, true).Get();
 	// DSV
 	dsvDescriptorHeap_ = CreateDsvDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE_DSV, 1, false).Get();
 	CreateDepthStencilView();
