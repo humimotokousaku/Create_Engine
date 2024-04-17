@@ -19,13 +19,10 @@ void PostEffect::Initialize() {
 
 	// テクスチャバッファの作成
 	texBuff_.resource = CreateTextureBufferResource();
-	//highIntensityTexBuff_.resource = CreateTextureBufferResource();
 
 #pragma region SRV
 	// ノーマル
 	texBuff_ = CreateSRV(texBuff_);
-	// 高輝度
-	//highIntensityTexBuff_ = CreateSRV(highIntensityTexBuff_);
 #pragma endregion
 
 #pragma region RTV
@@ -35,8 +32,6 @@ void PostEffect::Initialize() {
 	// RTVの作成
 	// 何も加工しない
 	CreateRTV(texBuff_, 0);
-	// 高輝度テクスチャ
-	//CreateRTV(highIntensityTexBuff_, 1);
 #pragma endregion
 
 #pragma region DSV
@@ -132,7 +127,6 @@ void PostEffect::Draw(uint32_t psoNum) {
 void PostEffect::PreDrawScene() {
 	// バリアを張る
 	SetBarrier(texBuff_.resource, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_RENDER_TARGET, 1);
-	//SetBarrier(highIntensityTexBuff_.resource, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_RENDER_TARGET, 1);
 
 	// 深度ステンシルビューのデスクリプタヒープのハンドルを取得
 	const uint32_t descriptorSizeRTV = directXCommon_->GetDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
@@ -169,11 +163,6 @@ void PostEffect::SpriteInitialize(RenderingTextureData texData) {
 	CreateIndexBufferView();
 	// material
 	CreateMaterialResource();
-
-	// 1つ分のサイズを用意する
-	//cameraPosResource_ = CreateBufferResource(DirectXCommon::GetInstance()->GetDevice(), sizeof(Vector3)).Get();
-	// 書き込むためのアドレスを取得
-	//cameraPosResource_->Map(0, nullptr, reinterpret_cast<void**>(&cameraPosData_));
 
 	// 書き込むためのアドレスを取得
 	vertexResource_->Map(0, nullptr, reinterpret_cast<void**>(&vertexData_));

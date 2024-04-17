@@ -30,7 +30,10 @@ Motion LoadAnimationFile(const std::string& directoryPath, const std::string& fi
 	Assimp::Importer importer;
 	std::string filePath = directoryPath + "/" + filename;
 	const aiScene* scene = importer.ReadFile(filePath.c_str(), 0);
-	assert(scene->mAnimations != 0);
+	if (scene->mAnimations == 0) {
+		return animation;
+	}
+	//assert(scene->mAnimations != 0);
 
 	aiAnimation* animationAssimp = scene->mAnimations[0];
 	animation.duration = float(animationAssimp->mDuration / animationAssimp->mTicksPerSecond); // 時間の単位を秒に変換
@@ -68,11 +71,11 @@ Motion LoadAnimationFile(const std::string& directoryPath, const std::string& fi
 	return animation;
 }
 
-Vector3 CalculateValue(const std::vector<KeyframeVector3>& keyframes, float time) {
+Vector3 CalculateTranslateValue(const std::vector<KeyframeVector3>& keyframes, float time) {
 	if (keyframes.empty()) {
-		return Vector3{ 1,1,1 };
+		return Vector3{ 0,0,0 };
 	}
-	//assert(!keyframes.empty());
+
 	// キーが一つか、時刻がキーフレーム前なら最初の値にする
 	if (keyframes.size() == 1 || time <= keyframes[0].time) {
 		return keyframes[0].value;
@@ -90,8 +93,11 @@ Vector3 CalculateValue(const std::vector<KeyframeVector3>& keyframes, float time
 
 	return (*keyframes.rbegin()).value;
 }
-Quaternion CalculateValue(const std::vector<KeyframeQuaternion>& keyframes, float time) {
-	assert(!keyframes.empty());
+Quaternion CalculateQuaternionValue(const std::vector<KeyframeQuaternion>& keyframes, float time) {
+	if (keyframes.empty()) {
+		return Quaternion{ 0,0,0,0 };
+	}
+
 	// キーが一つか、時刻がキーフレーム前なら最初の値にする
 	if (keyframes.size() == 1 || time <= keyframes[0].time) {
 		return keyframes[0].value;
@@ -104,6 +110,29 @@ Quaternion CalculateValue(const std::vector<KeyframeQuaternion>& keyframes, floa
 			// 範囲内を補間
 			float t = (time - keyframes[index].time) / (keyframes[nextIndex].time - keyframes[index].time);
 			return Slerp(keyframes[index].value, keyframes[nextIndex].value, t);
+		}
+	}
+
+	return (*keyframes.rbegin()).value;
+}
+
+Vector3 CalculateScaleValue(const std::vector<KeyframeVector3>& keyframes, float time) {
+	if (keyframes.empty()) {
+		return Vector3{ 1,1,1 };
+	}
+
+	// キーが一つか、時刻がキーフレーム前なら最初の値にする
+	if (keyframes.size() == 1 || time <= keyframes[0].time) {
+		return keyframes[0].value;
+	}
+
+	for (size_t index = 0; index < keyframes.size() - 1; ++index) {
+		size_t nextIndex = index + 1;
+		// indexとnextIndexを比較して範囲内に時刻があるかを判定
+		if (keyframes[index].time <= time && time <= keyframes[nextIndex].time) {
+			// 範囲内を補間
+			float t = (time - keyframes[index].time) / (keyframes[nextIndex].time - keyframes[index].time);
+			return Lerps::Lerp(keyframes[index].value, keyframes[nextIndex].value, t);
 		}
 	}
 
@@ -176,9 +205,9 @@ void ApplyAnimation(Skeleton& skeleton, const Motion& animation, float animation
 	for (Joint& joint : skeleton.joints) {
 		if (auto it = animation.nodeAnimations.find(joint.name); it != animation.nodeAnimations.end()) {
 			const NodeAnimation& rootNodeAnimation = (*it).second;
-			joint.transform.translate = CalculateValue(rootNodeAnimation.translate.keyframes, animationTime);
-			joint.transform.rotate = CalculateValue(rootNodeAnimation.rotate.keyframes, animationTime);
-			joint.transform.scale = CalculateValue(rootNodeAnimation.scale.keyframes, animationTime);
+			joint.transform.translate = CalculateTranslateValue(rootNodeAnimation.translate.keyframes, animationTime);
+			joint.transform.rotate = CalculateQuaternionValue(rootNodeAnimation.rotate.keyframes, animationTime);
+			joint.transform.scale = CalculateScaleValue(rootNodeAnimation.scale.keyframes, animationTime);
 		}
 	}
 }

@@ -20,8 +20,8 @@ void TitleScene::Initialize() {
 	//ModelManager::GetInstance()->LoadModel("plane.obj");
 	ModelManager::GetInstance()->LoadModel("Human/walk.gltf");
 	//ModelManager::GetInstance()->LoadModel("testPlane.gltf");
-	//ModelManager::GetInstance()->LoadModel("axis.obj");
-	//ModelManager::GetInstance()->LoadModel("block.obj");
+	ModelManager::GetInstance()->LoadModel("axis.obj");
+	ModelManager::GetInstance()->LoadModel("block.obj");
 
 	// カメラの初期化
 	camera_ = std::make_unique<Camera>();
@@ -62,6 +62,14 @@ void TitleScene::Initialize() {
 	plane_->SetModel("Human/walk.gltf");
 	plane_->SetCamera(camera_.get());
 	plane_->model_->materialData_->color = { 1,1,1,1 };
+
+	// 3D線
+	axis_ = std::make_unique<Object3D>();
+	axis_->Initialize();
+	axis_->SetModel("axis.obj");
+	axis_->SetCamera(camera_.get());
+	axis_->worldTransform.transform.translate = { 3,3,0 };
+	axis_->model_->materialData_->color = { 1,1,1,1 };
 
 	// アニメーション
 	anim_ = std::make_unique<Animation>();
@@ -148,7 +156,7 @@ void TitleScene::Update() {
 void TitleScene::Draw() {
 
 #pragma region パーティクル以外の処理
-	//axis_->Draw(uvcheckerTexture_);
+	axis_->Draw(uvcheckerTexture_);
 	plane_->Draw(uvcheckerTexture_);
 	//testWater_->Draw(world_, viewProjection_);
 	//player_->Draw(uvcheckerTexture_);

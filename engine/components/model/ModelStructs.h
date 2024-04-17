@@ -76,8 +76,9 @@ struct Motion {
 // アニメーションの読み込み
 Motion LoadAnimationFile(const std::string& directoryPath, const std::string& filename);
 // 任意の時刻の値を取得
-Vector3 CalculateValue(const std::vector<KeyframeVector3>& keyframes, float time);
-Quaternion CalculateValue(const std::vector<KeyframeQuaternion>& keyframes, float time);
+Vector3 CalculateTranslateValue(const std::vector<KeyframeVector3>& keyframes, float time);
+Quaternion CalculateQuaternionValue(const std::vector<KeyframeQuaternion>& keyframes, float time);
+Vector3 CalculateScaleValue(const std::vector<KeyframeVector3>& keyframes, float time);
 
 // ノード
 struct Node {
