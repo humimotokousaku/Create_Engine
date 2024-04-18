@@ -14,15 +14,16 @@ void PostEffect::Initialize() {
 	// 基本機能
 	directXCommon_ = DirectXCommon::GetInstance();
 	postEffectPSO_ = PostEffectPSO::GetInstance();
+	srvManager_ = SrvManager::GetInstance();
 
 	HRESULT result;
 
 	// テクスチャバッファの作成
-	texBuff_.resource = CreateTextureBufferResource();
+	//texBuff_.resource = CreateRenderTextureResource()//CreateTextureBufferResource();
 
 #pragma region SRV
 	// ノーマル
-	CreateSRV(texBuff_);
+	//CreateSRV(texBuff_);
 
 #pragma endregion
 
@@ -76,10 +77,19 @@ void PostEffect::Initialize() {
 		&dsvDesc,
 		GetCPUDescriptorHandle(descHeapDSV_.Get(), descriptorSizeRTV, 0)
 	);
+
+	//descHeapDSV_ = directXCommon_->GetDsvDescriptorHeap();
 #pragma endregion
 
 	// スプライトの初期化
-	SpriteInitialize(texBuff_);
+	//SpriteInitialize(texBuff_);
+	worldTransform_.Initialize();
+	worldTransform_.transform.translate = { 640,360,1 };
+
+	// カメラ
+	camera_ = std::make_unique<Camera>();
+	camera_->Initialize();
+	camera_->GetViewProjection().constMap->projection = MakeOrthographicMatrix(0.0f, 0.0f, float(WinApp::kClientWidth_), float(WinApp::kClientHeight_), 0.0f, 100.0f);
 
 #pragma region シェーダ内のパラメータを調整するための準備
 	// ブラーの情報を書き込む
@@ -127,14 +137,14 @@ void PostEffect::Draw(uint32_t psoNum) {
 
 void PostEffect::PreDrawScene() {
 	// バリアを張る
-	SetBarrier(texBuff_.resource, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_RENDER_TARGET, 1);
+	SetBarrier(texBuff_.resource, D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
 
 	// 深度ステンシルビューのデスクリプタヒープのハンドルを取得
 	const uint32_t descriptorSizeRTV = directXCommon_->GetDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
 
 	D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle = GetCPUDescriptorHandle(descHeapDSV_.Get(), descriptorSizeRTV, 0);
 	// レンダーターゲットをセット
-	directXCommon_->GetCommandList()->OMSetRenderTargets(1, &rtvHandle_, false, &dsvHandle);
+	directXCommon_->GetCommandList()->OMSetRenderTargets(1, &rtvHandle_, false, nullptr);
 
 	// ビューポートの設定
 	D3D12_VIEWPORT viewport = CD3DX12_VIEWPORT(0.0f, 0.0f, WinApp::kClientWidth_, WinApp::kClientHeight_);
@@ -146,14 +156,27 @@ void PostEffect::PreDrawScene() {
 	// 全画面クリア
 	directXCommon_->GetCommandList()->ClearRenderTargetView(rtvHandle_, clearColor_, 0, nullptr);
 	// 深度バッファのクリア
-	directXCommon_->GetCommandList()->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
+	//directXCommon_->GetCommandList()->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
 }
 
 void PostEffect::PostDrawScene() {
 	// バリアの変更
-	SetBarrier(texBuff_.resource, D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, 1);
+	//SetBarrier(texBuff_.resource, D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
 }
 
+D3D12_CPU_DESCRIPTOR_HANDLE PostEffect::GetCPUDescriptorHandle(const Microsoft::WRL::ComPtr<ID3D12DescriptorHeap>& descriptorHeap, uint32_t descriptorSize, uint32_t index) {
+	D3D12_CPU_DESCRIPTOR_HANDLE handleCPU = descriptorHeap.Get()->GetCPUDescriptorHandleForHeapStart();
+	handleCPU.ptr += (descriptorSize * index);
+	return handleCPU;
+}
+
+D3D12_GPU_DESCRIPTOR_HANDLE PostEffect::GetGPUDescriptorHandle(const Microsoft::WRL::ComPtr<ID3D12DescriptorHeap>& descriptorHeap, uint32_t descriptorSize, uint32_t index) {
+	D3D12_GPU_DESCRIPTOR_HANDLE handleGPU = descriptorHeap.Get()->GetGPUDescriptorHandleForHeapStart();
+	handleGPU.ptr += (descriptorSize * index);
+	return handleGPU;
+}
+
+#pragma region Sprite作成に必要なもの
 void PostEffect::SpriteInitialize(RenderingTextureData texData) {
 	/// メモリ確保
 	// 頂点データ
@@ -232,19 +255,6 @@ void PostEffect::SpriteInitialize(RenderingTextureData texData) {
 	camera_->GetViewProjection().constMap->projection = MakeOrthographicMatrix(0.0f, 0.0f, float(WinApp::kClientWidth_), float(WinApp::kClientHeight_), 0.0f, 100.0f);
 }
 
-D3D12_CPU_DESCRIPTOR_HANDLE PostEffect::GetCPUDescriptorHandle(const Microsoft::WRL::ComPtr<ID3D12DescriptorHeap>& descriptorHeap, uint32_t descriptorSize, uint32_t index) {
-	D3D12_CPU_DESCRIPTOR_HANDLE handleCPU = descriptorHeap.Get()->GetCPUDescriptorHandleForHeapStart();
-	handleCPU.ptr += (descriptorSize * index);
-	return handleCPU;
-}
-
-D3D12_GPU_DESCRIPTOR_HANDLE PostEffect::GetGPUDescriptorHandle(const Microsoft::WRL::ComPtr<ID3D12DescriptorHeap>& descriptorHeap, uint32_t descriptorSize, uint32_t index) {
-	D3D12_GPU_DESCRIPTOR_HANDLE handleGPU = descriptorHeap.Get()->GetGPUDescriptorHandleForHeapStart();
-	handleGPU.ptr += (descriptorSize * index);
-	return handleGPU;
-}
-
-#pragma region Sprite作成に必要なもの
 Microsoft::WRL::ComPtr<ID3D12Resource> PostEffect::CreateBufferResource(const Microsoft::WRL::ComPtr<ID3D12Device>& device, size_t sizeInBytes) {
 	HRESULT hr;
 	// 頂点リソース用のヒープの設定
@@ -355,9 +365,8 @@ Microsoft::WRL::ComPtr<ID3D12Resource> PostEffect::CreateTextureBufferResource()
 	return texBuff;
 }
 
-void PostEffect::CreateSRV(RenderingTextureData texData) {
+void PostEffect::CreateSRV() {
 	// デスクリプタヒープにSRV作成
-	RenderingTextureData texBuff = texData;
 	texBuff_.srvIndex = SrvManager::GetInstance()->Allocate();
 	texBuff_.srvHandleCPU = SrvManager::GetInstance()->GetCPUDescriptorHandle(texBuff_.srvIndex);
 	texBuff_.srvHandleGPU = SrvManager::GetInstance()->GetGPUDescriptorHandle(texBuff_.srvIndex);
@@ -370,23 +379,36 @@ void PostEffect::CreateRTV() {
 	// シェーダの計算結果をSRGBに変換して書き込む
 	rtvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;
 	rtvDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D;
+
 	// デスクリプタヒープにRTV作成
 	const uint32_t descriptorSizeRTV = directXCommon_->GetDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
 	
-	// 現在は赤色に設定
-	const Vector4 kRenderTargetClearValue{ 1.0f,0.0f,0.0f,1.0f };
-	auto renderTextureResource = CreateRenderTextureResource(directXCommon_->GetDevice(), WinApp::kClientWidth_, WinApp::kClientHeight_, DXGI_FORMAT_R8G8B8A8_UNORM_SRGB, kRenderTargetClearValue);
+	/*auto renderTextureResource*/texBuff_.resource = CreateRenderTextureResource(directXCommon_->GetDevice(), WinApp::kClientWidth_, WinApp::kClientHeight_, DXGI_FORMAT_R8G8B8A8_UNORM_SRGB, kRenderTargetClearValue);
 	rtvHandle_ = GetCPUDescriptorHandle(descHeapRTV_.Get(), descriptorSizeRTV, 0);
 	directXCommon_->GetDevice()->CreateRenderTargetView(
-		renderTextureResource.Get(),
+		texBuff_.resource.Get(),
 		&rtvDesc,
 		rtvHandle_
 	);
+
+	// srv作成
+	CreateSRV();
 }
 
-void PostEffect::SetBarrier(Microsoft::WRL::ComPtr<ID3D12Resource> texBuff, D3D12_RESOURCE_STATES beforeState, D3D12_RESOURCE_STATES afterState, UINT numBarrier) {
-	D3D12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Transition(texBuff.Get(), beforeState, afterState);
-	directXCommon_->GetCommandList()->ResourceBarrier(numBarrier, &barrier);
+void PostEffect::SetBarrier(Microsoft::WRL::ComPtr<ID3D12Resource> texBuff, D3D12_RESOURCE_STATES beforeState, D3D12_RESOURCE_STATES afterState) {
+	D3D12_RESOURCE_BARRIER barrier;
+	barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+	// Noneにしておく
+	barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+	// バリアを張る対象のリソース
+	barrier.Transition.pResource = texBuff.Get();
+	// 遷移前(現在)のResourceState
+	barrier.Transition.StateBefore = beforeState;
+	// 遷移後のResourceState
+	barrier.Transition.StateAfter = afterState;
+	barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+	// TransitionBarrierを張る
+	directXCommon_->GetCommandList()->ResourceBarrier(1, &barrier);
 }
 
 Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> PostEffect::CreateRTVDescriptorHeap(const Microsoft::WRL::ComPtr<ID3D12Device>& device, D3D12_DESCRIPTOR_HEAP_TYPE heapType, UINT numDescriptors, bool shaderVisible) {
@@ -409,12 +431,18 @@ Microsoft::WRL::ComPtr<ID3D12Resource> PostEffect::CreateRenderTextureResource(M
 	D3D12_RESOURCE_DESC resourceDesc;
 	resourceDesc.Format = format;
 	resourceDesc.Width = width;
-	resourceDesc.Height = height;
-	resourceDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET;
+	resourceDesc.Height = height;								  
+	resourceDesc.MipLevels = 1;									  
+	resourceDesc.DepthOrArraySize = 1;							  		  
+	resourceDesc.SampleDesc.Count = 1;							  
 	resourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+	resourceDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET;
+	resourceDesc.Alignment = 0;
+
 	D3D12_HEAP_PROPERTIES heapProperties{};
 	heapProperties.Type = D3D12_HEAP_TYPE_DEFAULT;
 	D3D12_CLEAR_VALUE clearValue;
+	clearValue.Format = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;
 	clearValue.Color[0] = clearColor.x;
 	clearValue.Color[1] = clearColor.y;
 	clearValue.Color[2] = clearColor.z;
@@ -433,4 +461,4 @@ Microsoft::WRL::ComPtr<ID3D12Resource> PostEffect::CreateRenderTextureResource(M
 	return resource;
 }
 
-const float PostEffect::clearColor_[4] = { 0.25f, 0.5f, 0.1f, 0.0f };
+const float PostEffect::clearColor_[4] = { 1.0f,0.0f,0.0f,1.0f };

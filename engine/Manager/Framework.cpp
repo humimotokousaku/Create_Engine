@@ -34,6 +34,10 @@ void Framework::Initialize() {
 	// ポストエフェクトのPSO
 	postEffectPSO_ = PostEffectPSO::GetInstance();
 	postEffectPSO_->Initialize();
+
+	postEffect_ = new PostEffect();
+	postEffect_->Initialize();
+
 	// ImGuiの初期化
 	imGuiManager_ = new ImGuiManager();
 	imGuiManager_->Initialize(winApp_->GetHwnd());
@@ -91,15 +95,17 @@ void Framework::Run() {
 			Update();
 
 			// 出力結果をテクスチャにする
-			postEffectManager_->PreDraw();
+			postEffect_->PreDrawScene();
+			//postEffectManager_->PreDraw();
 			// 描画処理
 			Draw();
-			postEffectManager_->PostDraw();
+			//postEffectManager_->PostDraw();
+			//postEffect_->PostDrawScene();
 
 			// 2パス目を描画
 			// DirectXCommon
 			directXCommon_->PreDraw();
-			postEffectManager_->Draw();
+			//postEffectManager_->Draw();
 			// 描画後の処理
 			EndFrame();
 		}
@@ -115,6 +121,7 @@ void Framework::Finalize() {
 	// ImGui
 	imGuiManager_->Finalize();
 	delete postEffectManager_;
+	delete postEffect_;
 	textureManager_->Finalize();
 	//delete srvManager_;
 	directXCommon_->Finalize();

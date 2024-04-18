@@ -87,13 +87,13 @@ private:// プライベートなメンバ関数
 	Microsoft::WRL::ComPtr<ID3D12Resource> CreateTextureBufferResource();
 
 	// SRVの作成
-	void CreateSRV(RenderingTextureData texData);
+	void CreateSRV();
 
 	// RTVの作成
 	void CreateRTV();
 
 	// バリアを張る
-	void SetBarrier(Microsoft::WRL::ComPtr<ID3D12Resource> texBuff, D3D12_RESOURCE_STATES beforeState, D3D12_RESOURCE_STATES afterState, UINT numBarrier);
+	void SetBarrier(Microsoft::WRL::ComPtr<ID3D12Resource> texBuff, D3D12_RESOURCE_STATES beforeState, D3D12_RESOURCE_STATES afterState);
 
 	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> CreateRTVDescriptorHeap(const Microsoft::WRL::ComPtr<ID3D12Device>& device, D3D12_DESCRIPTOR_HEAP_TYPE heapType, UINT numDescriptors, bool shaderVisible);
 
@@ -108,6 +108,9 @@ public:// 定数
 	// 画面クリアカラー
 	static const float clearColor_[4];
 
+	// 現在は赤色に設定
+	const Vector4 kRenderTargetClearValue = { 1.0f,0.0f,0.0f,1.0f };
+
 public:// プライベートな変数
 	WorldTransform worldTransform_;
 
@@ -115,6 +118,7 @@ private:// パブリックな変数
 	// 基本機能
 	DirectXCommon* directXCommon_;
 	PostEffectPSO* postEffectPSO_;
+	SrvManager* srvManager_;
 
 	// テクスチャバッファ
 	RenderingTextureData texBuff_;

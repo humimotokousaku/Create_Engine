@@ -82,6 +82,7 @@ protected:
 	PostEffectPSO* postEffectPSO_;
 
 	PostEffectManager* postEffectManager_;
+	PostEffect* postEffect_;
 
 	// components
 	DirectionalLight* directionalLight_;

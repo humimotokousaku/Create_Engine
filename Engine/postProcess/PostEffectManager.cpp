@@ -23,11 +23,11 @@ void PostEffectManager::PostDraw() {
 
 	for (int i = 0; i < COUNT - 1; i++) {
 		postEffect_[i + 1]->PreDrawScene();
-		postEffect_[i]->Draw(i);
+		//postEffect_[i]->Draw(i);
 		postEffect_[i + 1]->PostDrawScene();
 	}
 }
 
 void PostEffectManager::Draw() {
-	postEffect_[COUNT - 1]->Draw(COUNT - 1);
+	//postEffect_[COUNT - 1]->Draw(COUNT - 1);
 }
