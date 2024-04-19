@@ -5,7 +5,7 @@
 MaterialData LoadMaterialTemplateFile(const std::string& directoryPath, const std::string& filename) {
 	MaterialData materialData;
 	std::string line;
-	std::ifstream file(directoryPath + "/" + filename);
+	std::ifstream file("Engine/resources" + directoryPath + "/" + filename);
 	assert(file.is_open());
 
 	while (std::getline(file, line)) {
@@ -18,7 +18,7 @@ MaterialData LoadMaterialTemplateFile(const std::string& directoryPath, const st
 			std::string textureFilename;
 			s >> textureFilename;
 			// 連結してファイルパスをする
-			materialData.textureFilePath = directoryPath + "/" + textureFilename;
+			materialData.textureFilePath = "Engine/resources" + directoryPath + "/" + textureFilename;
 		}
 	}
 
@@ -28,7 +28,7 @@ MaterialData LoadMaterialTemplateFile(const std::string& directoryPath, const st
 Motion LoadAnimationFile(const std::string& directoryPath, const std::string& filename) {
 	Motion animation;
 	Assimp::Importer importer;
-	std::string filePath = directoryPath + "/" + filename;
+	std::string filePath = "Engine/resources/" + directoryPath + "/" + filename;
 	const aiScene* scene = importer.ReadFile(filePath.c_str(), 0);
 	if (scene->mAnimations == 0) {
 		return animation;
@@ -147,7 +147,7 @@ Node ReadNode(aiNode* node) {
 
 	node->mTransformation.Decompose(scale, rotate, translate);
 	result.transform.scale = { scale.x, scale.y, scale.z };
-	result.transform.rotate = { rotate.x, -rotate.y, -rotate.z,rotate.x };
+	result.transform.rotate = { rotate.x, -rotate.y, -rotate.z,rotate.w };
 	result.transform.translate = { -translate.x, translate.y, translate.z };
 	result.localMatrix = MakeAffineMatrix(result.transform.scale, result.transform.rotate, result.transform.translate);
 
@@ -187,6 +187,8 @@ Skeleton CreateSkeleton(const Node& rootNode) {
 		skeleton.jointMap.emplace(joint.name, joint.index);
 	}
 
+	SkeletonUpdate(skeleton);
+
 	return skeleton;
 }
 void SkeletonUpdate(Skeleton& skeleton) {
@@ -208,6 +210,12 @@ void ApplyAnimation(Skeleton& skeleton, const Motion& animation, float animation
 			joint.transform.translate = CalculateTranslateValue(rootNodeAnimation.translate.keyframes, animationTime);
 			joint.transform.rotate = CalculateQuaternionValue(rootNodeAnimation.rotate.keyframes, animationTime);
 			joint.transform.scale = CalculateScaleValue(rootNodeAnimation.scale.keyframes, animationTime);
+		}
+		// Skeletonがない場合デフォルトの数値を代入
+		else {
+			joint.transform.translate = { 0,0,0 };
+			joint.transform.rotate = { 0,0,0 };
+			joint.transform.scale = { 1,1,1 };
 		}
 	}
 }

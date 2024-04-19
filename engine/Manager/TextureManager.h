@@ -58,8 +58,6 @@ public:
 	D3D12_GPU_DESCRIPTOR_HANDLE GetGPUDescriptorHandle(const Microsoft::WRL::ComPtr<ID3D12DescriptorHeap>& descriptorHeap, uint32_t descriptorSize, uint32_t index);
 	//D3D12_GPU_DESCRIPTOR_HANDLE GetSrvHandleGPU(uint32_t textureIndex);
 	D3D12_GPU_DESCRIPTOR_HANDLE GetSrvHandleGPU(const std::string& filePath);
-	// メタデータの取得
-	//const DirectX::TexMetadata& GetMetaData(const std::string& filePath);
 	// SRVインデックスの取得
 	uint32_t GetSrvIndex(const std::string& filePath);
 	// GPUハンドルの取得

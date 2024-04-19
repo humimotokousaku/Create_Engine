@@ -18,13 +18,23 @@ void Framework::Initialize() {
 	winApp_->Initialize(titleString.c_str(), 1280, 720);
 	// DirectXの初期化
 	directXCommon_ = DirectXCommon::GetInstance();
-	directXCommon_->DirectXCommon::GetInstance()->Initialize(winApp_->GetHwnd());
+	directXCommon_->Initialize(winApp_->GetHwnd());
+
 	// SRVマネージャの初期化
 	srvManager_ = SrvManager::GetInstance();
 	srvManager_->Initialize();
+	// ImGuiの初期化
+	imGuiManager_ = new ImGuiManager();
+	imGuiManager_->Initialize(winApp_->GetHwnd());
 	// Textureの初期化
 	textureManager_ = TextureManager::GetInstance();
-	textureManager_->TextureManager::GetInstance()->Initialize(srvManager_);
+	textureManager_->Initialize(srvManager_);
+	// モデルマネージャ
+	ModelManager::GetInstance()->Initialize();
+
+	// ブローバル変数の読み込み
+	//GlobalVariables::GetInstance()->LoadFiles();
+	
 	// PSOの初期化
 	pipelineManager_ = PipelineManager::GetInstance();
 	pipelineManager_->Initialize();
@@ -34,13 +44,8 @@ void Framework::Initialize() {
 	// ポストエフェクトのPSO
 	postEffectPSO_ = PostEffectPSO::GetInstance();
 	postEffectPSO_->Initialize();
-	// ImGuiの初期化
-	imGuiManager_ = new ImGuiManager();
-	imGuiManager_->Initialize(winApp_->GetHwnd());
-	// ブローバル変数の読み込み
-	//GlobalVariables::GetInstance()->LoadFiles();
-	// モデルマネージャ
-	ModelManager::GetInstance()->Initialize();
+
+
 
 	// ポストエフェクト
 	postEffectManager_ = new PostEffectManager();

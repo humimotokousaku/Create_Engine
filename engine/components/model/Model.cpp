@@ -12,10 +12,22 @@
 #include <assimp/postprocess.h>
 
 void Model::Initialize(const std::string& directoryPath, const std::string& filename) {
+	// エンジン機能のインスタンスを入れる
+	dxCommon_ = DirectXCommon::GetInstance();
+	texManager_ = TextureManager::GetInstance();
+
 	// モデルの読み込み
 	modelData_ = LoadObjFile(directoryPath, filename);
+	// アニメーションデータを読み込む
 	animation_ = LoadAnimationFile(directoryPath, filename);
+	// スケルトンデータを作成
 	skeleton_ = CreateSkeleton(modelData_.rootNode);
+
+	// モデルファイルと同じ階層にテクスチャがない場合、デフォルトのテクスチャが入るようにする
+	texHandle_ = 1;
+	// テクスチャ読み込み 
+	texManager_->LoadTexture(modelData_.material.textureFilePath);
+	texHandle_ = texManager_->GetSrvIndex(modelData_.material.textureFilePath);
 
 	CreateVertexResource();
 	CreateVertexBufferView();
@@ -24,7 +36,7 @@ void Model::Initialize(const std::string& directoryPath, const std::string& file
 
 	// カメラ
 	// 1つ分のサイズを用意する
-	cameraPosResource_ = CreateBufferResource(DirectXCommon::GetInstance()->GetDevice(), sizeof(Vector3)).Get();
+	cameraPosResource_ = CreateBufferResource(dxCommon_->GetDevice(), sizeof(Vector3)).Get();
 	// 書き込むためのアドレスを取得
 	cameraPosResource_->Map(0, nullptr, reinterpret_cast<void**>(&cameraPosData_));
 
@@ -49,13 +61,16 @@ void Model::Draw(const ViewProjection& viewProjection, uint32_t textureHandle) {
 	animationTime_ += 1.0f / 60.0f;
 	animationTime_ = std::fmod(animationTime_, animation_.duration);
 	//NodeAnimation& rootNodeAnimation = animation_.nodeAnimations[modelData_.rootNode.name];
-	//Vector3 translate = CalculateValue(rootNodeAnimation.translate.keyframes, animationTime_);
-	//Quaternion rotate = CalculateValue(rootNodeAnimation.rotate.keyframes, animationTime_);
+	//Vector3 translate = CalculateTranslateValue(rootNodeAnimation.translate.keyframes, animationTime_);
+	//Quaternion rotate = CalculateQuaternionValue(rootNodeAnimation.rotate.keyframes, animationTime_);
 	//Vector3 scale = { 1,1,1 };
-	//animationLocalMatrix_ = MakeAffineMatrix(scale, rotate, translate);
+	//modelData_.rootNode.localMatrix = MakeAffineMatrix(scale, rotate, translate);
 
+	// スケルトンに対してアニメーションを適用
 	ApplyAnimation(skeleton_, animation_, animationTime_);
+	// 骨の更新処理
 	SkeletonUpdate(skeleton_);
+
 #pragma endregion
 
 	// 形状を設定
@@ -64,20 +79,57 @@ void Model::Draw(const ViewProjection& viewProjection, uint32_t textureHandle) {
 	/// CBVの設定
 
 	// viewProjection
-	DirectXCommon::GetInstance()->GetCommandList()->SetGraphicsRootConstantBufferView(4, viewProjection.constBuff_->GetGPUVirtualAddress());
-	DirectXCommon::GetInstance()->GetCommandList()->SetGraphicsRootConstantBufferView(5, cameraPosResource_.Get()->GetGPUVirtualAddress());
+	dxCommon_->GetCommandList()->SetGraphicsRootConstantBufferView(4, viewProjection.constBuff_->GetGPUVirtualAddress());
+	dxCommon_->GetCommandList()->SetGraphicsRootConstantBufferView(5, cameraPosResource_.Get()->GetGPUVirtualAddress());
 
 	/// DescriptorTableの設定
 	// texture
-	//DirectXCommon::GetInstance()->GetCommandList()->SetGraphicsRootDescriptorTable(2, TextureManager::GetInstance()->GetSrvHandleGPU(textureNum));
 	SrvManager::GetInstance()->SetGraphicsRootDesctiptorTable(2, textureHandle);
 	// material
-	DirectXCommon::GetInstance()->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialResource_.Get()->GetGPUVirtualAddress());
+	dxCommon_->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialResource_.Get()->GetGPUVirtualAddress());
 	// ライティング
-	DirectXCommon::GetInstance()->GetCommandList()->SetGraphicsRootConstantBufferView(3, DirectionalLight::GetInstance()->GetDirectionalLightResource()->GetGPUVirtualAddress());
-	DirectXCommon::GetInstance()->GetCommandList()->SetGraphicsRootConstantBufferView(6, PointLight::GetInstance()->GetPointLightResource()->GetGPUVirtualAddress());
-	DirectXCommon::GetInstance()->GetCommandList()->SetGraphicsRootConstantBufferView(7, SpotLight::GetInstance()->GetSpotLightResource()->GetGPUVirtualAddress());
-	DirectXCommon::GetInstance()->GetCommandList()->DrawInstanced(UINT(modelData_.vertices.size()), 1, 0, 0);
+	dxCommon_->GetCommandList()->SetGraphicsRootConstantBufferView(3, DirectionalLight::GetInstance()->GetDirectionalLightResource()->GetGPUVirtualAddress());
+	dxCommon_->GetCommandList()->SetGraphicsRootConstantBufferView(6, PointLight::GetInstance()->GetPointLightResource()->GetGPUVirtualAddress());
+	dxCommon_->GetCommandList()->SetGraphicsRootConstantBufferView(7, SpotLight::GetInstance()->GetSpotLightResource()->GetGPUVirtualAddress());
+	dxCommon_->GetCommandList()->DrawInstanced(UINT(modelData_.vertices.size()), 1, 0, 0);
+}
+
+void Model::Draw(const ViewProjection& viewProjection) {
+#pragma region アニメーション
+	animationTime_ += 1.0f / 60.0f;
+	animationTime_ = std::fmod(animationTime_, animation_.duration);
+	//NodeAnimation& rootNodeAnimation = animation_.nodeAnimations[modelData_.rootNode.name];
+	//Vector3 translate = CalculateTranslateValue(rootNodeAnimation.translate.keyframes, animationTime_);
+	//Quaternion rotate = CalculateQuaternionValue(rootNodeAnimation.rotate.keyframes, animationTime_);
+	//Vector3 scale = { 1,1,1 };
+	//modelData_.rootNode.localMatrix = MakeAffineMatrix(scale, rotate, translate);
+
+	// スケルトンに対してアニメーションを適用
+	ApplyAnimation(skeleton_, animation_, animationTime_);
+	// 骨の更新処理
+	SkeletonUpdate(skeleton_);
+
+#pragma endregion
+
+	// 形状を設定
+	DirectXCommon::GetInstance()->GetCommandList()->IASetVertexBuffers(0, 1, &vertexBufferView_); // VBVを設定
+
+	/// CBVの設定
+
+	// viewProjection
+	dxCommon_->GetCommandList()->SetGraphicsRootConstantBufferView(4, viewProjection.constBuff_->GetGPUVirtualAddress());
+	dxCommon_->GetCommandList()->SetGraphicsRootConstantBufferView(5, cameraPosResource_.Get()->GetGPUVirtualAddress());
+
+	/// DescriptorTableの設定
+	// texture
+	SrvManager::GetInstance()->SetGraphicsRootDesctiptorTable(2, texHandle_);
+	// material
+	dxCommon_->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialResource_.Get()->GetGPUVirtualAddress());
+	// ライティング
+	dxCommon_->GetCommandList()->SetGraphicsRootConstantBufferView(3, DirectionalLight::GetInstance()->GetDirectionalLightResource()->GetGPUVirtualAddress());
+	dxCommon_->GetCommandList()->SetGraphicsRootConstantBufferView(6, PointLight::GetInstance()->GetPointLightResource()->GetGPUVirtualAddress());
+	dxCommon_->GetCommandList()->SetGraphicsRootConstantBufferView(7, SpotLight::GetInstance()->GetSpotLightResource()->GetGPUVirtualAddress());
+	dxCommon_->GetCommandList()->DrawInstanced(UINT(modelData_.vertices.size()), 1, 0, 0);
 }
 
 void Model::AdjustParameter() {
@@ -139,7 +191,7 @@ void Model::CreateMaterialResource() {
 ModelData Model::LoadObjFile(const std::string& directoryPath, const std::string& filename) {
 	ModelData modelData;
 	Assimp::Importer importer;
-	std::string filePath = directoryPath + "/" + filename;
+	std::string filePath = "Engine/resources/" + directoryPath + "/" + filename;
 	const aiScene* scene = importer.ReadFile(filePath.c_str(), aiProcess_FlipWindingOrder | aiProcess_FlipUVs);
 	assert(scene->HasMeshes());
 
@@ -175,7 +227,7 @@ ModelData Model::LoadObjFile(const std::string& directoryPath, const std::string
 		if (material->GetTextureCount(aiTextureType_DIFFUSE) != 0) {
 			aiString textureFilePath;
 			material->GetTexture(aiTextureType_DIFFUSE, 0, &textureFilePath);
-			modelData.material.textureFilePath = directoryPath + "/" + textureFilePath.C_Str();
+			modelData.material.textureFilePath = "Engine/resources/" + directoryPath + "/" + textureFilePath.C_Str();
 		}
 	}
 

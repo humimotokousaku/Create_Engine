@@ -20,6 +20,8 @@ TextureManager* TextureManager::GetInstance() {
 void TextureManager::Initialize(SrvManager* srvManager) {
 	srvManager_ = srvManager;
 	textureDatas_.reserve(DirectXCommon::kMaxSRVCount);
+	// モデルを読み込んだ際にテクスチャがないなら白い画像を送る
+	LoadTexture("Engine/resources/DefaultTexture/white.png");
 }
 
 void TextureManager::Finalize() {
@@ -37,7 +39,11 @@ void TextureManager::ComUninit() {
 void TextureManager::LoadTexture(const std::string& filePath) {
 	// 読み込み済みテクスチャを検索
 	if (textureDatas_.contains(filePath)) {
-
+		return;
+	}
+	// 何も読み込んでいなかったら終了
+	if (filePath.size() == 0) {
+		return;
 	}
 	// テクスチャ枚数の上限チェック
 	assert(srvManager_->GetIsLimit());
@@ -84,6 +90,10 @@ D3D12_GPU_DESCRIPTOR_HANDLE TextureManager::GetSrvHandleGPU(const std::string& f
 
 uint32_t TextureManager::GetSrvIndex(const std::string& filePath) {
 	TextureData& textureData = textureDatas_[filePath];
+	// 何も書いてないならデフォルトテクスチャの番号を返す
+	if (filePath.size() == 0) {
+		textureData = textureDatas_["Engine/resources/DefaultTexture/white.png"];
+	}
 	return textureData.srvIndex;
 }
 

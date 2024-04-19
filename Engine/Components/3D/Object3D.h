@@ -29,6 +29,10 @@ public:
 	/// <param name="viewProjection">カメラ</param>
 	/// <param name="textureNum">テクスチャ番号</param>
 	void Draw(uint32_t textureNum);
+	/// <summary>
+	/// 描画処理(モデルで使われているテクスチャを使用する)
+	/// </summary>
+	void Draw();
 
 	///
 	/// Default Method
@@ -42,7 +46,7 @@ public:
 	void SetCamera(Camera* camera) { camera_ = camera; }
 
 	// モデルのセット
-	void SetModel(const std::string& filePath) { model_ = ModelManager::GetInstance()->FindModel(filePath); }
+	void SetModel(const std::string& directoryPath, const std::string& filePath) { model_ = ModelManager::GetInstance()->FindModel(directoryPath, filePath); }
 
 public:
 	WorldTransform worldTransform;

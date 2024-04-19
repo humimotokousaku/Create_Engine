@@ -5,18 +5,18 @@
 #include "SpotLight.h"
 #include <cassert>
 
-Sprite::Sprite(std::string textureFilePath) {
-	Initialize(textureFilePath);
+Sprite::Sprite(const std::string& directoryPath, std::string textureFilePath) {
+	Initialize(directoryPath, textureFilePath);
 }
 
-Sprite* Sprite::Create(std::string textureFilePath)
+Sprite* Sprite::Create(const std::string& directoryPath, std::string textureFilePath)
 {
-	Sprite* sprite = new Sprite(textureFilePath);
+	Sprite* sprite = new Sprite(directoryPath, textureFilePath);
 
 	return sprite;
 }
 
-void Sprite::Initialize(std::string textureFilePath) {
+void Sprite::Initialize(const std::string& directoryPath, std::string textureFilePath) {
 	textureManager_ = TextureManager::GetInstance();
 	psoManager_ = PipelineManager::GetInstance();
 
@@ -56,7 +56,7 @@ void Sprite::Initialize(std::string textureFilePath) {
 	/// 頂点座標の設定
 	textureIndex_ = TextureManager::GetInstance()->GetTextureIndexByFilePath(textureFilePath);
 	if (textureIndex_ != UINT32_MAX) {
-		AdjustTextureSize(textureFilePath);
+		AdjustTextureSize(directoryPath, textureFilePath);
 		size_ = textureSize_;
 	}
 
@@ -167,7 +167,7 @@ void Sprite::Release() {
 
 }
 
-void Sprite::AdjustTextureSize(std::string textureFilePath) {
+void Sprite::AdjustTextureSize(const std::string& directoryPath, std::string textureFilePath) {
 	Microsoft::WRL::ComPtr<ID3D12Resource> textureBuffer = textureManager_->GetTextureResource(textureFilePath).Get();
 	assert(textureBuffer);
 
