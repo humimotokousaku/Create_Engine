@@ -54,7 +54,7 @@ void Sprite::Initialize(const std::string& directoryPath, std::string textureFil
 	};
 
 	/// 頂点座標の設定
-	textureIndex_ = TextureManager::GetInstance()->GetTextureIndexByFilePath(textureFilePath);
+	textureIndex_ = TextureManager::GetInstance()->GetTextureIndexByFilePath(directoryPath, textureFilePath);
 	if (textureIndex_ != UINT32_MAX) {
 		AdjustTextureSize(directoryPath, textureFilePath);
 		size_ = textureSize_;
@@ -78,7 +78,7 @@ void Sprite::Initialize(const std::string& directoryPath, std::string textureFil
 	indexData_[4] = 3;
 	indexData_[5] = 2;
 
-	ID3D12Resource* textureBuffer = textureManager_->GetTextureResource(textureFilePath).Get();
+	ID3D12Resource* textureBuffer = textureManager_->GetTextureResource(directoryPath, textureFilePath).Get();
 	// 指定番号の画像が読み込み済みなら
 	if (textureBuffer) {
 		//// テクスチャ情報取得
@@ -168,7 +168,7 @@ void Sprite::Release() {
 }
 
 void Sprite::AdjustTextureSize(const std::string& directoryPath, std::string textureFilePath) {
-	Microsoft::WRL::ComPtr<ID3D12Resource> textureBuffer = textureManager_->GetTextureResource(textureFilePath).Get();
+	Microsoft::WRL::ComPtr<ID3D12Resource> textureBuffer = textureManager_->GetTextureResource(directoryPath, textureFilePath).Get();
 	assert(textureBuffer);
 
 	D3D12_RESOURCE_DESC resDesc = textureBuffer->GetDesc();

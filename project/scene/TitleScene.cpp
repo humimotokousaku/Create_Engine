@@ -14,13 +14,13 @@ void TitleScene::Initialize() {
 	camera_->SetTranslate(Vector3{ 0,5,-20 });
 
 	// テクスチャの読み込み
-	TextureManager::GetInstance()->LoadTexture("Engine/resources/uvChecker.png");
-	TextureManager::GetInstance()->LoadTexture("Engine/resources/monsterBall.png");
-	TextureManager::GetInstance()->LoadTexture("Engine/resources/circle.png");
+	TextureManager::GetInstance()->LoadTexture("","uvChecker.png");
+	TextureManager::GetInstance()->LoadTexture("","monsterBall.png");
+	TextureManager::GetInstance()->LoadTexture("","circle.png");
 	// srvの番号取得
-	uvcheckerTexture_ = TextureManager::GetInstance()->GetSrvIndex("Engine/resources/uvChecker.png");
-	monsterBallTexture_ = TextureManager::GetInstance()->GetSrvIndex("Engine/resources/monsterBall.png");
-	particleTexture_ = TextureManager::GetInstance()->GetSrvIndex("Engine/resources/circle.png");
+	uvcheckerTexture_ = TextureManager::GetInstance()->GetSrvIndex(  "","uvChecker.png");
+	monsterBallTexture_ = TextureManager::GetInstance()->GetSrvIndex("","monsterBall.png");
+	particleTexture_ = TextureManager::GetInstance()->GetSrvIndex(   "","circle.png");
 	// objモデル
 	//ModelManager::GetInstance()->LoadModel("plane.obj");
 	ModelManager::GetInstance()->LoadModel("Human","walk.gltf");
