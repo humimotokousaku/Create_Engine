@@ -122,16 +122,14 @@ private:// パブリックな変数
 
 	// テクスチャバッファ
 	RenderingTextureData texBuff_;
-	// 高輝度テクスチャ
-	//RenderingTextureData highIntensityTexBuff_;
 
-	// 深度バッファ
-	Microsoft::WRL::ComPtr<ID3D12Resource> depthBuff_;
 	// RTV用のデスクリプタヒープ
 	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> descHeapRTV_;
 	D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle_;
+	// 深度バッファ
+	Microsoft::WRL::ComPtr<ID3D12Resource> depthBuff_;
 	// DSV用のデスクリプタヒープ
-	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> descHeapDSV_;
+	//Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> descHeapDSV_;
 
 	// ブラーの情報
 	BlurData* blurData_;

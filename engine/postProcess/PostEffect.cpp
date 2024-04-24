@@ -15,74 +15,29 @@ void PostEffect::Initialize() {
 	directXCommon_ = DirectXCommon::GetInstance();
 	postEffectPSO_ = PostEffectPSO::GetInstance();
 	srvManager_ = SrvManager::GetInstance();
-
 	HRESULT result;
-
-	// テクスチャバッファの作成
-	//texBuff_.resource = CreateRenderTextureResource()//CreateTextureBufferResource();
-
-#pragma region SRV
-	// ノーマル
-	//CreateSRV(texBuff_);
-
-#pragma endregion
-
 #pragma region RTV
-	// RTV用のデスクリプタヒープ
-	descHeapRTV_ = CreateRTVDescriptorHeap(directXCommon_->GetDevice(), D3D12_DESCRIPTOR_HEAP_TYPE_RTV, 1, false).Get();
-
 	// RTVの作成
 	CreateRTV();
 
 #pragma endregion
 
-#pragma region DSV
-	// 深度バッファリソース設定
-	CD3DX12_RESOURCE_DESC depthResDesc =
-		CD3DX12_RESOURCE_DESC::Tex2D(
-			DXGI_FORMAT_D24_UNORM_S8_UINT,
-			WinApp::kClientWidth_,
-			WinApp::kClientHeight_,
-			1, 0,
-			1, 0,
-			D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL
-		);
-	// 深度バッファの生成
-	D3D12_HEAP_PROPERTIES depthHeapProperties = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
-	D3D12_CLEAR_VALUE clearValue = CD3DX12_CLEAR_VALUE(DXGI_FORMAT_D24_UNORM_S8_UINT, 1.0F, 0);
-	result = directXCommon_->GetDevice()->CreateCommittedResource(
-		&depthHeapProperties,
-		D3D12_HEAP_FLAG_NONE,
-		&depthResDesc,
-		D3D12_RESOURCE_STATE_DEPTH_WRITE,
-		&clearValue,
-		IID_PPV_ARGS(&depthBuff_)
-	);
-	assert(SUCCEEDED(result));
+#pragma region SRV
+	// srv作成
+	CreateSRV();
+#pragma endregion
 
-	// DSV用のデスクリプタヒープ設定
-	D3D12_DESCRIPTOR_HEAP_DESC DSVHeapDesc{};
-	DSVHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_DSV;
-	DSVHeapDesc.NumDescriptors = 1;
-	// DSV用デスクリプタヒープを作成
-	result = directXCommon_->GetDevice()->CreateDescriptorHeap(&DSVHeapDesc, IID_PPV_ARGS(&descHeapDSV_));
-	assert(SUCCEEDED(result));
-	// デスクリプタヒープにDSV作成
-	const uint32_t descriptorSizeRTV = directXCommon_->GetDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+	depthBuff_ = directXCommon_->CreateDepthStencilTextureResource(WinApp::kClientWidth_, WinApp::kClientHeight_).Get();
+
 	D3D12_DEPTH_STENCIL_VIEW_DESC dsvDesc{};
 	dsvDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
 	dsvDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
-	directXCommon_->GetDevice()->CreateDepthStencilView(
-		depthBuff_.Get(),
-		&dsvDesc,
-		GetCPUDescriptorHandle(descHeapDSV_.Get(), descriptorSizeRTV, 0)
-	);
 
-	//descHeapDSV_ = directXCommon_->GetDsvDescriptorHeap();
-#pragma endregion
+	const uint32_t descriptorSizeDSV = directXCommon_->GetDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
+	directXCommon_->GetDevice()->CreateDepthStencilView(depthBuff_.Get(), &dsvDesc, GetCPUDescriptorHandle(directXCommon_->GetDsvDescriptorHeap().Get(), descriptorSizeDSV, 0));
 
 	// スプライトの初期化
-	//SpriteInitialize(texBuff_);
+	SpriteInitialize(texBuff_);
 	worldTransform_.Initialize();
 	worldTransform_.transform.translate = { 640,360,1 };
 
@@ -92,19 +47,19 @@ void PostEffect::Initialize() {
 	camera_->GetViewProjection().constMap->projection = MakeOrthographicMatrix(0.0f, 0.0f, float(WinApp::kClientWidth_), float(WinApp::kClientHeight_), 0.0f, 100.0f);
 
 #pragma region シェーダ内のパラメータを調整するための準備
-	// ブラーの情報を書き込む
-	blurResource_ = CreateBufferResource(DirectXCommon::GetInstance()->GetDevice(), sizeof(BlurData)).Get();
-	// データを書き込む
-	blurData_ = nullptr;
-	// 書き込むためのアドレスを取得
-	blurResource_.Get()->Map(0, nullptr, reinterpret_cast<void**>(&blurData_));
+	//// ブラーの情報を書き込む
+	//blurResource_ = CreateBufferResource(DirectXCommon::GetInstance()->GetDevice(), sizeof(BlurData)).Get();
+	//// データを書き込む
+	//blurData_ = nullptr;
+	//// 書き込むためのアドレスを取得
+	//blurResource_.Get()->Map(0, nullptr, reinterpret_cast<void**>(&blurData_));
 
-	// 高輝度テクスチャの情報を書き込む
-	highIntensityResource_ = CreateBufferResource(DirectXCommon::GetInstance()->GetDevice(), sizeof(HighIntensityData)).Get();
-	// データを書き込む
-	highIntensityData_ = nullptr;
-	// 書き込むためのアドレスを取得
-	highIntensityResource_.Get()->Map(0, nullptr, reinterpret_cast<void**>(&highIntensityData_));
+	//// 高輝度テクスチャの情報を書き込む
+	//highIntensityResource_ = CreateBufferResource(DirectXCommon::GetInstance()->GetDevice(), sizeof(HighIntensityData)).Get();
+	//// データを書き込む
+	//highIntensityData_ = nullptr;
+	//// 書き込むためのアドレスを取得
+	//highIntensityResource_.Get()->Map(0, nullptr, reinterpret_cast<void**>(&highIntensityData_));
 #pragma endregion
 }
 
@@ -137,14 +92,17 @@ void PostEffect::Draw(uint32_t psoNum) {
 
 void PostEffect::PreDrawScene() {
 	// バリアを張る
-	SetBarrier(texBuff_.resource, D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
+	//SetBarrier(texBuff_.resource, D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
 
 	// 深度ステンシルビューのデスクリプタヒープのハンドルを取得
 	const uint32_t descriptorSizeRTV = directXCommon_->GetDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
-
-	D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle = GetCPUDescriptorHandle(descHeapDSV_.Get(), descriptorSizeRTV, 0);
+	D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle = GetCPUDescriptorHandle(directXCommon_->GetDsvDescriptorHeap(), descriptorSizeRTV, 0);
 	// レンダーターゲットをセット
-	directXCommon_->GetCommandList()->OMSetRenderTargets(1, &rtvHandle_, false, nullptr);
+	directXCommon_->GetCommandList()->OMSetRenderTargets(1, &rtvHandle_, false, &dsvHandle);
+	// 全画面クリア
+	directXCommon_->GetCommandList()->ClearRenderTargetView(rtvHandle_, clearColor_, 0, nullptr);
+	// 深度バッファのクリア
+	directXCommon_->GetCommandList()->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
 
 	// ビューポートの設定
 	D3D12_VIEWPORT viewport = CD3DX12_VIEWPORT(0.0f, 0.0f, WinApp::kClientWidth_, WinApp::kClientHeight_);
@@ -152,11 +110,6 @@ void PostEffect::PreDrawScene() {
 	// シザー矩形の設定
 	D3D12_RECT scissor = CD3DX12_RECT(0, 0, WinApp::kClientWidth_, WinApp::kClientHeight_);
 	directXCommon_->GetCommandList()->RSSetScissorRects(1, &scissor);
-
-	// 全画面クリア
-	directXCommon_->GetCommandList()->ClearRenderTargetView(rtvHandle_, clearColor_, 0, nullptr);
-	// 深度バッファのクリア
-	//directXCommon_->GetCommandList()->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
 }
 
 void PostEffect::PostDrawScene() {
@@ -380,19 +333,17 @@ void PostEffect::CreateRTV() {
 	rtvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;
 	rtvDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D;
 
+	// RenderTextureの作成
+	texBuff_.resource = CreateRenderTextureResource(directXCommon_->GetDevice(), WinApp::kClientWidth_, WinApp::kClientHeight_, DXGI_FORMAT_R8G8B8A8_UNORM_SRGB, kRenderTargetClearValue);
+	
 	// デスクリプタヒープにRTV作成
 	const uint32_t descriptorSizeRTV = directXCommon_->GetDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
-	
-	/*auto renderTextureResource*/texBuff_.resource = CreateRenderTextureResource(directXCommon_->GetDevice(), WinApp::kClientWidth_, WinApp::kClientHeight_, DXGI_FORMAT_R8G8B8A8_UNORM_SRGB, kRenderTargetClearValue);
-	rtvHandle_ = GetCPUDescriptorHandle(descHeapRTV_.Get(), descriptorSizeRTV, 0);
+	rtvHandle_ = GetCPUDescriptorHandle(descHeapRTV_, descriptorSizeRTV, 0);
 	directXCommon_->GetDevice()->CreateRenderTargetView(
 		texBuff_.resource.Get(),
 		&rtvDesc,
 		rtvHandle_
 	);
-
-	// srv作成
-	CreateSRV();
 }
 
 void PostEffect::SetBarrier(Microsoft::WRL::ComPtr<ID3D12Resource> texBuff, D3D12_RESOURCE_STATES beforeState, D3D12_RESOURCE_STATES afterState) {

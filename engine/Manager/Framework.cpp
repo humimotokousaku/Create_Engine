@@ -18,13 +18,15 @@ void Framework::Initialize() {
 	winApp_->Initialize(titleString.c_str(), 1280, 720);
 	// DirectXの初期化
 	directXCommon_ = DirectXCommon::GetInstance();
-	directXCommon_->DirectXCommon::GetInstance()->Initialize(winApp_->GetHwnd());
+	directXCommon_->Initialize(winApp_->GetHwnd());
+
 	// SRVマネージャの初期化
 	srvManager_ = SrvManager::GetInstance();
 	srvManager_->Initialize();
 	// Textureの初期化
 	textureManager_ = TextureManager::GetInstance();
-	textureManager_->TextureManager::GetInstance()->Initialize(srvManager_);
+	textureManager_->Initialize(srvManager_);
+
 	// PSOの初期化
 	pipelineManager_ = PipelineManager::GetInstance();
 	pipelineManager_->Initialize();
@@ -35,9 +37,6 @@ void Framework::Initialize() {
 	postEffectPSO_ = PostEffectPSO::GetInstance();
 	postEffectPSO_->Initialize();
 
-	postEffect_ = new PostEffect();
-	postEffect_->Initialize();
-
 	// ImGuiの初期化
 	imGuiManager_ = new ImGuiManager();
 	imGuiManager_->Initialize(winApp_->GetHwnd());
@@ -46,9 +45,12 @@ void Framework::Initialize() {
 	// モデルマネージャ
 	ModelManager::GetInstance()->Initialize();
 
+	postEffect_ = new PostEffect();
+	postEffect_->Initialize();
+
 	// ポストエフェクト
-	postEffectManager_ = new PostEffectManager();
-	postEffectManager_->Initialize();
+	//postEffectManager_ = new PostEffectManager();
+	//postEffectManager_->Initialize();
 
 	/// Components
 	// 入力(キーボードとゲームパッド)
@@ -66,9 +68,9 @@ void Framework::Initialize() {
 	// Audioの初期化
 	audio_ = Audio::GetInstance();
 	// 音声読み込み
-	soundData1_ = audio_->SoundLoadWave("Engine/resources/fanfare.wav");
+	//soundData1_ = audio_->SoundLoadWave("Engine/resources/fanfare.wav");
 
-	audio_->Initialize(soundData1_);
+	//audio_->Initialize(soundData1_);
 }
 
 void Framework::Update() {
@@ -100,7 +102,7 @@ void Framework::Run() {
 			// 描画処理
 			Draw();
 			//postEffectManager_->PostDraw();
-			//postEffect_->PostDrawScene();
+			postEffect_->PostDrawScene();
 
 			// 2パス目を描画
 			// DirectXCommon
