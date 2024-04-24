@@ -23,9 +23,10 @@ void TitleScene::Initialize() {
 	particleTexture_ = TextureManager::GetInstance()->GetSrvIndex(   "","circle.png");
 	// objモデル
 	//ModelManager::GetInstance()->LoadModel("plane.obj");
+	ModelManager::GetInstance()->LoadModel("", "testPlane.gltf");
 	ModelManager::GetInstance()->LoadModel("Human","walk.gltf");
 	ModelManager::GetInstance()->LoadModel("AnimatedCube", "AnimatedCube.gltf");
-	ModelManager::GetInstance()->LoadModel("", "testPlane.gltf");
+
 	ModelManager::GetInstance()->LoadModel("", "axis.obj");
 	ModelManager::GetInstance()->LoadModel("", "block.obj");
 
@@ -85,9 +86,10 @@ void TitleScene::Update() {
 }
 
 void TitleScene::Draw() {
-	axis_->Draw();
 	plane_->Draw();
-	human_->Draw();
+	axis_->Draw();
+	
+	//human_->Draw();
 }
 
 void TitleScene::Finalize() {

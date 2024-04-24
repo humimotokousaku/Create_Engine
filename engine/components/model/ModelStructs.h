@@ -119,6 +119,7 @@ void ApplyAnimation(Skeleton& skeleton, const Motion& animation, float animation
 
 struct ModelData {
 	std::vector<VertexData> vertices;
+	std::vector<uint32_t> indices;
 	MaterialData material;
 	Node rootNode;
 };

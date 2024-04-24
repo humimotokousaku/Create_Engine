@@ -43,7 +43,7 @@ private:
 
 	void CreateMaterialResource();
 
-	ModelData LoadObjFile(const std::string& directoryPath, const std::string& filename);
+	ModelData LoadModelFile(const std::string& directoryPath, const std::string& filename);
 
 public:
 	// Material
@@ -70,6 +70,10 @@ private:
 	Microsoft::WRL::ComPtr<ID3D12Resource> vertexResource_;
 	D3D12_VERTEX_BUFFER_VIEW vertexBufferView_;
 	VertexData* vertexData_;
+	// インデックス
+	Microsoft::WRL::ComPtr<ID3D12Resource> indexResource_;
+	D3D12_INDEX_BUFFER_VIEW indexBufferView_;
+	uint32_t* mappedIndex_;
 
 	// モデルデータ
 	ModelData modelData_;

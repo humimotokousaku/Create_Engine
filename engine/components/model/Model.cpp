@@ -17,7 +17,7 @@ void Model::Initialize(const std::string& directoryPath, const std::string& file
 	texManager_ = TextureManager::GetInstance();
 
 	// モデルの読み込み
-	modelData_ = LoadObjFile(directoryPath, filename);
+	modelData_ = LoadModelFile(directoryPath, filename);
 	// アニメーションデータを読み込む
 	animation_ = LoadAnimationFile(directoryPath, filename);
 	// スケルトンデータを作成
@@ -29,9 +29,24 @@ void Model::Initialize(const std::string& directoryPath, const std::string& file
 	texManager_->LoadTexture(modelData_.material.textureFilePath);
 	texHandle_ = texManager_->GetSrvIndex(modelData_.material.textureFilePath);
 
+	// 頂点データのリソース作成
 	CreateVertexResource();
 	CreateVertexBufferView();
+	// 書き込むためのアドレスを取得
+	vertexResource_->Map(0, nullptr, reinterpret_cast<void**>(&vertexData_));
+	std::memcpy(vertexData_, modelData_.vertices.data(), sizeof(VertexData) * modelData_.vertices.size());
 
+	// インデックスのリソース作成
+	indexResource_ = CreateBufferResource(dxCommon_->GetDevice(), sizeof(uint32_t) * modelData_.indices.size());
+	indexBufferView_.BufferLocation = indexResource_.Get()->GetGPUVirtualAddress();
+	indexBufferView_.SizeInBytes = sizeof(uint32_t) * (uint32_t)modelData_.indices.size();
+	indexBufferView_.Format = DXGI_FORMAT_R32_UINT;
+	// 書き込むためのアドレスを取得
+	indexResource_->Map(0, nullptr, reinterpret_cast<void**>(&mappedIndex_));
+	std::memcpy(mappedIndex_, modelData_.indices.data(), sizeof(uint32_t) * (uint32_t)modelData_.indices.size());
+	*mappedIndex_ = modelData_.indices.size();
+
+	// マテリアルデータのリソース作成
 	CreateMaterialResource();
 
 	// カメラ
@@ -39,10 +54,6 @@ void Model::Initialize(const std::string& directoryPath, const std::string& file
 	cameraPosResource_ = CreateBufferResource(dxCommon_->GetDevice(), sizeof(Vector3)).Get();
 	// 書き込むためのアドレスを取得
 	cameraPosResource_->Map(0, nullptr, reinterpret_cast<void**>(&cameraPosData_));
-
-	// 書き込むためのアドレスを取得
-	vertexResource_->Map(0, nullptr, reinterpret_cast<void**>(&vertexData_));
-	std::memcpy(vertexData_, modelData_.vertices.data(), sizeof(VertexData) * modelData_.vertices.size());
 
 	// Lightingするか
 	materialData_->enableLighting = false;
@@ -74,7 +85,8 @@ void Model::Draw(const ViewProjection& viewProjection, uint32_t textureHandle) {
 #pragma endregion
 
 	// 形状を設定
-	DirectXCommon::GetInstance()->GetCommandList()->IASetVertexBuffers(0, 1, &vertexBufferView_); // VBVを設定
+	dxCommon_->GetCommandList()->IASetVertexBuffers(0, 1, &vertexBufferView_); // VBVを設定
+	dxCommon_->GetCommandList()->IASetIndexBuffer(&indexBufferView_);
 
 	/// CBVの設定
 
@@ -91,7 +103,7 @@ void Model::Draw(const ViewProjection& viewProjection, uint32_t textureHandle) {
 	dxCommon_->GetCommandList()->SetGraphicsRootConstantBufferView(3, DirectionalLight::GetInstance()->GetDirectionalLightResource()->GetGPUVirtualAddress());
 	dxCommon_->GetCommandList()->SetGraphicsRootConstantBufferView(6, PointLight::GetInstance()->GetPointLightResource()->GetGPUVirtualAddress());
 	dxCommon_->GetCommandList()->SetGraphicsRootConstantBufferView(7, SpotLight::GetInstance()->GetSpotLightResource()->GetGPUVirtualAddress());
-	dxCommon_->GetCommandList()->DrawInstanced(UINT(modelData_.vertices.size()), 1, 0, 0);
+	dxCommon_->GetCommandList()->DrawIndexedInstanced(UINT(modelData_.indices.size()), 1, 0, 0, 0);
 }
 
 void Model::Draw(const ViewProjection& viewProjection) {
@@ -113,6 +125,7 @@ void Model::Draw(const ViewProjection& viewProjection) {
 
 	// 形状を設定
 	DirectXCommon::GetInstance()->GetCommandList()->IASetVertexBuffers(0, 1, &vertexBufferView_); // VBVを設定
+	dxCommon_->GetCommandList()->IASetIndexBuffer(&indexBufferView_);
 
 	/// CBVの設定
 
@@ -129,7 +142,7 @@ void Model::Draw(const ViewProjection& viewProjection) {
 	dxCommon_->GetCommandList()->SetGraphicsRootConstantBufferView(3, DirectionalLight::GetInstance()->GetDirectionalLightResource()->GetGPUVirtualAddress());
 	dxCommon_->GetCommandList()->SetGraphicsRootConstantBufferView(6, PointLight::GetInstance()->GetPointLightResource()->GetGPUVirtualAddress());
 	dxCommon_->GetCommandList()->SetGraphicsRootConstantBufferView(7, SpotLight::GetInstance()->GetSpotLightResource()->GetGPUVirtualAddress());
-	dxCommon_->GetCommandList()->DrawInstanced(UINT(modelData_.vertices.size()), 1, 0, 0);
+	dxCommon_->GetCommandList()->DrawIndexedInstanced(UINT(modelData_.indices.size()), 1, 0, 0, 0);
 }
 
 void Model::AdjustParameter() {
@@ -188,7 +201,7 @@ void Model::CreateMaterialResource() {
 	materialResource_->Map(0, nullptr, reinterpret_cast<void**>(&materialData_));
 }
 
-ModelData Model::LoadObjFile(const std::string& directoryPath, const std::string& filename) {
+ModelData Model::LoadModelFile(const std::string& directoryPath, const std::string& filename) {
 	ModelData modelData;
 	Assimp::Importer importer;
 	std::string filePath = "Engine/resources/" + directoryPath + "/" + filename;
@@ -199,28 +212,36 @@ ModelData Model::LoadObjFile(const std::string& directoryPath, const std::string
 		aiMesh* mesh = scene->mMeshes[meshIndex];
 		assert(mesh->HasNormals());
 		assert(mesh->HasTextureCoords(0));
-		// 面の解析
+		// 頂点数分のメモリを確保
+		//modelData.vertices.resize(mesh->mNumVertices);
+		for (uint32_t vertexIndex = 0; vertexIndex < mesh->mNumVertices; ++vertexIndex) {
+			aiVector3D& position = mesh->mVertices[vertexIndex];
+			aiVector3D& normal = mesh->mNormals[vertexIndex];
+			aiVector3D& texcoord = mesh->mTextureCoords[0][vertexIndex];
+			VertexData vertex;
+			vertex.position = { -position.x, position.y, position.z, 1.0f };
+			vertex.normal = { -normal.x, normal.y, normal.z };
+			vertex.texcoord = { texcoord.x, texcoord.y };
+
+			//modelData.vertices[vertexIndex].position = { -position.x, position.y, position.z, 1.0f };
+			//modelData.vertices[vertexIndex].normal = { -normal.x, normal.y, normal.z };
+			//modelData.vertices[vertexIndex].texcoord = { texcoord.x, texcoord.y };
+
+
+			modelData.vertices.push_back(vertex);
+		}
+		// 面からindexの解析
 		for (uint32_t faceIndex = 0; faceIndex < mesh->mNumFaces; ++faceIndex) {
 			aiFace& face = mesh->mFaces[faceIndex];
 			assert(face.mNumIndices == 3);
 			// 頂点を解析
 			for (uint32_t element = 0; element < face.mNumIndices; ++element) {
 				uint32_t vertexIndex = face.mIndices[element];
-				aiVector3D& position = mesh->mVertices[vertexIndex];
-				aiVector3D& normal = mesh->mNormals[vertexIndex];
-				aiVector3D& texcoord = mesh->mTextureCoords[0][vertexIndex];
-				VertexData vertex;
-				vertex.position = { position.x, position.y, position.z, 1.0f };
-				vertex.normal = { normal.x, normal.y, normal.z };
-				vertex.texcoord = { texcoord.x, texcoord.y };
-				// 右手座標から左手座標に変換されるので対処する
-				vertex.position.x *= -1.0f;
-				vertex.normal.x *= -1.0f;
-				modelData.vertices.push_back(vertex);
+				modelData.indices.push_back(vertexIndex);
 			}
 		}
 	}
-
+	modelData;
 	// マテリアルの解析
 	for (uint32_t materialIndex = 0; materialIndex < scene->mNumMaterials; ++materialIndex) {
 		aiMaterial* material = scene->mMaterials[materialIndex];
