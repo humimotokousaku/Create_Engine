@@ -11,6 +11,12 @@
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
 
+Model::~Model() {
+	for (int i = 0; i < skeletonLine_.size(); i++) {
+		delete skeletonLine_[i];
+	}
+}
+
 void Model::Initialize(const std::string& directoryPath, const std::string& filename) {
 	// エンジン機能のインスタンスを入れる
 	dxCommon_ = DirectXCommon::GetInstance();
@@ -39,12 +45,11 @@ void Model::Initialize(const std::string& directoryPath, const std::string& file
 	// インデックスのリソース作成
 	indexResource_ = CreateBufferResource(dxCommon_->GetDevice(), sizeof(uint32_t) * modelData_.indices.size());
 	indexBufferView_.BufferLocation = indexResource_.Get()->GetGPUVirtualAddress();
-	indexBufferView_.SizeInBytes = sizeof(uint32_t) * (uint32_t)modelData_.indices.size();
+	indexBufferView_.SizeInBytes = sizeof(uint32_t) * modelData_.indices.size();
 	indexBufferView_.Format = DXGI_FORMAT_R32_UINT;
 	// 書き込むためのアドレスを取得
 	indexResource_->Map(0, nullptr, reinterpret_cast<void**>(&mappedIndex_));
-	std::memcpy(mappedIndex_, modelData_.indices.data(), sizeof(uint32_t) * (uint32_t)modelData_.indices.size());
-	*mappedIndex_ = modelData_.indices.size();
+	std::memcpy(mappedIndex_, modelData_.indices.data(), sizeof(uint32_t) * modelData_.indices.size());
 
 	// マテリアルデータのリソース作成
 	CreateMaterialResource();
@@ -65,6 +70,11 @@ void Model::Initialize(const std::string& directoryPath, const std::string& file
 		{0.0f,0.0f,0.0f},
 		{0.0f,0.0f,0.0f}
 	};
+
+	//// スケルトンの初期化
+	//SkeletonLineInit();
+	//// jointの初期化
+	//JointSphereInit();
 }
 
 void Model::Draw(const ViewProjection& viewProjection, uint32_t textureHandle) {
@@ -104,6 +114,33 @@ void Model::Draw(const ViewProjection& viewProjection, uint32_t textureHandle) {
 	dxCommon_->GetCommandList()->SetGraphicsRootConstantBufferView(6, PointLight::GetInstance()->GetPointLightResource()->GetGPUVirtualAddress());
 	dxCommon_->GetCommandList()->SetGraphicsRootConstantBufferView(7, SpotLight::GetInstance()->GetSpotLightResource()->GetGPUVirtualAddress());
 	dxCommon_->GetCommandList()->DrawIndexedInstanced(UINT(modelData_.indices.size()), 1, 0, 0, 0);
+
+	//// jointの座標を代入
+	//for (int i = 0; i < skeletonLine_.size(); i++) {
+	//	// 親子関係のあるノードを検索
+	//	if (skeleton_.joints[i].children.size() != 0) {
+	//		for (int j = 0; j < skeleton_.joints[i].children.size(); j++) {
+	//			int index = skeleton_.joints[i].children[j];
+	//			skeletonLine_[index]->startPos_ = skeleton_.joints[index].transform.translate;
+	//		}
+	//	}
+	//	//skeletonLine_[i]->startPos_ = skeleton_.joints[i].transform.translate;
+	//	//skeletonLine_[i]->endPos_ = skeleton_.joints[i + 1].transform.translate;
+	//}
+	//// スケルトンの描画
+	//for (int i = 0; i < skeletonLine_.size(); i++) {
+	//	skeletonLine_[i]->Draw(viewProjection);
+	//}
+	//// jointの描画
+
+	//for (int i = 0; i < jointSphere_.size(); i++) {
+	//	jointSphere_[i]->worldTransform.transform.translate = skeleton_.joints[i].transform.translate;
+	//	//jointSphere_[i]->worldTransform.transform.rotate = skeleton_.joints[i].transform.rotate;
+	//	jointSphere_[i]->worldTransform.transform.scale = Multiply(0.1f, skeleton_.joints[i].transform.scale);
+	//}
+	//for (int i = 0; i < jointSphere_.size(); i++) {
+	//	jointSphere_[i]->Draw(textureHandle, viewProjection);
+	//}
 }
 
 void Model::Draw(const ViewProjection& viewProjection) {
@@ -124,7 +161,7 @@ void Model::Draw(const ViewProjection& viewProjection) {
 #pragma endregion
 
 	// 形状を設定
-	DirectXCommon::GetInstance()->GetCommandList()->IASetVertexBuffers(0, 1, &vertexBufferView_); // VBVを設定
+	dxCommon_->GetCommandList()->IASetVertexBuffers(0, 1, &vertexBufferView_); // VBVを設定
 	dxCommon_->GetCommandList()->IASetIndexBuffer(&indexBufferView_);
 
 	/// CBVの設定
@@ -143,12 +180,82 @@ void Model::Draw(const ViewProjection& viewProjection) {
 	dxCommon_->GetCommandList()->SetGraphicsRootConstantBufferView(6, PointLight::GetInstance()->GetPointLightResource()->GetGPUVirtualAddress());
 	dxCommon_->GetCommandList()->SetGraphicsRootConstantBufferView(7, SpotLight::GetInstance()->GetSpotLightResource()->GetGPUVirtualAddress());
 	dxCommon_->GetCommandList()->DrawIndexedInstanced(UINT(modelData_.indices.size()), 1, 0, 0, 0);
+
+	//// jointの座標を代入
+	//for (int i = 0; i < skeletonLine_.size(); i++) {
+	//	// 親子関係のあるノードを検索
+	//	if (skeleton_.joints[i].children.size() != 0) {
+	//		for (int j = 0; j < skeleton_.joints[i].children.size(); j++) {
+	//			int index = skeleton_.joints[i].children[j];
+	//			skeletonLine_[index]->startPos_ = skeleton_.joints[index].transform.translate;
+	//		}
+	//	}
+	//	//skeletonLine_[i]->startPos_ = skeleton_.joints[i].transform.translate;
+	//	//skeletonLine_[i]->endPos_ = skeleton_.joints[i + 1].transform.translate;
+	//}
+	//// スケルトンの描画
+	//for (int i = 0; i < skeletonLine_.size(); i++) {
+
+	//	skeletonLine_[i]->Draw(viewProjection);
+	//}
+	//// jointの描画
+	//for (int i = 0; i < jointSphere_.size(); i++) {
+	//	jointSphere_[i]->worldTransform.transform.translate = skeleton_.joints[i].transform.translate;
+	//	//jointSphere_[i]->worldTransform.transform.rotate = skeleton_.joints[i].transform.rotate;
+	//	jointSphere_[i]->worldTransform.transform.scale = Multiply(0.1f, skeleton_.joints[i].transform.scale);
+	//}
+	//for (int i = 0; i < jointSphere_.size(); i++) {
+	//	jointSphere_[i]->Draw(1, viewProjection);
+	//}
 }
 
 void Model::AdjustParameter() {
 	ImGui::Begin("Model");
 	//ImGui::DragFloat3("translation", worldtrans)
 	ImGui::End();
+}
+
+void Model::SkeletonLineInit() {
+	// メモリーを確保
+	skeletonLine_.resize(skeleton_.joints.size());
+
+	// 初期化
+	for (int i = 0; i < skeletonLine_.size(); i++) {
+		skeletonLine_[i] = new Line();
+		skeletonLine_[i]->Initialize();
+	}
+
+	// jointの座標を代入
+	for (int i = 0; i < skeletonLine_.size(); i++) {
+		// 親子関係のあるノードを検索
+		if (skeleton_.joints[i].children.size() != 0) {
+			for (int j = 0; j < skeleton_.joints[i].children.size(); j++) {
+				int index = skeleton_.joints[i].children[j];
+				skeletonLine_[index]->startPos_ = skeleton_.joints[index].transform.translate;
+			}
+		}
+		//skeletonLine_[i]->startPos_ = skeleton_.joints[i].transform.translate;
+		//skeletonLine_[i]->endPos_ = skeleton_.joints[i + 1].transform.translate;
+	}
+
+
+}
+
+void Model::JointSphereInit() {
+	// メモリーを確保
+	jointSphere_.resize(skeleton_.joints.size());
+
+	// 初期化
+	for (int i = 0; i < jointSphere_.size(); i++) {
+		jointSphere_[i] = new Sphere();
+		jointSphere_[i]->Initialize();
+	}
+
+	for (int i = 0; i < jointSphere_.size(); i++) {
+		jointSphere_[i]->worldTransform.transform.translate = skeleton_.joints[i].transform.translate;
+		//jointSphere_[i]->worldTransform.transform.rotate = skeleton_.joints[i].transform.rotate;
+		jointSphere_[i]->worldTransform.transform.scale = Multiply(0.1f,skeleton_.joints[i].transform.scale);
+	}
 }
 
 #pragma region プライベートな関数
@@ -213,22 +320,15 @@ ModelData Model::LoadModelFile(const std::string& directoryPath, const std::stri
 		assert(mesh->HasNormals());
 		assert(mesh->HasTextureCoords(0));
 		// 頂点数分のメモリを確保
-		//modelData.vertices.resize(mesh->mNumVertices);
+		modelData.vertices.resize(mesh->mNumVertices);
 		for (uint32_t vertexIndex = 0; vertexIndex < mesh->mNumVertices; ++vertexIndex) {
 			aiVector3D& position = mesh->mVertices[vertexIndex];
 			aiVector3D& normal = mesh->mNormals[vertexIndex];
 			aiVector3D& texcoord = mesh->mTextureCoords[0][vertexIndex];
-			VertexData vertex;
-			vertex.position = { -position.x, position.y, position.z, 1.0f };
-			vertex.normal = { -normal.x, normal.y, normal.z };
-			vertex.texcoord = { texcoord.x, texcoord.y };
 
-			//modelData.vertices[vertexIndex].position = { -position.x, position.y, position.z, 1.0f };
-			//modelData.vertices[vertexIndex].normal = { -normal.x, normal.y, normal.z };
-			//modelData.vertices[vertexIndex].texcoord = { texcoord.x, texcoord.y };
-
-
-			modelData.vertices.push_back(vertex);
+			modelData.vertices[vertexIndex].position = { -position.x, position.y, position.z, 1.0f };
+			modelData.vertices[vertexIndex].normal = { -normal.x, normal.y, normal.z };
+			modelData.vertices[vertexIndex].texcoord = { texcoord.x, texcoord.y };
 		}
 		// 面からindexの解析
 		for (uint32_t faceIndex = 0; faceIndex < mesh->mNumFaces; ++faceIndex) {
@@ -241,7 +341,7 @@ ModelData Model::LoadModelFile(const std::string& directoryPath, const std::stri
 			}
 		}
 	}
-	modelData;
+
 	// マテリアルの解析
 	for (uint32_t materialIndex = 0; materialIndex < scene->mNumMaterials; ++materialIndex) {
 		aiMaterial* material = scene->mMaterials[materialIndex];

@@ -5,13 +5,15 @@
 #include "ViewProjection.h"
 #include "DirectXCommon.h"
 #include "TextureManager.h"
+#include "Line.h"
+#include "Sphere.h"
 #include <d3d12.h>
 
 class Model
 {
 public:
 	Model() = default;
-	~Model() = default;
+	~Model();
 
 	void Initialize(const std::string& directoryPath, const std::string& filename);
 
@@ -27,7 +29,6 @@ public:
 	/// Getter
 	// モデルデータ
 	ModelData GetModelData() { return modelData_; }
-
 	// アニメーションの行列
 	Matrix4x4 GetAnimationMatrix() { return animationLocalMatrix_; }
 
@@ -35,6 +36,11 @@ public:
 	void SetIsLighting(bool isActive) { materialData_->enableLighting = isActive; }
 
 private:
+	// スケルトンの線描画をするための初期化
+	void SkeletonLineInit();
+	// jointを描画するための初期化
+	void JointSphereInit();
+
 	Microsoft::WRL::ComPtr<ID3D12Resource> CreateBufferResource(const Microsoft::WRL::ComPtr<ID3D12Device>& device, size_t sizeInBytes);
 
 	void CreateVertexResource();
@@ -82,6 +88,10 @@ private:
 	// スケルトン
 	Skeleton skeleton_;
 	float animationTime_ = 0.0f;
+	// スケルトン描画用の線
+	std::vector<Line*> skeletonLine_;
+	// joint描画用の球
+	std::vector<Sphere*> jointSphere_;
 
 	// カメラの座標
 	Microsoft::WRL::ComPtr<ID3D12Resource> cameraPosResource_;

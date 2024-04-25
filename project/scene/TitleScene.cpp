@@ -22,9 +22,10 @@ void TitleScene::Initialize() {
 	monsterBallTexture_ = TextureManager::GetInstance()->GetSrvIndex("","monsterBall.png");
 	particleTexture_ = TextureManager::GetInstance()->GetSrvIndex(   "","circle.png");
 	// objモデル
-	//ModelManager::GetInstance()->LoadModel("plane.obj");
+	ModelManager::GetInstance()->LoadModel("SimpleSkin", "simpleSkin.gltf");
 	ModelManager::GetInstance()->LoadModel("", "testPlane.gltf");
 	ModelManager::GetInstance()->LoadModel("Human","walk.gltf");
+	ModelManager::GetInstance()->LoadModel("Human", "sneakWalk.gltf");
 	ModelManager::GetInstance()->LoadModel("AnimatedCube", "AnimatedCube.gltf");
 
 	ModelManager::GetInstance()->LoadModel("", "axis.obj");
@@ -33,7 +34,7 @@ void TitleScene::Initialize() {
 	// 平面(スケルトンなしのgltf)
 	plane_ = std::make_unique<Object3D>();
 	plane_->Initialize();
-	plane_->SetModel("", "testPlane.gltf");
+	plane_->SetModel("AnimatedCube", "AnimatedCube.gltf");
 	plane_->SetCamera(camera_.get());
 	plane_->worldTransform.transform.translate = { -10,0,0 };
 
@@ -44,11 +45,12 @@ void TitleScene::Initialize() {
 	//human_->SetModel("AnimatedCube/AnimatedCube.gltf");
 	human_->SetCamera(camera_.get());
 	human_->worldTransform.transform.translate = { 0,0,0 };
+	//human_->model_->materialData_->color = { 1,1,1,0.0f };
 
 	// 3D線(obj読み込み)
 	axis_ = std::make_unique<Object3D>();
 	axis_->Initialize();
-	axis_->SetModel("", "axis.obj");
+	axis_->SetModel("Human", "sneakWalk.gltf");
 	axis_->SetCamera(camera_.get());
 	axis_->worldTransform.transform.translate = { 10,0,0 };
 
@@ -74,6 +76,11 @@ void TitleScene::Update() {
 	ImGui::DragFloat3("scale", &axis_->worldTransform.transform.scale.x, 0.01f, -100, 100);
 	ImGui::DragFloat3("rotate", &axis_->worldTransform.transform.rotate.x, 0.01f, -6.28f, 6.28f);
 	ImGui::End();
+	ImGui::Begin("human");
+	ImGui::DragFloat3("translation", &human_->worldTransform.transform.translate.x, 0.01f, -100, 100);
+	ImGui::DragFloat3("scale", &human_->worldTransform.transform.scale.x, 0.01f, -100, 100);
+	ImGui::DragFloat3("rotate", &human_->worldTransform.transform.rotate.x, 0.01f, -6.28f, 6.28f);
+	ImGui::End();
 
 	ImGui::Begin("Current Scene");
 	ImGui::Text("TITLE");
@@ -88,8 +95,7 @@ void TitleScene::Update() {
 void TitleScene::Draw() {
 	plane_->Draw();
 	axis_->Draw();
-	
-	//human_->Draw();
+	human_->Draw();
 }
 
 void TitleScene::Finalize() {
