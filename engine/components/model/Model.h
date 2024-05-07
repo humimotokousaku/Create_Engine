@@ -41,7 +41,7 @@ private:
 	// jointを描画するための初期化
 	void JointSphereInit();
 
-	Microsoft::WRL::ComPtr<ID3D12Resource> CreateBufferResource(const Microsoft::WRL::ComPtr<ID3D12Device>& device, size_t sizeInBytes);
+	//Microsoft::WRL::ComPtr<ID3D12Resource> CreateBufferResource(const Microsoft::WRL::ComPtr<ID3D12Device>& device, size_t sizeInBytes);
 
 	void CreateVertexResource();
 
@@ -87,11 +87,15 @@ private:
 	Motion animation_;
 	// スケルトン
 	Skeleton skeleton_;
-	float animationTime_ = 0.0f;
+	// スキンクラスタ
+	SkinCluster skinCluster_;
+
 	// スケルトン描画用の線
 	std::vector<Line*> skeletonLine_;
 	// joint描画用の球
 	std::vector<Sphere*> jointSphere_;
+
+	float animationTime_ = 0.0f;
 
 	// カメラの座標
 	Microsoft::WRL::ComPtr<ID3D12Resource> cameraPosResource_;

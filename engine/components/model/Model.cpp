@@ -28,6 +28,8 @@ void Model::Initialize(const std::string& directoryPath, const std::string& file
 	animation_ = LoadAnimationFile(directoryPath, filename);
 	// スケルトンデータを作成
 	skeleton_ = CreateSkeleton(modelData_.rootNode);
+	// スキンクラスタを作成
+	skinCluster_ = CreateSkinCluster(skeleton_, modelData_);
 
 	// モデルファイルと同じ階層にテクスチャがない場合、デフォルトのテクスチャが入るようにする
 	texHandle_ = 1;
@@ -91,6 +93,8 @@ void Model::Draw(const ViewProjection& viewProjection, uint32_t textureHandle) {
 	ApplyAnimation(skeleton_, animation_, animationTime_);
 	// 骨の更新処理
 	SkeletonUpdate(skeleton_);
+	// スキンクラスタの更新
+	SkinClusterUpdate(skinCluster_, skeleton_);
 
 #pragma endregion
 
@@ -260,32 +264,32 @@ void Model::JointSphereInit() {
 
 #pragma region プライベートな関数
 
-Microsoft::WRL::ComPtr<ID3D12Resource> Model::CreateBufferResource(const Microsoft::WRL::ComPtr<ID3D12Device>& device, size_t sizeInBytes) {
-	HRESULT hr;
-	// 頂点リソース用のヒープの設定
-	D3D12_HEAP_PROPERTIES uploadHeapProperties{};
-	uploadHeapProperties.Type = D3D12_HEAP_TYPE_UPLOAD; // UploadHeapを使う
-	// 頂点リソースの設定
-	D3D12_RESOURCE_DESC vertexResourceDesc{};
-	// バッファソース。テクスチャの場合はまた別の設定をする
-	vertexResourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
-	vertexResourceDesc.Width = sizeInBytes; // リソースのサイズ。今回はVector4を3頂点分
-	// バッファの場合はこれからは1にする決まり
-	vertexResourceDesc.Height = 1;
-	vertexResourceDesc.DepthOrArraySize = 1;
-	vertexResourceDesc.MipLevels = 1;
-	vertexResourceDesc.SampleDesc.Count = 1;
-	// バッファの場合はこれにする決まり
-	vertexResourceDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
-
-	Microsoft::WRL::ComPtr<ID3D12Resource> vertexResource;
-	// 実際に頂点リソースを作る
-	hr = device.Get()->CreateCommittedResource(&uploadHeapProperties, D3D12_HEAP_FLAG_NONE,
-		&vertexResourceDesc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(&vertexResource));
-	assert(SUCCEEDED(hr));
-
-	return vertexResource;
-}
+//Microsoft::WRL::ComPtr<ID3D12Resource> Model::CreateBufferResource(const Microsoft::WRL::ComPtr<ID3D12Device>& device, size_t sizeInBytes) {
+//	HRESULT hr;
+//	// 頂点リソース用のヒープの設定
+//	D3D12_HEAP_PROPERTIES uploadHeapProperties{};
+//	uploadHeapProperties.Type = D3D12_HEAP_TYPE_UPLOAD; // UploadHeapを使う
+//	// 頂点リソースの設定
+//	D3D12_RESOURCE_DESC vertexResourceDesc{};
+//	// バッファソース。テクスチャの場合はまた別の設定をする
+//	vertexResourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
+//	vertexResourceDesc.Width = sizeInBytes; // リソースのサイズ。今回はVector4を3頂点分
+//	// バッファの場合はこれからは1にする決まり
+//	vertexResourceDesc.Height = 1;
+//	vertexResourceDesc.DepthOrArraySize = 1;
+//	vertexResourceDesc.MipLevels = 1;
+//	vertexResourceDesc.SampleDesc.Count = 1;
+//	// バッファの場合はこれにする決まり
+//	vertexResourceDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+//
+//	Microsoft::WRL::ComPtr<ID3D12Resource> vertexResource;
+//	// 実際に頂点リソースを作る
+//	hr = device.Get()->CreateCommittedResource(&uploadHeapProperties, D3D12_HEAP_FLAG_NONE,
+//		&vertexResourceDesc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(&vertexResource));
+//	assert(SUCCEEDED(hr));
+//
+//	return vertexResource;
+//}
 
 void Model::CreateVertexResource() {
 	vertexResource_ = CreateBufferResource(DirectXCommon::GetInstance()->GetDevice(), sizeof(VertexData) * modelData_.vertices.size()).Get();
@@ -338,6 +342,27 @@ ModelData Model::LoadModelFile(const std::string& directoryPath, const std::stri
 			for (uint32_t element = 0; element < face.mNumIndices; ++element) {
 				uint32_t vertexIndex = face.mIndices[element];
 				modelData.indices.push_back(vertexIndex);
+			}
+		}
+		// skinClusterの解析
+		for (uint32_t boneIndex = 0; boneIndex < mesh->mNumBones; ++boneIndex) {
+			// jointごとの格納領域を作成
+			aiBone* bone = mesh->mBones[boneIndex];
+			std::string jointName = bone->mName.C_Str();
+			JointWeightData& jointWeightData = modelData.skinClusterData[jointName];
+
+			// InverseBindPoseMatrixの抽出
+			aiMatrix4x4 bindPoseMatrixAssimp = bone->mOffsetMatrix.Inverse();
+			aiVector3D scale;
+			aiVector3D translate;
+			aiQuaternion rotate;
+			bindPoseMatrixAssimp.Decompose(scale, rotate, translate);
+			Matrix4x4 bindPoseMatrix = MakeAffineMatrix({ scale.x, scale.y, scale.z }, { rotate.x, -rotate.y, -rotate.z, rotate.w }, { -translate.x,translate.y, translate.z });
+			jointWeightData.inverseBindPoseMatrix = Inverse(bindPoseMatrix);
+
+			// weight情報を取り出す
+			for (uint32_t weightIndex = 0; weightIndex < bone->mNumWeights;++weightIndex) {
+				jointWeightData.vertexWeights.push_back({ bone->mWeights[weightIndex].mWeight, bone->mWeights[weightIndex].mVertexId });
 			}
 		}
 	}

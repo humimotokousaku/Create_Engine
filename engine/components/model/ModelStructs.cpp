@@ -1,4 +1,5 @@
 #include "ModelStructs.h"
+#include "SrvManager.h"
 #include <cassert>
 #include <assimp/Importer.hpp>
 
@@ -218,4 +219,97 @@ void ApplyAnimation(Skeleton& skeleton, const Motion& animation, float animation
 			joint.transform.scale = { 1,1,1 };
 		}
 	}
+}
+
+SkinCluster CreateSkinCluster(const Skeleton& skeleton, const ModelData& modelData) {
+	SkinCluster skinCluster;
+#pragma region palette用のResourceを確保
+	skinCluster.paletteResource = CreateBufferResource(DirectXCommon::GetInstance()->GetDevice(), sizeof(WellForGPU) * skeleton.joints.size());
+	WellForGPU* mappedPalette = nullptr;
+	skinCluster.paletteResource->Map(0, nullptr, reinterpret_cast<void**>(&mappedPalette));
+	skinCluster.mappedPalette = { mappedPalette, skeleton.joints.size() };
+#pragma  endregion
+
+#pragma region pallet用のsrv作成
+	int srvIndex = SrvManager::GetInstance()->Allocate();
+	skinCluster.paletteSrvHandle.first = SrvManager::GetInstance()->GetCPUDescriptorHandle(srvIndex);
+	skinCluster.paletteSrvHandle.second = SrvManager::GetInstance()->GetGPUDescriptorHandle(srvIndex);
+	SrvManager::GetInstance()->CreateSRVforStructuredBuffer(srvIndex, skinCluster.paletteResource.Get(), skeleton.joints.size(), sizeof(WellForGPU));
+#pragma endregion
+
+#pragma region Influence用のResourceを確保
+	skinCluster.influenceResource = CreateBufferResource(DirectXCommon::GetInstance()->GetDevice(), sizeof(VertexInfluence));
+	VertexInfluence* mappedInfluence = nullptr;
+	skinCluster.influenceResource->Map(0, nullptr, reinterpret_cast<void**>(&mappedInfluence));
+	std::memset(mappedInfluence, 0, sizeof(VertexInfluence) * modelData.vertices.size());
+	skinCluster.mappedInfluence = { mappedInfluence, modelData.vertices.size() };
+
+	// VBVを作成
+	skinCluster.influenceBufferView.BufferLocation = skinCluster.influenceResource->GetGPUVirtualAddress();
+	skinCluster.influenceBufferView.SizeInBytes = UINT(sizeof(VertexInfluence) * modelData.vertices.size());
+	skinCluster.influenceBufferView.StrideInBytes = sizeof(VertexInfluence);
+
+	// InverseBindPoseMatrixのサイズを確保
+	skinCluster.inverseBindPoseMatrices.resize(skeleton.joints.size());
+	std::generate(skinCluster.inverseBindPoseMatrices.begin(), skinCluster.inverseBindPoseMatrices.end(), MakeIdentity4x4);
+#pragma endregion
+
+#pragma region ModelのSkinClusterを解析
+	for (const auto& jointWeight : modelData.skinClusterData) {
+		auto it = skeleton.jointMap.find(jointWeight.first);
+		// jointの名前を検索
+		if (it == skeleton.jointMap.end()) {
+			continue;
+		}
+
+		skinCluster.inverseBindPoseMatrices[(*it).second] = jointWeight.second.inverseBindPoseMatrix;
+		for (const auto& vertexWeight : jointWeight.second.vertexWeights) {
+			auto& currentInfluence = skinCluster.mappedInfluence[vertexWeight.vertexIndex];
+			for (uint32_t index = 0; index < kNumMaxInfluence; ++index) {
+				if (currentInfluence.weights[index] == 0.0f) {
+					currentInfluence.weights[index] = vertexWeight.weight;
+					currentInfluence.jointIndices[index] = (*it).second;
+					break;
+				}
+			}
+		}
+	}
+#pragma endregion
+
+	return skinCluster;
+}
+
+void SkinClusterUpdate(SkinCluster& skinCluster, const Skeleton& skeleton) {
+	for (size_t jointIndex = 0; jointIndex < skeleton.joints.size(); ++jointIndex) {
+		assert(jointIndex < skinCluster.inverseBindPoseMatrices.size());
+		skinCluster.mappedPalette[jointIndex].skeletonSpaceMatrix = Multiply(skinCluster.inverseBindPoseMatrices[jointIndex], skeleton.joints[jointIndex].skeletonSpaceMatrix);
+		skinCluster.mappedPalette[jointIndex].skeletonSpaceInverseTransposeMatrix = Transpose(Inverse(skinCluster.mappedPalette[jointIndex].skeletonSpaceMatrix));
+	}
+}
+
+Microsoft::WRL::ComPtr<ID3D12Resource> CreateBufferResource(const Microsoft::WRL::ComPtr<ID3D12Device>& device, size_t sizeInBytes) {
+	HRESULT hr;
+	// 頂点リソース用のヒープの設定
+	D3D12_HEAP_PROPERTIES uploadHeapProperties{};
+	uploadHeapProperties.Type = D3D12_HEAP_TYPE_UPLOAD; // UploadHeapを使う
+	// 頂点リソースの設定
+	D3D12_RESOURCE_DESC vertexResourceDesc{};
+	// バッファソース。テクスチャの場合はまた別の設定をする
+	vertexResourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
+	vertexResourceDesc.Width = sizeInBytes; // リソースのサイズ。今回はVector4を3頂点分
+	// バッファの場合はこれからは1にする決まり
+	vertexResourceDesc.Height = 1;
+	vertexResourceDesc.DepthOrArraySize = 1;
+	vertexResourceDesc.MipLevels = 1;
+	vertexResourceDesc.SampleDesc.Count = 1;
+	// バッファの場合はこれにする決まり
+	vertexResourceDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+
+	Microsoft::WRL::ComPtr<ID3D12Resource> vertexResource;
+	// 実際に頂点リソースを作る
+	hr = device.Get()->CreateCommittedResource(&uploadHeapProperties, D3D12_HEAP_FLAG_NONE,
+		&vertexResourceDesc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(&vertexResource));
+	assert(SUCCEEDED(hr));
+
+	return vertexResource;
 }
