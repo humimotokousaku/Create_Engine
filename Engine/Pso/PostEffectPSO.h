@@ -10,8 +10,8 @@
 /// </summary>
 enum PostEffectType {
 	NORMAL,
-	HIGHINTENSITY,
-	BLUR,
+	/*HIGHINTENSITY,
+	BLUR,*/
 	COUNT
 };
 
