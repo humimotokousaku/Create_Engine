@@ -45,12 +45,9 @@ void Framework::Initialize() {
 	// モデルマネージャ
 	ModelManager::GetInstance()->Initialize();
 
-	postEffect_ = new PostEffect();
-	postEffect_->Initialize();
-
 	// ポストエフェクト
-	//postEffectManager_ = new PostEffectManager();
-	//postEffectManager_->Initialize();
+	postEffectManager_ = new PostEffectManager();
+	postEffectManager_->Initialize();
 
 	/// Components
 	// 入力(キーボードとゲームパッド)
@@ -97,17 +94,14 @@ void Framework::Run() {
 			Update();
 
 			// 出力結果をテクスチャにする
-			postEffect_->PreDrawScene();
-			//postEffectManager_->PreDraw();
+			postEffectManager_->PreDraw();
 			// 描画処理
 			Draw();
-			//postEffectManager_->PostDraw();
-			postEffect_->PostDrawScene();
-
-			// 2パス目を描画
-			// DirectXCommon
+			postEffectManager_->PostDraw();
+			
 			directXCommon_->PreDraw();
-			//postEffectManager_->Draw();
+			// 2パス目を描画
+			postEffectManager_->Draw();
 			// 描画後の処理
 			EndFrame();
 		}
@@ -123,7 +117,6 @@ void Framework::Finalize() {
 	// ImGui
 	imGuiManager_->Finalize();
 	delete postEffectManager_;
-	delete postEffect_;
 	textureManager_->Finalize();
 	//delete srvManager_;
 	directXCommon_->Finalize();

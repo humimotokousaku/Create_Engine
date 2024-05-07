@@ -19,7 +19,7 @@ public:
 	/// コンストラクタ
 	/// </summary>
 	PostEffect();
-	
+
 	//static PostEffect* GetInstance();
 
 	/// <summary>
@@ -87,29 +87,19 @@ private:// プライベートなメンバ関数
 	Microsoft::WRL::ComPtr<ID3D12Resource> CreateTextureBufferResource();
 
 	// SRVの作成
-	void CreateSRV();
+	RenderingTextureData CreateSRV(RenderingTextureData texData);
 
 	// RTVの作成
-	void CreateRTV();
+	void CreateRTV(RenderingTextureData texData, uint32_t index);
 
 	// バリアを張る
-	void SetBarrier(Microsoft::WRL::ComPtr<ID3D12Resource> texBuff, D3D12_RESOURCE_STATES beforeState, D3D12_RESOURCE_STATES afterState);
+	void SetBarrier(Microsoft::WRL::ComPtr<ID3D12Resource> texBuff, D3D12_RESOURCE_STATES beforeState, D3D12_RESOURCE_STATES afterState, UINT numBarrier);
 
 	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> CreateRTVDescriptorHeap(const Microsoft::WRL::ComPtr<ID3D12Device>& device, D3D12_DESCRIPTOR_HEAP_TYPE heapType, UINT numDescriptors, bool shaderVisible);
-
-
-
-
-	// RenderTextureの生成
-	Microsoft::WRL::ComPtr<ID3D12Resource> CreateRenderTextureResource(Microsoft::WRL::ComPtr<ID3D12Device> device, uint32_t width, uint32_t height, DXGI_FORMAT format, const Vector4& clearColor);
-
 
 public:// 定数
 	// 画面クリアカラー
 	static const float clearColor_[4];
-
-	// 現在は赤色に設定
-	const Vector4 kRenderTargetClearValue = { 1.0f,0.0f,0.0f,1.0f };
 
 public:// プライベートな変数
 	WorldTransform worldTransform_;
@@ -118,18 +108,17 @@ private:// パブリックな変数
 	// 基本機能
 	DirectXCommon* directXCommon_;
 	PostEffectPSO* postEffectPSO_;
-	SrvManager* srvManager_;
 
 	// テクスチャバッファ
 	RenderingTextureData texBuff_;
 
-	// RTV用のデスクリプタヒープ
-	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> descHeapRTV_;
-	D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle_;
 	// 深度バッファ
 	Microsoft::WRL::ComPtr<ID3D12Resource> depthBuff_;
+	// RTV用のデスクリプタヒープ
+	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> descHeapRTV_;
+	D3D12_CPU_DESCRIPTOR_HANDLE rtvHandles_[1];
 	// DSV用のデスクリプタヒープ
-	//Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> descHeapDSV_;
+	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> descHeapDSV_;
 
 	// ブラーの情報
 	BlurData* blurData_;
@@ -175,4 +164,3 @@ private:// パブリックな変数
 	uint32_t textureIndex_;
 #pragma endregion
 };
-
