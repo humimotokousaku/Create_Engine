@@ -185,12 +185,6 @@ void Cube::Initialize() {
 }
 
 void Cube::Draw(uint32_t textureHandle, const WorldTransform& worldTransform, const ViewProjection& viewProjection) {
-	//ImGui::DragFloat4("power", &materialData_->color,)
-	//uvTransformMatrix_ = MakeScaleMatrix(uvTransform_.scale);
-	//uvTransformMatrix_ = Multiply(uvTransformMatrix_, MakeRotateZMatrix(uvTransform_.rotate.z));
-	//uvTransformMatrix_ = Multiply(uvTransformMatrix_, MakeTranslateMatrix(uvTransform_.translate));
-	//materialData_->uvTransform = uvTransformMatrix_;
-
 	// コマンドを積む
 	DirectXCommon::GetInstance()->GetCommandList()->IASetVertexBuffers(0, 1, &vertexBufferView_); // VBVを設定
 	DirectXCommon::GetInstance()->GetCommandList()->SetGraphicsRootConstantBufferView(1, worldTransform.constBuff_->GetGPUVirtualAddress());

@@ -4,6 +4,8 @@
 #include "ImGuiManager.h"
 #include "TextureManager.h"
 
+#include "Object3dPSO.h"
+
 #include <dxcapi.h>
 #pragma comment(lib, "dxguid.lib")
 #pragma comment(lib, "dxcompiler.lib")
@@ -134,11 +136,10 @@ private:
 	// particle用
 	IDxcBlob* particleVertexShaderBlob_;
 	IDxcBlob* particlePixelShaderBlob_;
-	// ポストエフェクト用
-	IDxcBlob* PostEffectVertexShaderBlob_;
-	IDxcBlob* PostEffectPixelShaderBlob_;
-	IDxcBlob* scanLinePixelShaderBlob_;
 
 	D3D12_VIEWPORT viewport_;
 	D3D12_RECT scissorRect_;
+
+
+	Object3dPSO* object3dPSO_;
 };

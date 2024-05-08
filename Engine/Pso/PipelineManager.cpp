@@ -13,6 +13,12 @@ void PipelineManager::Initialize() {
 
 	// DXCの初期化
 	DXCInitialize();
+
+	// 3Dのオブジェクトに使用するPSO
+	object3dPSO_ = Object3dPSO::GetInstance();
+	object3dPSO_->Init(dxcUtils_, dxcCompiler_, includeHandler_);
+	object3dPSO_->CreatePSO();
+
 	// PSOを生成
 	PSO();
 	// ビューポートの生成

@@ -66,22 +66,6 @@ void Triangle::Initialize() {
 }
 
 void Triangle::Draw(uint32_t textureHandle) {
-	//ApplyGlobalVariables();
-	//GlobalVariables* globalVariables = GlobalVariables::GetInstance();
-	//// ボタンを押したらsave
-	//if (globalVariables->GetInstance()->GetIsSave()) {
-	//	globalVariables->SaveFile("Triangle");
-	//}
-
-	//uvTransformMatrix_ = MakeScaleMatrix(uvTransform_.scale);
-	//uvTransformMatrix_ = Multiply(uvTransformMatrix_, MakeRotateZMatrix(uvTransform_.rotate.z));
-	//uvTransformMatrix_ = Multiply(uvTransformMatrix_, MakeTranslateMatrix(uvTransform_.translate));
-	//materialData_->uvTransform = uvTransformMatrix_;
-
-	//wvpData_->World = MakeAffineMatrix(transform_.scale, transform_.rotate, transform_.translate);
-	//wvpData_->World = Multiply(wvpData_->World, *Camera::GetInstance()->GetTransformationMatrixData());
-	//wvpData_->WVP = wvpData_->World;
-
 	// コマンドを積む
 	DirectXCommon::GetInstance()->GetCommandList()->IASetVertexBuffers(0, 1, &vertexBufferView_); // VBVを設定
 	// 形状を設定。PSOに設定しているものとはまた別。同じものを設定すると考えておけば良い

@@ -121,19 +121,17 @@ void Sphere::Draw(uint32_t textureHandle, const WorldTransform& worldTransform, 
 
 	cameraPosData_ = viewProjection.transform.translate;
 
-	// RootSignatureを設定。PSOに設定しているけど別途設定が必要
-	DirectXCommon::GetInstance()->GetCommandList()->SetGraphicsRootSignature(PipelineManager::GetInstance()->GetRootSignature()[1].Get());
-	DirectXCommon::GetInstance()->GetCommandList()->SetPipelineState(PipelineManager::GetInstance()->GetGraphicsPipelineState()[1].Get()); // PSOを設定
-
-	// コマンドを積む
+	/// コマンドを積む
+	// 使用するPSO
+	Object3dPSO::GetInstance()->SetCommand();
+	
 	DirectXCommon::GetInstance()->GetCommandList()->IASetVertexBuffers(0, 1, &vertexBufferView_); // VBVを設定
 
 	DirectXCommon::GetInstance()->GetCommandList()->SetGraphicsRootConstantBufferView(1, worldTransform.constBuff_->GetGPUVirtualAddress());
 	DirectXCommon::GetInstance()->GetCommandList()->SetGraphicsRootConstantBufferView(4, viewProjection.constBuff_->GetGPUVirtualAddress());
 	DirectXCommon::GetInstance()->GetCommandList()->SetGraphicsRootConstantBufferView(5, cameraPosResource_.Get()->GetGPUVirtualAddress());
 
-	// 形状を設定。PSOに設定しているものとはまた別。同じものを設定すると考えておけば良い
-	DirectXCommon::GetInstance()->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
 	// DescriptorTableの設定
 	//DirectXCommon::GetInstance()->GetCommandList()->SetGraphicsRootDescriptorTable(2, useMonsterBall_ ? TextureManager::GetInstance()->GetSrvHandleGPU(2) : TextureManager::GetInstance()->GetSrvHandleGPU(1));
 	SrvManager::GetInstance()->SetGraphicsRootDesctiptorTable(2, textureHandle);

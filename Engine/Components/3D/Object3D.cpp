@@ -23,12 +23,9 @@ void Object3D::Draw(uint32_t textureNum) {
 	worldTransform.TransferMatrix();
 
 	/// コマンドを積む
-	// RootSignatureを設定。PSOに設定しているけど別途設定が必要
-	DirectXCommon::GetInstance()->GetCommandList()->SetGraphicsRootSignature(PipelineManager::GetInstance()->GetRootSignature()[0].Get());
-	DirectXCommon::GetInstance()->GetCommandList()->SetPipelineState(PipelineManager::GetInstance()->GetGraphicsPipelineState()[0].Get()); // PSOを設定
+	// 使用するPSO
+	Object3dPSO::GetInstance()->SetCommand();
 
-	// 形状を設定
-	DirectXCommon::GetInstance()->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	// worldTransform
 	DirectXCommon::GetInstance()->GetCommandList()->SetGraphicsRootConstantBufferView(1, worldTransform.constBuff_->GetGPUVirtualAddress());
 	

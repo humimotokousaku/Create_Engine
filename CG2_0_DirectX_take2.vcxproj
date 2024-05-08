@@ -160,6 +160,8 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" </Command>
   <ItemGroup>
     <ClCompile Include="Engine\Pso\PostEffectPSO.cpp" />
     <ClCompile Include="Engine\postProcess\PostEffectManager.cpp" />
+    <ClCompile Include="Engine\Pso\IPSO.cpp" />
+    <ClCompile Include="Engine\Pso\Object3dPSO.cpp" />
     <ClCompile Include="Project\GameObject\Enemy.cpp" />
     <ClCompile Include="Engine\Components\Animation\Animation.cpp" />
     <ClCompile Include="Engine\Components\3D\Primitive\Plane.cpp" />
@@ -217,6 +219,8 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" </Command>
   <ItemGroup>
     <ClInclude Include="Engine\Pso\PostEffectPSO.h" />
     <ClInclude Include="Engine\postProcess\PostEffectManager.h" />
+    <ClInclude Include="Engine\Pso\IPSO.h" />
+    <ClInclude Include="Engine\Pso\Object3dPSO.h" />
     <ClInclude Include="Project\GameObject\Enemy.h" />
     <ClInclude Include="Engine\Components\Animation\Animation.h" />
     <ClInclude Include="Engine\Components\3D\Primitive\Plane.h" />
