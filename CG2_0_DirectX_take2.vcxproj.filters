@@ -306,17 +306,17 @@
     <ClCompile Include="Project\GameObject\Enemy.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
-    <ClCompile Include="Engine\Base\SrvManager.cpp">
-      <Filter>ソース ファイル</Filter>
+    <ClCompile Include="Engine\postProcess\PostEffectManager.cpp">
+      <Filter>ソース ファイル\Engine\PostProcess</Filter>
     </ClCompile>
     <ClCompile Include="Engine\Pso\PostEffectPSO.cpp">
-      <Filter>ソース ファイル</Filter>
+      <Filter>ソース ファイル\Engine\Pso</Filter>
     </ClCompile>
-    <ClCompile Include="Engine\postProcess\PostEffectManager.cpp">
-      <Filter>ソース ファイル</Filter>
+    <ClCompile Include="Engine\Base\SrvManager.cpp">
+      <Filter>ソース ファイル\Engine\Manager</Filter>
     </ClCompile>
     <ClCompile Include="Engine\math\Quaternion.cpp">
-      <Filter>ソース ファイル</Filter>
+      <Filter>ソース ファイル\Engine\Math</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -488,17 +488,17 @@
     <ClInclude Include="Project\GameObject\Enemy.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
-    <ClInclude Include="Engine\Base\SrvManager.h">
-      <Filter>ヘッダー ファイル</Filter>
+    <ClInclude Include="Engine\postProcess\PostEffectManager.h">
+      <Filter>ヘッダー ファイル\Engine\PostProcess</Filter>
     </ClInclude>
     <ClInclude Include="Engine\Pso\PostEffectPSO.h">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>ヘッダー ファイル\Engine\Pso</Filter>
     </ClInclude>
-    <ClInclude Include="Engine\postProcess\PostEffectManager.h">
-      <Filter>ヘッダー ファイル</Filter>
+    <ClInclude Include="Engine\Base\SrvManager.h">
+      <Filter>ヘッダー ファイル\Engine\Manager</Filter>
     </ClInclude>
     <ClInclude Include="Engine\math\Quaternion.h">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>ヘッダー ファイル\Engine\Math</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -516,7 +516,9 @@
     <None Include="engine\resources\sharder\Line.hlsli">
       <Filter>リソース ファイル</Filter>
     </None>
-    <None Include="Engine\resources\sharder\PostEffectTest.hlsli" />
+    <None Include="Engine\resources\sharder\PostEffectTest.hlsli">
+      <Filter>リソース ファイル</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="engine\resources\sharder\Object3d.PS.hlsl">
@@ -537,11 +539,23 @@
     <FxCompile Include="engine\resources\sharder\LinePS.hlsl">
       <Filter>リソース ファイル</Filter>
     </FxCompile>
-    <FxCompile Include="Engine\resources\sharder\PostEffectTestVS.hlsl" />
-    <FxCompile Include="Engine\resources\sharder\PostEffectTestPS.hlsl" />
-    <FxCompile Include="Engine\resources\sharder\BlurPS.hlsl" />
-    <FxCompile Include="Engine\resources\sharder\HighIntensityPS.hlsl" />
-    <FxCompile Include="Engine\resources\sharder\BloomPS.hlsl" />
-    <FxCompile Include="Engine\resources\sharder\SkinningObject3d.VS.hlsl" />
+    <FxCompile Include="Engine\resources\sharder\SkinningObject3d.VS.hlsl">
+      <Filter>リソース ファイル</Filter>
+    </FxCompile>
+    <FxCompile Include="Engine\resources\sharder\BloomPS.hlsl">
+      <Filter>リソース ファイル</Filter>
+    </FxCompile>
+    <FxCompile Include="Engine\resources\sharder\BlurPS.hlsl">
+      <Filter>リソース ファイル</Filter>
+    </FxCompile>
+    <FxCompile Include="Engine\resources\sharder\HighIntensityPS.hlsl">
+      <Filter>リソース ファイル</Filter>
+    </FxCompile>
+    <FxCompile Include="Engine\resources\sharder\PostEffectTestPS.hlsl">
+      <Filter>リソース ファイル</Filter>
+    </FxCompile>
+    <FxCompile Include="Engine\resources\sharder\PostEffectTestVS.hlsl">
+      <Filter>リソース ファイル</Filter>
+    </FxCompile>
   </ItemGroup>
 </Project>

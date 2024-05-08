@@ -73,10 +73,8 @@ void Model::Initialize(const std::string& directoryPath, const std::string& file
 		{0.0f,0.0f,0.0f}
 	};
 
-	//// スケルトンの初期化
-	//SkeletonLineInit();
-	//// jointの初期化
-	//JointSphereInit();
+	vbvs_[0] = vertexBufferView_;
+	vbvs_[1] = skinCluster_.influenceBufferView;
 }
 
 void Model::Draw(const ViewProjection& viewProjection, uint32_t textureHandle) {
@@ -99,7 +97,7 @@ void Model::Draw(const ViewProjection& viewProjection, uint32_t textureHandle) {
 #pragma endregion
 
 	// 形状を設定
-	dxCommon_->GetCommandList()->IASetVertexBuffers(0, 1, &vertexBufferView_); // VBVを設定
+	dxCommon_->GetCommandList()->IASetVertexBuffers(0, 2, vbvs_); // VBVを設定
 	dxCommon_->GetCommandList()->IASetIndexBuffer(&indexBufferView_);
 
 	/// CBVの設定
@@ -165,7 +163,7 @@ void Model::Draw(const ViewProjection& viewProjection) {
 #pragma endregion
 
 	// 形状を設定
-	dxCommon_->GetCommandList()->IASetVertexBuffers(0, 1, &vertexBufferView_); // VBVを設定
+	dxCommon_->GetCommandList()->IASetVertexBuffers(0, 2, vbvs_); // VBVを設定
 	dxCommon_->GetCommandList()->IASetIndexBuffer(&indexBufferView_);
 
 	/// CBVの設定

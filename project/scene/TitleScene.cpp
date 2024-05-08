@@ -22,9 +22,10 @@ void TitleScene::Initialize() {
 	monsterBallTexture_ = TextureManager::GetInstance()->GetSrvIndex("","monsterBall.png");
 	particleTexture_ = TextureManager::GetInstance()->GetSrvIndex(   "","circle.png");
 	// objモデル
+	ModelManager::GetInstance()->LoadModel("Human","walk.gltf");
 	ModelManager::GetInstance()->LoadModel("SimpleSkin", "simpleSkin.gltf");
 	ModelManager::GetInstance()->LoadModel("", "testPlane.gltf");
-	ModelManager::GetInstance()->LoadModel("Human","walk.gltf");
+	
 	ModelManager::GetInstance()->LoadModel("Human", "sneakWalk.gltf");
 	ModelManager::GetInstance()->LoadModel("AnimatedCube", "AnimatedCube.gltf");
 

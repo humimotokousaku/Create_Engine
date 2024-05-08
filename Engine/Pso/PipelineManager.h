@@ -115,7 +115,7 @@ private:
 
 	static const int kMaxPSO = 7;
 	Microsoft::WRL::ComPtr<ID3D12RootSignature> rootSignature_[kMaxPSO];
-	D3D12_INPUT_ELEMENT_DESC inputElementDescs_[kMaxPSO][3];
+	D3D12_INPUT_ELEMENT_DESC inputElementDescs_[kMaxPSO][5];
 	D3D12_INPUT_LAYOUT_DESC inputLayoutDesc_[kMaxPSO];
 	D3D12_ROOT_SIGNATURE_DESC descriptionRootSignature_[kMaxPSO];
 	ID3DBlob* signatureBlob_[kMaxPSO];
@@ -124,7 +124,7 @@ private:
 	D3D12_GRAPHICS_PIPELINE_STATE_DESC graphicsPipelineStateDescs_[kMaxPSO];
 	D3D12_BLEND_DESC blendDesc_[kMaxPSO];
 	Microsoft::WRL::ComPtr<ID3D12PipelineState> graphicsPipelineState_[kMaxPSO];
-	D3D12_ROOT_PARAMETER rootParameters_[kMaxPSO][8];
+	D3D12_ROOT_PARAMETER rootParameters_[kMaxPSO][9];
 	D3D12_DESCRIPTOR_RANGE descriptorRange_[kMaxPSO][1];
 	D3D12_STATIC_SAMPLER_DESC staticSamplers_[kMaxPSO][1];
 

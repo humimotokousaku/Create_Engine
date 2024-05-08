@@ -75,6 +75,7 @@ private:
 	// 頂点データ
 	Microsoft::WRL::ComPtr<ID3D12Resource> vertexResource_;
 	D3D12_VERTEX_BUFFER_VIEW vertexBufferView_;
+	D3D12_VERTEX_BUFFER_VIEW vbvs_[2];
 	VertexData* vertexData_;
 	// インデックス
 	Microsoft::WRL::ComPtr<ID3D12Resource> indexResource_;

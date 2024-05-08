@@ -149,33 +149,19 @@ void PipelineManager::CreateRootParameter() {
 	CreateDescriptorRange();
 
 	for (int i = 0; i < kMaxPSO; i++) {
+#pragma region 共通設定
 		// material
 		rootParameters_[i][0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
 		rootParameters_[i][0].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
 		rootParameters_[i][0].Descriptor.ShaderRegister = 0;
-
-		// パーティクル以外に適用
-		if (i != 6) {
-			// worldTransform
-			rootParameters_[i][1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
-			rootParameters_[i][1].ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;
-			rootParameters_[i][1].Descriptor.ShaderRegister = 0;
-
-			// texture
-			rootParameters_[i][2].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
-			rootParameters_[i][2].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
-			rootParameters_[i][2].DescriptorTable.pDescriptorRanges = descriptorRange_[i];
-			rootParameters_[i][2].DescriptorTable.NumDescriptorRanges = _countof(descriptorRange_[i]);
-
-			// viewProjection
-			rootParameters_[i][4].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
-			rootParameters_[i][4].ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;
-			rootParameters_[i][4].Descriptor.ShaderRegister = 1;
-		}
 		// 平行光源
 		rootParameters_[i][3].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
 		rootParameters_[i][3].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
 		rootParameters_[i][3].Descriptor.ShaderRegister = 1;
+		// カメラ位置
+		rootParameters_[i][5].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
+		rootParameters_[i][5].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+		rootParameters_[i][5].Descriptor.ShaderRegister = 2;
 		// 点光源
 		rootParameters_[i][6].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
 		rootParameters_[i][6].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
@@ -184,12 +170,30 @@ void PipelineManager::CreateRootParameter() {
 		rootParameters_[i][7].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
 		rootParameters_[i][7].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
 		rootParameters_[i][7].Descriptor.ShaderRegister = 4;
-		// カメラ位置
-		rootParameters_[i][5].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
-		rootParameters_[i][5].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
-		rootParameters_[i][5].Descriptor.ShaderRegister = 2;
+#pragma endregion
+		// パーティクル以外に適用
+		if (i != 6) {
+			// worldTransform
+			rootParameters_[i][1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
+			rootParameters_[i][1].ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;
+			rootParameters_[i][1].Descriptor.ShaderRegister = 0;
+			// texture
+			rootParameters_[i][2].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+			rootParameters_[i][2].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+			rootParameters_[i][2].DescriptorTable.pDescriptorRanges = descriptorRange_[i];
+			rootParameters_[i][2].DescriptorTable.NumDescriptorRanges = _countof(descriptorRange_[i]);
+			// viewProjection
+			rootParameters_[i][4].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
+			rootParameters_[i][4].ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;
+			rootParameters_[i][4].Descriptor.ShaderRegister = 1;
+			// アニメーションデータ
+			rootParameters_[i][8].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+			rootParameters_[i][8].ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;
+			rootParameters_[i][8].Descriptor.ShaderRegister = 0;
+			rootParameters_[i][8].DescriptorTable.pDescriptorRanges = descriptorRange_[i];
+			rootParameters_[i][8].DescriptorTable.NumDescriptorRanges = _countof(descriptorRange_[i]);
+		}
 	}
-
 
 	// particle用
 
@@ -258,9 +262,22 @@ void PipelineManager::SettingInputLayout() {
 		inputElementDescs_[i][2].Format = DXGI_FORMAT_R32G32B32_FLOAT;
 		inputElementDescs_[i][2].AlignedByteOffset = D3D12_APPEND_ALIGNED_ELEMENT;
 
+		inputElementDescs_[i][3].SemanticName = "WEIGHT";
+		inputElementDescs_[i][3].SemanticIndex = 0;
+		inputElementDescs_[i][3].Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
+		inputElementDescs_[i][3].InputSlot = 1;
+		inputElementDescs_[i][3].AlignedByteOffset = D3D12_APPEND_ALIGNED_ELEMENT;
+
+		inputElementDescs_[i][4].SemanticName = "INDEX";
+		inputElementDescs_[i][4].SemanticIndex = 0;
+		inputElementDescs_[i][4].Format = DXGI_FORMAT_R32G32B32A32_SINT;
+		inputElementDescs_[i][4].InputSlot = 1;
+		inputElementDescs_[i][4].AlignedByteOffset = D3D12_APPEND_ALIGNED_ELEMENT;
+
 		inputLayoutDesc_[i].pInputElementDescs = inputElementDescs_[i];
 		inputLayoutDesc_[i].NumElements = _countof(inputElementDescs_[i]);
 	}
+
 	inputElementDescs_[6][0].SemanticName = "POSITION";
 	inputElementDescs_[6][0].SemanticIndex = 0;
 	inputElementDescs_[6][0].Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
@@ -275,17 +292,6 @@ void PipelineManager::SettingInputLayout() {
 	inputElementDescs_[6][2].AlignedByteOffset = D3D12_APPEND_ALIGNED_ELEMENT;
 	inputLayoutDesc_[6].pInputElementDescs = inputElementDescs_[6];
 	inputLayoutDesc_[6].NumElements = _countof(inputElementDescs_[6]);
-
-	//inputElementDescs_[7][0].SemanticName = "POSITION";
-	//inputElementDescs_[7][0].SemanticIndex = 0;
-	//inputElementDescs_[7][0].Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
-	//inputElementDescs_[7][0].AlignedByteOffset = D3D12_APPEND_ALIGNED_ELEMENT;
-	//inputElementDescs_[7][1].SemanticName = "TEXCOORD";
-	//inputElementDescs_[7][1].SemanticIndex = 0;
-	//inputElementDescs_[7][1].Format = DXGI_FORMAT_R32G32_FLOAT;
-	//inputElementDescs_[7][1].AlignedByteOffset = D3D12_APPEND_ALIGNED_ELEMENT;
-	//inputLayoutDesc_[7].pInputElementDescs = inputElementDescs_[7];
-	//inputLayoutDesc_[7].NumElements = _countof(inputElementDescs_[7]);
 }
 
 void PipelineManager::SettingBlendState() {
@@ -365,7 +371,7 @@ void PipelineManager::PixelSharder() {
 
 void PipelineManager::VertexSharder() {
 	// Shaderをコンパイルする
-	vertexShaderBlob_ = CompileShader(L"engine/resources/sharder/Object3d.VS.hlsl",
+	vertexShaderBlob_ = CompileShader(L"engine/resources/sharder/SkinningObject3d.VS.hlsl",
 		L"vs_6_0", dxcUtils_, dxcCompiler_, includeHandler_);
 	assert(vertexShaderBlob_ != nullptr);
 
@@ -412,23 +418,6 @@ void PipelineManager::CreatePSO() {
 			graphicsPipelineStateDescs_[i].DepthStencilState = depthStencilDesc;
 			graphicsPipelineStateDescs_[i].DSVFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
 		}
-		// ポストエフェクト
-		//if (i == 7) {
-		//	graphicsPipelineStateDescs_[i].VS = { PostEffectVertexShaderBlob_->GetBufferPointer(),
-		//	vertexShaderBlob_->GetBufferSize() }; // vertexShader
-		//	graphicsPipelineStateDescs_[i].PS = { PostEffectPixelShaderBlob_->GetBufferPointer(),
-		//	pixelShaderBlob_->GetBufferSize() }; // pixelShader
-		//	// DepthStencilの設定
-		//	D3D12_DEPTH_STENCIL_DESC depthStencilDesc{};
-		//	// Depthの機能を有効化する
-		//	depthStencilDesc.DepthEnable = true;
-		//	// 書き込みをします
-		//	depthStencilDesc.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ZERO;
-		//	// 比較関数はLessEqual。つまり、近ければ描画される
-		//	depthStencilDesc.DepthFunc = D3D12_COMPARISON_FUNC_ALWAYS;//D3D12_COMPARISON_FUNC_LESS_EQUAL;
-		//	graphicsPipelineStateDescs_[i].DepthStencilState = depthStencilDesc;
-		//	graphicsPipelineStateDescs_[i].DSVFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
-		//}
 
 		graphicsPipelineStateDescs_[i].BlendState = blendDesc_[i]; // blendState
 		graphicsPipelineStateDescs_[i].RasterizerState = rasterizerDesc_[i]; // rasterizerState
@@ -452,7 +441,7 @@ void PipelineManager::PSO() {
 
 	CreateRootSignature();
 
-	CreateRootParameter();
+	//CreateRootParameter();
 
 	SettingInputLayout();
 
