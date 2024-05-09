@@ -36,6 +36,7 @@ void PipelineManager::Initialize() {
 }
 
 void PipelineManager::PreDraw() {
+	// ポストエフェクトの描画前処理
 	postEffectPSO_->PreDraw();
 	DirectXCommon::GetInstance()->GetCommandList()->RSSetViewports(1, &viewport_); // Viewportを設定
 	DirectXCommon::GetInstance()->GetCommandList()->RSSetScissorRects(1, &scissorRect_); // Scirssorを設定
