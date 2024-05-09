@@ -6,9 +6,9 @@ Object3dPSO* Object3dPSO::GetInstance() {
 	return &instance;
 }
 
-void Object3dPSO::Init(IDxcUtils* dxcUtils, IDxcCompiler3* dxcCompiler, IDxcIncludeHandler* includeHandler) {
+void Object3dPSO::Init(IDxcUtils* dxcUtils, IDxcCompiler3* dxcCompiler, IDxcIncludeHandler* includeHandler, const std::string& VS_fileName, const std::string& PS_fileName) {
 	// 基底クラスの初期化
-	IPSO::Init(dxcUtils, dxcCompiler, includeHandler);
+	IPSO::Init(dxcUtils, dxcCompiler, includeHandler, VS_fileName, PS_fileName);
 }
 
 void Object3dPSO::CreateRootSignature() {
@@ -147,11 +147,11 @@ void Object3dPSO::CreatePSO() {
 
 #pragma region シェーダのコンパイル
 	// VS
-	vertexShaderBlob_ = CompileShader(L"engine/resources/sharder/Object3d.VS.hlsl",
+	vertexShaderBlob_ = CompileShader(VSFilePath_,
 		L"vs_6_0", dxcUtils_, dxcCompiler_, includeHandler_);
 	assert(vertexShaderBlob_ != nullptr);
 	// PS
-	pixelShaderBlob_ = CompileShader(L"engine/resources/sharder/Object3d.PS.hlsl",
+	pixelShaderBlob_ = CompileShader(PSFilePath_,
 		L"ps_6_0", dxcUtils_, dxcCompiler_, includeHandler_);
 	assert(pixelShaderBlob_ != nullptr);
 #pragma endregion

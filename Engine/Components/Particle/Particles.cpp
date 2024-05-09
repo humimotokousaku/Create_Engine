@@ -147,23 +147,14 @@ void Particles::Draw(uint32_t textureHandle) {
 
 	camera_->Update();
 
-	// RootSignatureを設定。PSOに設定しているけど別途設定が必要
-	DirectXCommon::GetInstance()->GetCommandList()->SetGraphicsRootSignature(PipelineManager::GetInstance()->GetRootSignature()[6].Get());
-	DirectXCommon::GetInstance()->GetCommandList()->SetPipelineState(PipelineManager::GetInstance()->GetGraphicsPipelineState()[6].Get()); // PSOを設定
-
-	// 形状を設定。PSOに設定しているものとはまた別。同じものを設定すると考えておけば良い
-	DirectXCommon::GetInstance()->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-
 	// コマンドを積む
+	// RootSignatureを設定。PSOに設定しているけど別途設定が必要
+	ParticlePSO::GetInstance()->SetCommand();
 	DirectXCommon::GetInstance()->GetCommandList()->IASetVertexBuffers(0, 1, &vertexBufferView_); // VBVを設定
-
 	// DescriptorTableの設定
 	SrvManager::GetInstance()->SetGraphicsRootDesctiptorTable(1, srvIndex_);
-	//DirectXCommon::GetInstance()->GetCommandList()->SetGraphicsRootDescriptorTable(1, instancingSrvHandleGPU_);
-	//DirectXCommon::GetInstance()->GetCommandList()->SetGraphicsRootDescriptorTable(2, TextureManager::GetInstance()->GetSrvHandleGPU(1));
 	SrvManager::GetInstance()->SetGraphicsRootDesctiptorTable(2, textureHandle);
 	DirectXCommon::GetInstance()->GetCommandList()->SetGraphicsRootConstantBufferView(3, DirectionalLight::GetInstance()->GetDirectionalLightResource()->GetGPUVirtualAddress());
-	//DirectXCommon::GetInstance()->GetCommandList()->SetGraphicsRootConstantBufferView(6, PointLight::GetInstance()->GetPointLightResource()->GetGPUVirtualAddress());
 
 	// マテリアルCBufferの場所を設定
 	DirectXCommon::GetInstance()->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialResource_->GetGPUVirtualAddress());

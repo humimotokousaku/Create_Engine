@@ -8,8 +8,6 @@
 
 // PSO
 #include "PipelineManager.h"
-#include "LinePSO.h"
-#include "PostEffectPSO.h"
 
 // Base
 #include "WinApp.h"
@@ -78,8 +76,6 @@ protected:
 	SrvManager* srvManager_;
 	// PSO
 	PipelineManager* pipelineManager_;
-	LinePSO* linePSO_;
-	PostEffectPSO* postEffectPSO_;
 
 	PostEffectManager* postEffectManager_;
 	PostEffect* postEffect_;
@@ -95,6 +91,4 @@ protected:
 	Input* input_;
 	Audio* audio_;
 	SoundData soundData1_;
-
-	X3DAUDIO_VECTOR pos_;
 };

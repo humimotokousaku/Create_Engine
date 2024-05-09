@@ -1,12 +1,12 @@
 #pragma once
 #include "IPSO.h"
 
-class Object3dPSO : public IPSO {
+class ParticlePSO : public IPSO {
 public:// メンバ関数
 	/// <summary>
 	/// シングルトン
 	/// </summary>
-	static Object3dPSO* GetInstance();
+	static ParticlePSO* GetInstance();
 
 	/// <summary>
 	/// 初期化
@@ -46,3 +46,4 @@ private:// プライベートなメンバ変数
 	D3D12_DESCRIPTOR_RANGE descriptorRange_[1];
 	D3D12_STATIC_SAMPLER_DESC staticSamplers_[1];
 };
+

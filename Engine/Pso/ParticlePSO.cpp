@@ -1,20 +1,17 @@
-#include "LinePSO.h"
-#include "ConvertString.h"
-#include <format>
-#include <cassert>
+#include "ParticlePSO.h"
 
-LinePSO* LinePSO::GetInstance() {
-	static LinePSO instance;
+ParticlePSO* ParticlePSO::GetInstance() {
+	static ParticlePSO instance;
 
 	return &instance;
 }
 
-void LinePSO::Init(IDxcUtils* dxcUtils, IDxcCompiler3* dxcCompiler, IDxcIncludeHandler* includeHandler, const std::string& VS_fileName, const std::string& PS_fileName) {
+void ParticlePSO::Init(IDxcUtils* dxcUtils, IDxcCompiler3* dxcCompiler, IDxcIncludeHandler* includeHandler, const std::string& VS_fileName, const std::string& PS_fileName) {
 	// 基底クラスの初期化
 	IPSO::Init(dxcUtils, dxcCompiler, includeHandler, VS_fileName, PS_fileName);
 }
 
-void LinePSO::CreateRootSignature() {
+void ParticlePSO::CreateRootSignature() {
 	HRESULT hr;
 	descriptionRootSignature_.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
 
@@ -26,14 +23,47 @@ void LinePSO::CreateRootSignature() {
 #pragma endregion
 
 #pragma region rootParameter
+#pragma region VSShaderに送るデータ
+	// worldTransform
+	rootParameters_[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+	rootParameters_[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;
+	rootParameters_[1].Descriptor.ShaderRegister = 0;
+	rootParameters_[1].DescriptorTable.pDescriptorRanges = descriptorRange_;
+	rootParameters_[1].DescriptorTable.NumDescriptorRanges = _countof(descriptorRange_);
+	// viewProjection
+	rootParameters_[4].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
+	rootParameters_[4].ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;
+	rootParameters_[4].Descriptor.ShaderRegister = 1;
+#pragma endregion
+
+#pragma region PSShaderに送るデータ
 	// material
 	rootParameters_[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
 	rootParameters_[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
 	rootParameters_[0].Descriptor.ShaderRegister = 0;
-	// viewProjection
-	rootParameters_[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
-	rootParameters_[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;
-	rootParameters_[1].Descriptor.ShaderRegister = 0;
+	// texture
+	rootParameters_[2].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+	rootParameters_[2].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+	rootParameters_[2].DescriptorTable.pDescriptorRanges = descriptorRange_;
+	rootParameters_[2].DescriptorTable.NumDescriptorRanges = _countof(descriptorRange_);
+	// 平行光源
+	rootParameters_[3].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
+	rootParameters_[3].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+	rootParameters_[3].Descriptor.ShaderRegister = 1;
+	// カメラ位置
+	rootParameters_[5].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
+	rootParameters_[5].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+	rootParameters_[5].Descriptor.ShaderRegister = 2;
+	// 点光源
+	rootParameters_[6].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
+	rootParameters_[6].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+	rootParameters_[6].Descriptor.ShaderRegister = 3;
+	// スポットライト
+	rootParameters_[7].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
+	rootParameters_[7].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+	rootParameters_[7].Descriptor.ShaderRegister = 4;
+#pragma endregion
+
 #pragma endregion
 
 	// rootParameterの設定を入れる
@@ -66,7 +96,7 @@ void LinePSO::CreateRootSignature() {
 	assert(SUCCEEDED(hr));
 }
 
-void LinePSO::CreatePSO() {
+void ParticlePSO::CreatePSO() {
 	HRESULT hr;
 
 	// rootSignatureの作成
@@ -77,7 +107,14 @@ void LinePSO::CreatePSO() {
 	inputElementDescs_[0].SemanticIndex = 0;
 	inputElementDescs_[0].Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
 	inputElementDescs_[0].AlignedByteOffset = D3D12_APPEND_ALIGNED_ELEMENT;
-
+	inputElementDescs_[1].SemanticName = "TEXCOORD";
+	inputElementDescs_[1].SemanticIndex = 0;
+	inputElementDescs_[1].Format = DXGI_FORMAT_R32G32_FLOAT;
+	inputElementDescs_[1].AlignedByteOffset = D3D12_APPEND_ALIGNED_ELEMENT;
+	inputElementDescs_[2].SemanticName = "COLOR";
+	inputElementDescs_[2].SemanticIndex = 0;
+	inputElementDescs_[2].Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
+	inputElementDescs_[2].AlignedByteOffset = D3D12_APPEND_ALIGNED_ELEMENT;
 	inputLayoutDesc_.pInputElementDescs = inputElementDescs_;
 	inputLayoutDesc_.NumElements = _countof(inputElementDescs_);
 #pragma endregion
@@ -129,7 +166,14 @@ void LinePSO::CreatePSO() {
 	graphicsPipelineStateDescs_.PS = { pixelShaderBlob_->GetBufferPointer(),
 	pixelShaderBlob_->GetBufferSize() };
 	// DepthStencilの設定
-	graphicsPipelineStateDescs_.DepthStencilState = dxCommon_->GetDepthStencilDesc();
+	D3D12_DEPTH_STENCIL_DESC depthStencilDesc{};
+	// Depthの機能を有効化する
+	depthStencilDesc.DepthEnable = true;
+	// 書き込みをします
+	depthStencilDesc.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ZERO;
+	// 比較関数はLessEqual。つまり、近ければ描画される
+	depthStencilDesc.DepthFunc = D3D12_COMPARISON_FUNC_LESS_EQUAL;
+	graphicsPipelineStateDescs_.DepthStencilState = depthStencilDesc;
 	graphicsPipelineStateDescs_.DSVFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
 	// blendState
 	graphicsPipelineStateDescs_.BlendState = blendDesc_;
@@ -140,7 +184,7 @@ void LinePSO::CreatePSO() {
 	graphicsPipelineStateDescs_.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;
 	// 利用するトポロ時（形状）のタイプ。三角形
 	graphicsPipelineStateDescs_.PrimitiveTopologyType =
-		D3D12_PRIMITIVE_TOPOLOGY_TYPE_LINE;
+		D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
 	// どのように画面に色を打ち込むかの設定（気にしなくてよい）
 	graphicsPipelineStateDescs_.SampleDesc.Count = 1;
 	graphicsPipelineStateDescs_.SampleMask = D3D12_DEFAULT_SAMPLE_MASK;
@@ -149,42 +193,3 @@ void LinePSO::CreatePSO() {
 		IID_PPV_ARGS(&graphicsPipelineState_));
 	assert(SUCCEEDED(hr));
 }
-
-
-
-
-
-
-
-
-
-//void LinePSO::CreatePSO() {
-//	HRESULT hr;
-//
-//	graphicsPipelineStateDescs_.pRootSignature = rootSignature_.Get(); // rootSignature
-//	graphicsPipelineStateDescs_.InputLayout = inputLayoutDesc_; // InputLayout
-//
-//	graphicsPipelineStateDescs_.VS = { vertexShaderBlob_->GetBufferPointer(),
-//	vertexShaderBlob_->GetBufferSize() }; // vertexShader
-//	graphicsPipelineStateDescs_.PS = { pixelShaderBlob_->GetBufferPointer(),
-//	pixelShaderBlob_->GetBufferSize() }; // pixelShader
-//	// DepthStencilの設定
-//	graphicsPipelineStateDescs_.DepthStencilState = DirectXCommon::GetInstance()->GetDepthStencilDesc();
-//	graphicsPipelineStateDescs_.DSVFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
-//
-//	graphicsPipelineStateDescs_.BlendState = blendDesc_; // blendState
-//	graphicsPipelineStateDescs_.RasterizerState = rasterizerDesc_; // rasterizerState
-//	// 書き込むRTVの情報
-//	graphicsPipelineStateDescs_.NumRenderTargets = 1;
-//	graphicsPipelineStateDescs_.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;
-//	// 利用するトポロ時（形状）のタイプ。三角形
-//	graphicsPipelineStateDescs_.PrimitiveTopologyType =
-//		D3D12_PRIMITIVE_TOPOLOGY_TYPE_LINE;
-//	// どのように画面に色を打ち込むかの設定（気にしなくてよい）
-//	graphicsPipelineStateDescs_.SampleDesc.Count = 1;
-//	graphicsPipelineStateDescs_.SampleMask = D3D12_DEFAULT_SAMPLE_MASK;
-//	// 実際に生成
-//	hr = DirectXCommon::GetInstance()->GetDevice()->CreateGraphicsPipelineState(&graphicsPipelineStateDescs_,
-//		IID_PPV_ARGS(&graphicsPipelineState_));
-//	assert(SUCCEEDED(hr));
-//}

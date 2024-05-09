@@ -3,11 +3,17 @@
 #include <format>
 #include <cassert>
 
-void IPSO::Init(IDxcUtils* dxcUtils, IDxcCompiler3* dxcCompiler, IDxcIncludeHandler* includeHandler) {
+void IPSO::Init(IDxcUtils* dxcUtils, IDxcCompiler3* dxcCompiler, IDxcIncludeHandler* includeHandler, const std::string& VS_fileName, const std::string& PS_fileName) {
+	// directX
 	dxCommon_ = DirectXCommon::GetInstance();
+	// Pipelinemanager
 	dxcUtils_ = dxcUtils;
 	dxcCompiler_ = dxcCompiler;
 	includeHandler_ = includeHandler;
+	// VSのファイル名
+	VSFilePath_ = kDirectoryPath + ConvertString(VS_fileName);
+	// PSのファイル名
+	PSFilePath_ = kDirectoryPath + ConvertString(PS_fileName);
 }
 
 IDxcBlob* IPSO::CompileShader(

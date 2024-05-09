@@ -31,11 +31,10 @@ void Framework::Initialize() {
 	pipelineManager_ = PipelineManager::GetInstance();
 	pipelineManager_->Initialize();
 	// 線のPSO
-	linePSO_ = LinePSO::GetInstance();
-	linePSO_->Initialize();
+
 	// ポストエフェクトのPSO
-	postEffectPSO_ = PostEffectPSO::GetInstance();
-	postEffectPSO_->Initialize();
+	//postEffectPSO_ = PostEffectPSO::GetInstance();
+	//postEffectPSO_->Initialize();
 
 	// ImGuiの初期化
 	imGuiManager_ = new ImGuiManager();
@@ -128,7 +127,6 @@ void Framework::Finalize() {
 void Framework::BeginFrame() {
 	// キーの状態を取得
 	input_->Update();
-
 	// SrvManager
 	srvManager_->PreDraw();
 	// PSO
@@ -144,6 +142,4 @@ void Framework::EndFrame() {
 	imGuiManager_->PostDraw();
 	// DirectXCommon
 	directXCommon_->PostDraw();
-	// PSO
-	pipelineManager_->PostDraw();
 }

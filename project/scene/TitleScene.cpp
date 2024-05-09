@@ -216,7 +216,7 @@ void TitleScene::Draw() {
 	//sprite_2->Draw();
 #pragma endregion
 
-	//particles_->Draw(particleTexture_);
+	particles_->Draw(particleTexture_);
 	//particles_1->Draw(particleTexture_);
 }
 

@@ -18,7 +18,9 @@ public:
 	/// <summary>
 	/// 初期化
 	/// </summary>
-	virtual void Init(IDxcUtils* dxcUtils, IDxcCompiler3* dxcCompiler,IDxcIncludeHandler* includeHandler);
+	/// <param name="VS_fileName">VSのファイル名</param>
+	/// <param name="PS_fileName">PSのファイル名</param>
+	virtual void Init(IDxcUtils* dxcUtils, IDxcCompiler3* dxcCompiler,IDxcIncludeHandler* includeHandler, const std::string& VS_fileName, const std::string& PS_fileName);
 
 	/// <summary>
 	/// rootSignatureの作成
@@ -28,8 +30,7 @@ public:
 	/// <summary>
 	/// PSOの作成
 	/// </summary>
-	/// <param name="VS_SharderName">VSシェーダの名前</param>
-	/// <param name="PS_SharderName">PSシェーダの名前</param>
+
 	virtual void CreatePSO() = 0;
 
 	// シェーダのコンパイル
@@ -44,6 +45,10 @@ public:
 		IDxcIncludeHandler* includeHandler);
 
 protected:
+	// シェーダファイルまでのパス
+	const std::wstring& kDirectoryPath = L"engine/resources/sharder/";
+
+protected:
 	// directXCommonのインスタンス
 	DirectXCommon* dxCommon_;
 
@@ -55,6 +60,10 @@ protected:
 	ID3DBlob* signatureBlob_;
 	IDxcBlob* vertexShaderBlob_;
 	IDxcBlob* pixelShaderBlob_;
+	// VSのファイル名
+	std::wstring VSFilePath_;
+	// PSのファイル名
+	std::wstring PSFilePath_;
 
 	Microsoft::WRL::ComPtr<ID3D12RootSignature> rootSignature_;
 	D3D12_ROOT_SIGNATURE_DESC descriptionRootSignature_;

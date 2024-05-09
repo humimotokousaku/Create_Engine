@@ -17,23 +17,13 @@ void Line::Draw(Vector3 start, Vector3 end) {
 	vertexData_[0] = { start.x,start.y ,start.z ,1 };
 	vertexData_[1] = { end.x,end.y ,end.z ,1 };
 
-	//worldTransform.UpdateMatrix();
-	// RootSignatureを設定。PSOに設定しているけど別途設定が必要
-	DirectXCommon::GetInstance()->GetCommandList()->SetGraphicsRootSignature(LinePSO::GetInstance()->GetRootSignature().Get());
-	DirectXCommon::GetInstance()->GetCommandList()->SetPipelineState(LinePSO::GetInstance()->GetGraphicsPipelineState().Get()); // PSOを設定
-
-	// コマンドを積む
+	/// コマンドを積む
+	// 使用するPSO
+	LinePSO::GetInstance()->SetCommand();
 	DirectXCommon::GetInstance()->GetCommandList()->IASetVertexBuffers(0, 1, &vertexBufferView_); // VBVを設定
-
-	//DirectXCommon::GetInstance()->GetCommandList()->SetGraphicsRootConstantBufferView(1, worldTransform.constBuff_->GetGPUVirtualAddress());
 	DirectXCommon::GetInstance()->GetCommandList()->SetGraphicsRootConstantBufferView(1,camera_->GetViewProjection().constBuff_->GetGPUVirtualAddress());
-
-	// 形状を設定。PSOに設定しているものとはまた別。同じものを設定すると考えておけば良い
-	DirectXCommon::GetInstance()->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_LINELIST);
-
 	// マテリアルCBufferの場所を設定
 	DirectXCommon::GetInstance()->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialResource_.Get()->GetGPUVirtualAddress());
-
 	DirectXCommon::GetInstance()->GetCommandList()->DrawInstanced(2, 1, 0, 0);
 }
 
