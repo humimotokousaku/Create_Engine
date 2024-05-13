@@ -96,7 +96,7 @@ Vector3 CalculateTranslateValue(const std::vector<KeyframeVector3>& keyframes, f
 }
 Quaternion CalculateQuaternionValue(const std::vector<KeyframeQuaternion>& keyframes, float time) {
 	if (keyframes.empty()) {
-		return Quaternion{ 0,0,0,0 };
+		return Quaternion{ 0,0,0,1 };
 	}
 
 	// キーが一つか、時刻がキーフレーム前なら最初の値にする
@@ -116,7 +116,6 @@ Quaternion CalculateQuaternionValue(const std::vector<KeyframeQuaternion>& keyfr
 
 	return (*keyframes.rbegin()).value;
 }
-
 Vector3 CalculateScaleValue(const std::vector<KeyframeVector3>& keyframes, float time) {
 	if (keyframes.empty()) {
 		return Vector3{ 1,1,1 };
@@ -215,7 +214,7 @@ void ApplyAnimation(Skeleton& skeleton, const Motion& animation, float animation
 		// Skeletonがない場合デフォルトの数値を代入
 		else {
 			joint.transform.translate = { 0,0,0 };
-			joint.transform.rotate = { 0,0,0 };
+			joint.transform.rotate = { 0,0,0,1 };
 			joint.transform.scale = { 1,1,1 };
 		}
 	}
@@ -231,14 +230,14 @@ SkinCluster CreateSkinCluster(const Skeleton& skeleton, const ModelData& modelDa
 #pragma  endregion
 
 #pragma region pallet用のsrv作成
-	int srvIndex = SrvManager::GetInstance()->Allocate();
-	skinCluster.paletteSrvHandle.first = SrvManager::GetInstance()->GetCPUDescriptorHandle(srvIndex);
-	skinCluster.paletteSrvHandle.second = SrvManager::GetInstance()->GetGPUDescriptorHandle(srvIndex);
-	SrvManager::GetInstance()->CreateSRVforStructuredBuffer(srvIndex, skinCluster.paletteResource.Get(), skeleton.joints.size(), sizeof(WellForGPU));
+	skinCluster.srvIndex = SrvManager::GetInstance()->Allocate();
+	skinCluster.paletteSrvHandle.first = SrvManager::GetInstance()->GetCPUDescriptorHandle(skinCluster.srvIndex);
+	skinCluster.paletteSrvHandle.second = SrvManager::GetInstance()->GetGPUDescriptorHandle(skinCluster.srvIndex);
+	SrvManager::GetInstance()->CreateSRVforStructuredBuffer(skinCluster.srvIndex, skinCluster.paletteResource.Get(), skeleton.joints.size(), sizeof(WellForGPU));
 #pragma endregion
 
 #pragma region Influence用のResourceを確保
-	skinCluster.influenceResource = CreateBufferResource(DirectXCommon::GetInstance()->GetDevice(), sizeof(VertexInfluence));
+	skinCluster.influenceResource = CreateBufferResource(DirectXCommon::GetInstance()->GetDevice(), sizeof(VertexInfluence) * modelData.vertices.size());
 	VertexInfluence* mappedInfluence = nullptr;
 	skinCluster.influenceResource->Map(0, nullptr, reinterpret_cast<void**>(&mappedInfluence));
 	std::memset(mappedInfluence, 0, sizeof(VertexInfluence) * modelData.vertices.size());

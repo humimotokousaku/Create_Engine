@@ -32,6 +32,12 @@ void Object3dPSO::CreateRootSignature() {
 	rootParameters_[4].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
 	rootParameters_[4].ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;
 	rootParameters_[4].Descriptor.ShaderRegister = 1;
+	// matrixPalette
+	rootParameters_[8].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+	rootParameters_[8].ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;
+	rootParameters_[8].Descriptor.ShaderRegister = 0;
+	rootParameters_[8].DescriptorTable.pDescriptorRanges = descriptorRange_;
+	rootParameters_[8].DescriptorTable.NumDescriptorRanges = _countof(descriptorRange_);
 #pragma endregion
 
 #pragma region PSShaderに送るデータ
@@ -115,6 +121,18 @@ void Object3dPSO::CreatePSO() {
 	inputElementDescs_[2].SemanticIndex = 0;
 	inputElementDescs_[2].Format = DXGI_FORMAT_R32G32B32_FLOAT;
 	inputElementDescs_[2].AlignedByteOffset = D3D12_APPEND_ALIGNED_ELEMENT;
+
+	inputElementDescs_[3].SemanticName = "WEIGHT";
+	inputElementDescs_[3].SemanticIndex = 0;
+	inputElementDescs_[3].Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
+	inputElementDescs_[3].InputSlot = 1;
+	inputElementDescs_[3].AlignedByteOffset = D3D12_APPEND_ALIGNED_ELEMENT;
+
+	inputElementDescs_[4].SemanticName = "INDEX";
+	inputElementDescs_[4].SemanticIndex = 0;
+	inputElementDescs_[4].Format = DXGI_FORMAT_R32G32B32A32_SINT;
+	inputElementDescs_[4].InputSlot = 1;
+	inputElementDescs_[4].AlignedByteOffset = D3D12_APPEND_ALIGNED_ELEMENT;
 
 	inputLayoutDesc_.pInputElementDescs = inputElementDescs_;
 	inputLayoutDesc_.NumElements = _countof(inputElementDescs_);

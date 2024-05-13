@@ -72,20 +72,12 @@ void Model::Initialize(const std::string& directoryPath, const std::string& file
 		{0.0f,0.0f,0.0f},
 		{0.0f,0.0f,0.0f}
 	};
-
-	vbvs_[0] = vertexBufferView_;
-	vbvs_[1] = skinCluster_.influenceBufferView;
 }
 
 void Model::Draw(const ViewProjection& viewProjection, uint32_t textureHandle) {
 #pragma region アニメーション
 	animationTime_ += 1.0f / 60.0f;
 	animationTime_ = std::fmod(animationTime_, animation_.duration);
-	//NodeAnimation& rootNodeAnimation = animation_.nodeAnimations[modelData_.rootNode.name];
-	//Vector3 translate = CalculateTranslateValue(rootNodeAnimation.translate.keyframes, animationTime_);
-	//Quaternion rotate = CalculateQuaternionValue(rootNodeAnimation.rotate.keyframes, animationTime_);
-	//Vector3 scale = { 1,1,1 };
-	//modelData_.rootNode.localMatrix = MakeAffineMatrix(scale, rotate, translate);
 
 	// スケルトンに対してアニメーションを適用
 	ApplyAnimation(skeleton_, animation_, animationTime_);
@@ -95,9 +87,12 @@ void Model::Draw(const ViewProjection& viewProjection, uint32_t textureHandle) {
 	SkinClusterUpdate(skinCluster_, skeleton_);
 
 #pragma endregion
-
+	D3D12_VERTEX_BUFFER_VIEW vbvs[2] = {
+		vertexBufferView_,
+		skinCluster_.influenceBufferView
+	};
 	// 形状を設定
-	dxCommon_->GetCommandList()->IASetVertexBuffers(0, 2, vbvs_); // VBVを設定
+	dxCommon_->GetCommandList()->IASetVertexBuffers(0, 2, vbvs); // VBVを設定
 	dxCommon_->GetCommandList()->IASetIndexBuffer(&indexBufferView_);
 
 	/// CBVの設定
@@ -109,6 +104,9 @@ void Model::Draw(const ViewProjection& viewProjection, uint32_t textureHandle) {
 	/// DescriptorTableの設定
 	// texture
 	SrvManager::GetInstance()->SetGraphicsRootDesctiptorTable(2, textureHandle);
+	// MatrixPalette
+	SrvManager::GetInstance()->SetGraphicsRootDesctiptorTable(8, skinCluster_.srvIndex);
+
 	// material
 	dxCommon_->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialResource_.Get()->GetGPUVirtualAddress());
 	// ライティング
@@ -116,54 +114,27 @@ void Model::Draw(const ViewProjection& viewProjection, uint32_t textureHandle) {
 	dxCommon_->GetCommandList()->SetGraphicsRootConstantBufferView(6, PointLight::GetInstance()->GetPointLightResource()->GetGPUVirtualAddress());
 	dxCommon_->GetCommandList()->SetGraphicsRootConstantBufferView(7, SpotLight::GetInstance()->GetSpotLightResource()->GetGPUVirtualAddress());
 	dxCommon_->GetCommandList()->DrawIndexedInstanced(UINT(modelData_.indices.size()), 1, 0, 0, 0);
-
-	//// jointの座標を代入
-	//for (int i = 0; i < skeletonLine_.size(); i++) {
-	//	// 親子関係のあるノードを検索
-	//	if (skeleton_.joints[i].children.size() != 0) {
-	//		for (int j = 0; j < skeleton_.joints[i].children.size(); j++) {
-	//			int index = skeleton_.joints[i].children[j];
-	//			skeletonLine_[index]->startPos_ = skeleton_.joints[index].transform.translate;
-	//		}
-	//	}
-	//	//skeletonLine_[i]->startPos_ = skeleton_.joints[i].transform.translate;
-	//	//skeletonLine_[i]->endPos_ = skeleton_.joints[i + 1].transform.translate;
-	//}
-	//// スケルトンの描画
-	//for (int i = 0; i < skeletonLine_.size(); i++) {
-	//	skeletonLine_[i]->Draw(viewProjection);
-	//}
-	//// jointの描画
-
-	//for (int i = 0; i < jointSphere_.size(); i++) {
-	//	jointSphere_[i]->worldTransform.transform.translate = skeleton_.joints[i].transform.translate;
-	//	//jointSphere_[i]->worldTransform.transform.rotate = skeleton_.joints[i].transform.rotate;
-	//	jointSphere_[i]->worldTransform.transform.scale = Multiply(0.1f, skeleton_.joints[i].transform.scale);
-	//}
-	//for (int i = 0; i < jointSphere_.size(); i++) {
-	//	jointSphere_[i]->Draw(textureHandle, viewProjection);
-	//}
 }
 
 void Model::Draw(const ViewProjection& viewProjection) {
 #pragma region アニメーション
 	animationTime_ += 1.0f / 60.0f;
 	animationTime_ = std::fmod(animationTime_, animation_.duration);
-	//NodeAnimation& rootNodeAnimation = animation_.nodeAnimations[modelData_.rootNode.name];
-	//Vector3 translate = CalculateTranslateValue(rootNodeAnimation.translate.keyframes, animationTime_);
-	//Quaternion rotate = CalculateQuaternionValue(rootNodeAnimation.rotate.keyframes, animationTime_);
-	//Vector3 scale = { 1,1,1 };
-	//modelData_.rootNode.localMatrix = MakeAffineMatrix(scale, rotate, translate);
 
 	// スケルトンに対してアニメーションを適用
 	ApplyAnimation(skeleton_, animation_, animationTime_);
 	// 骨の更新処理
 	SkeletonUpdate(skeleton_);
-
+	// スキンクラスタの更新
+	SkinClusterUpdate(skinCluster_, skeleton_);
 #pragma endregion
 
 	// 形状を設定
-	dxCommon_->GetCommandList()->IASetVertexBuffers(0, 2, vbvs_); // VBVを設定
+	D3D12_VERTEX_BUFFER_VIEW vbvs[2] = {
+		vertexBufferView_,
+		skinCluster_.influenceBufferView
+	};
+	dxCommon_->GetCommandList()->IASetVertexBuffers(0, 2, vbvs); // VBVを設定
 	dxCommon_->GetCommandList()->IASetIndexBuffer(&indexBufferView_);
 
 	/// CBVの設定
@@ -175,6 +146,9 @@ void Model::Draw(const ViewProjection& viewProjection) {
 	/// DescriptorTableの設定
 	// texture
 	SrvManager::GetInstance()->SetGraphicsRootDesctiptorTable(2, texHandle_);
+	// MatrixPalette
+	SrvManager::GetInstance()->SetGraphicsRootDesctiptorTable(8, skinCluster_.srvIndex);
+
 	// material
 	dxCommon_->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialResource_.Get()->GetGPUVirtualAddress());
 	// ライティング
@@ -182,33 +156,6 @@ void Model::Draw(const ViewProjection& viewProjection) {
 	dxCommon_->GetCommandList()->SetGraphicsRootConstantBufferView(6, PointLight::GetInstance()->GetPointLightResource()->GetGPUVirtualAddress());
 	dxCommon_->GetCommandList()->SetGraphicsRootConstantBufferView(7, SpotLight::GetInstance()->GetSpotLightResource()->GetGPUVirtualAddress());
 	dxCommon_->GetCommandList()->DrawIndexedInstanced(UINT(modelData_.indices.size()), 1, 0, 0, 0);
-
-	//// jointの座標を代入
-	//for (int i = 0; i < skeletonLine_.size(); i++) {
-	//	// 親子関係のあるノードを検索
-	//	if (skeleton_.joints[i].children.size() != 0) {
-	//		for (int j = 0; j < skeleton_.joints[i].children.size(); j++) {
-	//			int index = skeleton_.joints[i].children[j];
-	//			skeletonLine_[index]->startPos_ = skeleton_.joints[index].transform.translate;
-	//		}
-	//	}
-	//	//skeletonLine_[i]->startPos_ = skeleton_.joints[i].transform.translate;
-	//	//skeletonLine_[i]->endPos_ = skeleton_.joints[i + 1].transform.translate;
-	//}
-	//// スケルトンの描画
-	//for (int i = 0; i < skeletonLine_.size(); i++) {
-
-	//	skeletonLine_[i]->Draw(viewProjection);
-	//}
-	//// jointの描画
-	//for (int i = 0; i < jointSphere_.size(); i++) {
-	//	jointSphere_[i]->worldTransform.transform.translate = skeleton_.joints[i].transform.translate;
-	//	//jointSphere_[i]->worldTransform.transform.rotate = skeleton_.joints[i].transform.rotate;
-	//	jointSphere_[i]->worldTransform.transform.scale = Multiply(0.1f, skeleton_.joints[i].transform.scale);
-	//}
-	//for (int i = 0; i < jointSphere_.size(); i++) {
-	//	jointSphere_[i]->Draw(1, viewProjection);
-	//}
 }
 
 void Model::AdjustParameter() {
@@ -256,7 +203,7 @@ void Model::JointSphereInit() {
 	for (int i = 0; i < jointSphere_.size(); i++) {
 		jointSphere_[i]->worldTransform.transform.translate = skeleton_.joints[i].transform.translate;
 		//jointSphere_[i]->worldTransform.transform.rotate = skeleton_.joints[i].transform.rotate;
-		jointSphere_[i]->worldTransform.transform.scale = Multiply(0.1f,skeleton_.joints[i].transform.scale);
+		jointSphere_[i]->worldTransform.transform.scale = Multiply(0.1f, skeleton_.joints[i].transform.scale);
 	}
 }
 
@@ -359,7 +306,7 @@ ModelData Model::LoadModelFile(const std::string& directoryPath, const std::stri
 			jointWeightData.inverseBindPoseMatrix = Inverse(bindPoseMatrix);
 
 			// weight情報を取り出す
-			for (uint32_t weightIndex = 0; weightIndex < bone->mNumWeights;++weightIndex) {
+			for (uint32_t weightIndex = 0; weightIndex < bone->mNumWeights; ++weightIndex) {
 				jointWeightData.vertexWeights.push_back({ bone->mWeights[weightIndex].mWeight, bone->mWeights[weightIndex].mVertexId });
 			}
 		}

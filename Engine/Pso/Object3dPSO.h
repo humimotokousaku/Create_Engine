@@ -41,8 +41,8 @@ public:// メンバ関数
 	}
 
 private:// プライベートなメンバ変数
-	D3D12_ROOT_PARAMETER rootParameters_[8];
-	D3D12_INPUT_ELEMENT_DESC inputElementDescs_[3];
+	D3D12_ROOT_PARAMETER rootParameters_[9];
+	D3D12_INPUT_ELEMENT_DESC inputElementDescs_[5];
 	D3D12_DESCRIPTOR_RANGE descriptorRange_[1];
 	D3D12_STATIC_SAMPLER_DESC staticSamplers_[1];
 };

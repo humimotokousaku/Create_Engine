@@ -22,38 +22,40 @@ void TitleScene::Initialize() {
 	monsterBallTexture_ = TextureManager::GetInstance()->GetSrvIndex("","monsterBall.png");
 	particleTexture_ = TextureManager::GetInstance()->GetSrvIndex(   "","circle.png");
 	// objモデル
-	ModelManager::GetInstance()->LoadModel("Human","walk.gltf");
 	ModelManager::GetInstance()->LoadModel("SimpleSkin", "simpleSkin.gltf");
-	ModelManager::GetInstance()->LoadModel("", "testPlane.gltf");
-	
-	ModelManager::GetInstance()->LoadModel("Human", "sneakWalk.gltf");
-	ModelManager::GetInstance()->LoadModel("AnimatedCube", "AnimatedCube.gltf");
+	//ModelManager::GetInstance()->LoadModel("Human","walk.gltf");
 
-	ModelManager::GetInstance()->LoadModel("", "axis.obj");
-	ModelManager::GetInstance()->LoadModel("", "block.obj");
+	//ModelManager::GetInstance()->LoadModel("", "testPlane.gltf");
+	//
+	//ModelManager::GetInstance()->LoadModel("Human", "sneakWalk.gltf");
+	//ModelManager::GetInstance()->LoadModel("AnimatedCube", "AnimatedCube.gltf");
 
-	// 平面(スケルトンなしのgltf)
-	plane_ = std::make_unique<Object3D>();
-	plane_->Initialize();
-	plane_->SetModel("AnimatedCube", "AnimatedCube.gltf");
-	plane_->SetCamera(camera_.get());
-	plane_->worldTransform.transform.translate = { -10,0,0 };
+	//ModelManager::GetInstance()->LoadModel("", "axis.obj");
+	//ModelManager::GetInstance()->LoadModel("", "block.obj");
+
+	//// 平面(スケルトンなしのgltf)
+	//plane_ = std::make_unique<Object3D>();
+	//plane_->Initialize();
+	//plane_->SetModel("AnimatedCube", "AnimatedCube.gltf");
+	//plane_->SetCamera(camera_.get());
+	//plane_->worldTransform.transform.translate = { -10,0,0 };
 
 	// 人間(スケルトンありのgltf)
 	human_ = std::make_unique<Object3D>();
 	human_->Initialize();
-	human_->SetModel("Human", "walk.gltf");
-	//human_->SetModel("AnimatedCube/AnimatedCube.gltf");
+	//human_->SetModel("Human", "walk.gltf");
+	human_->SetModel("SimpleSkin", "simpleSkin.gltf");
 	human_->SetCamera(camera_.get());
-	human_->worldTransform.transform.translate = { 0,0,0 };
+	//human_->worldTransform.transform.scale = { 0.1f,0.1f,0.1f };
+	human_->worldTransform.transform.rotate = { 1.6f,0,0 };
 	//human_->model_->materialData_->color = { 1,1,1,0.0f };
 
-	// 3D線(obj読み込み)
-	axis_ = std::make_unique<Object3D>();
-	axis_->Initialize();
-	axis_->SetModel("Human", "sneakWalk.gltf");
-	axis_->SetCamera(camera_.get());
-	axis_->worldTransform.transform.translate = { 10,0,0 };
+	//// 3D線(obj読み込み)
+	//axis_ = std::make_unique<Object3D>();
+	//axis_->Initialize();
+	//axis_->SetModel("Human", "sneakWalk.gltf");
+	//axis_->SetCamera(camera_.get());
+	//axis_->worldTransform.transform.translate = { 10,0,0 };
 
 	// アニメーション
 	//anim_ = std::make_unique<Animation>();
@@ -67,16 +69,16 @@ void TitleScene::Update() {
 	}
 
 #ifdef _DEBUG
-	ImGui::Begin("plane");
-	ImGui::DragFloat3("translation", &plane_->worldTransform.transform.translate.x, 0.01f, -100, 100);
-	ImGui::DragFloat3("scale", &plane_->worldTransform.transform.scale.x, 0.01f, -100, 100);
-	ImGui::DragFloat3("rotate", &plane_->worldTransform.transform.rotate.x, 0.01f, -6.28f, 6.28f);
-	ImGui::End();
-	ImGui::Begin("axis");
-	ImGui::DragFloat3("translation", &axis_->worldTransform.transform.translate.x, 0.01f, -100, 100);
-	ImGui::DragFloat3("scale", &axis_->worldTransform.transform.scale.x, 0.01f, -100, 100);
-	ImGui::DragFloat3("rotate", &axis_->worldTransform.transform.rotate.x, 0.01f, -6.28f, 6.28f);
-	ImGui::End();
+	//ImGui::Begin("plane");
+	//ImGui::DragFloat3("translation", &plane_->worldTransform.transform.translate.x, 0.01f, -100, 100);
+	//ImGui::DragFloat3("scale", &plane_->worldTransform.transform.scale.x, 0.01f, -100, 100);
+	//ImGui::DragFloat3("rotate", &plane_->worldTransform.transform.rotate.x, 0.01f, -6.28f, 6.28f);
+	//ImGui::End();
+	//ImGui::Begin("axis");
+	//ImGui::DragFloat3("translation", &axis_->worldTransform.transform.translate.x, 0.01f, -100, 100);
+	//ImGui::DragFloat3("scale", &axis_->worldTransform.transform.scale.x, 0.01f, -100, 100);
+	//ImGui::DragFloat3("rotate", &axis_->worldTransform.transform.rotate.x, 0.01f, -6.28f, 6.28f);
+	//ImGui::End();
 	ImGui::Begin("human");
 	ImGui::DragFloat3("translation", &human_->worldTransform.transform.translate.x, 0.01f, -100, 100);
 	ImGui::DragFloat3("scale", &human_->worldTransform.transform.scale.x, 0.01f, -100, 100);
@@ -94,8 +96,8 @@ void TitleScene::Update() {
 }
 
 void TitleScene::Draw() {
-	plane_->Draw();
-	axis_->Draw();
+	//plane_->Draw();
+	//axis_->Draw();
 	human_->Draw();
 }
 
