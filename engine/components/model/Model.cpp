@@ -11,25 +11,56 @@
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
 
-void Model::Initialize(const std::string& directoryPath, const std::string& filename) {
-	// モデルの読み込み
-	modelData_ = LoadObjFile(directoryPath, filename);
-	animation_ = LoadAnimationFile(directoryPath, filename);
+Model::~Model() {
+	for (int i = 0; i < skeletonLine_.size(); i++) {
+		delete skeletonLine_[i];
+	}
+}
 
+void Model::Initialize(const std::string& directoryPath, const std::string& filename) {
+	// エンジン機能のインスタンスを入れる
+	dxCommon_ = DirectXCommon::GetInstance();
+	texManager_ = TextureManager::GetInstance();
+
+	// モデルの読み込み
+	modelData_ = LoadModelFile(directoryPath, filename);
+	// アニメーションデータを読み込む
+	animation_ = LoadAnimationFile(directoryPath, filename);
+	// スケルトンデータを作成
+	skeleton_ = CreateSkeleton(modelData_.rootNode);
+	// スキンクラスタを作成
+	skinCluster_ = CreateSkinCluster(skeleton_, modelData_);
+
+	// モデルファイルと同じ階層にテクスチャがない場合、デフォルトのテクスチャが入るようにする
+	texHandle_ = 1;
+	// テクスチャ読み込み 
+	texManager_->LoadTexture(modelData_.material.textureFilePath);
+	texHandle_ = texManager_->GetSrvIndex(modelData_.material.textureFilePath);
+
+	// 頂点データのリソース作成
 	CreateVertexResource();
 	CreateVertexBufferView();
+	// 書き込むためのアドレスを取得
+	vertexResource_->Map(0, nullptr, reinterpret_cast<void**>(&vertexData_));
+	std::memcpy(vertexData_, modelData_.vertices.data(), sizeof(VertexData) * modelData_.vertices.size());
 
+	// インデックスのリソース作成
+	indexResource_ = CreateBufferResource(dxCommon_->GetDevice(), sizeof(uint32_t) * modelData_.indices.size());
+	indexBufferView_.BufferLocation = indexResource_.Get()->GetGPUVirtualAddress();
+	indexBufferView_.SizeInBytes = sizeof(uint32_t) * modelData_.indices.size();
+	indexBufferView_.Format = DXGI_FORMAT_R32_UINT;
+	// 書き込むためのアドレスを取得
+	indexResource_->Map(0, nullptr, reinterpret_cast<void**>(&mappedIndex_));
+	std::memcpy(mappedIndex_, modelData_.indices.data(), sizeof(uint32_t) * modelData_.indices.size());
+
+	// マテリアルデータのリソース作成
 	CreateMaterialResource();
 
 	// カメラ
 	// 1つ分のサイズを用意する
-	cameraPosResource_ = CreateBufferResource(DirectXCommon::GetInstance()->GetDevice(), sizeof(Vector3)).Get();
+	cameraPosResource_ = CreateBufferResource(dxCommon_->GetDevice(), sizeof(Vector3)).Get();
 	// 書き込むためのアドレスを取得
 	cameraPosResource_->Map(0, nullptr, reinterpret_cast<void**>(&cameraPosData_));
-
-	// 書き込むためのアドレスを取得
-	vertexResource_->Map(0, nullptr, reinterpret_cast<void**>(&vertexData_));
-	std::memcpy(vertexData_, modelData_.vertices.data(), sizeof(VertexData) * modelData_.vertices.size());
 
 	// Lightingするか
 	materialData_->enableLighting = false;
@@ -41,40 +72,143 @@ void Model::Initialize(const std::string& directoryPath, const std::string& file
 		{0.0f,0.0f,0.0f},
 		{0.0f,0.0f,0.0f}
 	};
+
+	vbvs_[0] = vertexBufferView_;
+	vbvs_[1] = skinCluster_.influenceBufferView;
 }
 
 void Model::Draw(const ViewProjection& viewProjection, uint32_t textureHandle) {
 #pragma region アニメーション
 	animationTime_ += 1.0f / 60.0f;
 	animationTime_ = std::fmod(animationTime_, animation_.duration);
-	NodeAnimation& rootNodeAnimation = animation_.nodeAnimations[modelData_.rootNode.name];
-	Vector3 translate = CalculateValue(rootNodeAnimation.translate.keyframes, animationTime_);
-	Quaternion rotateQ = CalculateValue(rootNodeAnimation.rotate.keyframes, animationTime_);
-	Vector3 rotate = RotateVector(Vector3{ 1,1,1 }, rotateQ);
-	Vector3 scale = { 1,1,1 };//CalculateValue(rootNodeAnimation.scale.keyframes, animationTime_);
-	animationLocalMatrix_ = MakeAffineMatrix(scale, rotate, translate);
+	//NodeAnimation& rootNodeAnimation = animation_.nodeAnimations[modelData_.rootNode.name];
+	//Vector3 translate = CalculateTranslateValue(rootNodeAnimation.translate.keyframes, animationTime_);
+	//Quaternion rotate = CalculateQuaternionValue(rootNodeAnimation.rotate.keyframes, animationTime_);
+	//Vector3 scale = { 1,1,1 };
+	//modelData_.rootNode.localMatrix = MakeAffineMatrix(scale, rotate, translate);
+
+	// スケルトンに対してアニメーションを適用
+	ApplyAnimation(skeleton_, animation_, animationTime_);
+	// 骨の更新処理
+	SkeletonUpdate(skeleton_);
+	// スキンクラスタの更新
+	SkinClusterUpdate(skinCluster_, skeleton_);
+
 #pragma endregion
 
-	//// 形状を設定
-	DirectXCommon::GetInstance()->GetCommandList()->IASetVertexBuffers(0, 1, &vertexBufferView_); // VBVを設定
+	// 形状を設定
+	dxCommon_->GetCommandList()->IASetVertexBuffers(0, 2, vbvs_); // VBVを設定
+	dxCommon_->GetCommandList()->IASetIndexBuffer(&indexBufferView_);
 
 	/// CBVの設定
 
 	// viewProjection
-	DirectXCommon::GetInstance()->GetCommandList()->SetGraphicsRootConstantBufferView(4, viewProjection.constBuff_->GetGPUVirtualAddress());
-	DirectXCommon::GetInstance()->GetCommandList()->SetGraphicsRootConstantBufferView(5, cameraPosResource_.Get()->GetGPUVirtualAddress());
+	dxCommon_->GetCommandList()->SetGraphicsRootConstantBufferView(4, viewProjection.constBuff_->GetGPUVirtualAddress());
+	dxCommon_->GetCommandList()->SetGraphicsRootConstantBufferView(5, cameraPosResource_.Get()->GetGPUVirtualAddress());
 
 	/// DescriptorTableの設定
 	// texture
-	//DirectXCommon::GetInstance()->GetCommandList()->SetGraphicsRootDescriptorTable(2, TextureManager::GetInstance()->GetSrvHandleGPU(textureNum));
 	SrvManager::GetInstance()->SetGraphicsRootDesctiptorTable(2, textureHandle);
 	// material
-	DirectXCommon::GetInstance()->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialResource_.Get()->GetGPUVirtualAddress());
+	dxCommon_->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialResource_.Get()->GetGPUVirtualAddress());
 	// ライティング
-	DirectXCommon::GetInstance()->GetCommandList()->SetGraphicsRootConstantBufferView(3, DirectionalLight::GetInstance()->GetDirectionalLightResource()->GetGPUVirtualAddress());
-	DirectXCommon::GetInstance()->GetCommandList()->SetGraphicsRootConstantBufferView(6, PointLight::GetInstance()->GetPointLightResource()->GetGPUVirtualAddress());
-	DirectXCommon::GetInstance()->GetCommandList()->SetGraphicsRootConstantBufferView(7, SpotLight::GetInstance()->GetSpotLightResource()->GetGPUVirtualAddress());
-	DirectXCommon::GetInstance()->GetCommandList()->DrawInstanced(UINT(modelData_.vertices.size()), 1, 0, 0);
+	dxCommon_->GetCommandList()->SetGraphicsRootConstantBufferView(3, DirectionalLight::GetInstance()->GetDirectionalLightResource()->GetGPUVirtualAddress());
+	dxCommon_->GetCommandList()->SetGraphicsRootConstantBufferView(6, PointLight::GetInstance()->GetPointLightResource()->GetGPUVirtualAddress());
+	dxCommon_->GetCommandList()->SetGraphicsRootConstantBufferView(7, SpotLight::GetInstance()->GetSpotLightResource()->GetGPUVirtualAddress());
+	dxCommon_->GetCommandList()->DrawIndexedInstanced(UINT(modelData_.indices.size()), 1, 0, 0, 0);
+
+	//// jointの座標を代入
+	//for (int i = 0; i < skeletonLine_.size(); i++) {
+	//	// 親子関係のあるノードを検索
+	//	if (skeleton_.joints[i].children.size() != 0) {
+	//		for (int j = 0; j < skeleton_.joints[i].children.size(); j++) {
+	//			int index = skeleton_.joints[i].children[j];
+	//			skeletonLine_[index]->startPos_ = skeleton_.joints[index].transform.translate;
+	//		}
+	//	}
+	//	//skeletonLine_[i]->startPos_ = skeleton_.joints[i].transform.translate;
+	//	//skeletonLine_[i]->endPos_ = skeleton_.joints[i + 1].transform.translate;
+	//}
+	//// スケルトンの描画
+	//for (int i = 0; i < skeletonLine_.size(); i++) {
+	//	skeletonLine_[i]->Draw(viewProjection);
+	//}
+	//// jointの描画
+
+	//for (int i = 0; i < jointSphere_.size(); i++) {
+	//	jointSphere_[i]->worldTransform.transform.translate = skeleton_.joints[i].transform.translate;
+	//	//jointSphere_[i]->worldTransform.transform.rotate = skeleton_.joints[i].transform.rotate;
+	//	jointSphere_[i]->worldTransform.transform.scale = Multiply(0.1f, skeleton_.joints[i].transform.scale);
+	//}
+	//for (int i = 0; i < jointSphere_.size(); i++) {
+	//	jointSphere_[i]->Draw(textureHandle, viewProjection);
+	//}
+}
+
+void Model::Draw(const ViewProjection& viewProjection) {
+#pragma region アニメーション
+	animationTime_ += 1.0f / 60.0f;
+	animationTime_ = std::fmod(animationTime_, animation_.duration);
+	//NodeAnimation& rootNodeAnimation = animation_.nodeAnimations[modelData_.rootNode.name];
+	//Vector3 translate = CalculateTranslateValue(rootNodeAnimation.translate.keyframes, animationTime_);
+	//Quaternion rotate = CalculateQuaternionValue(rootNodeAnimation.rotate.keyframes, animationTime_);
+	//Vector3 scale = { 1,1,1 };
+	//modelData_.rootNode.localMatrix = MakeAffineMatrix(scale, rotate, translate);
+
+	// スケルトンに対してアニメーションを適用
+	ApplyAnimation(skeleton_, animation_, animationTime_);
+	// 骨の更新処理
+	SkeletonUpdate(skeleton_);
+
+#pragma endregion
+
+	// 形状を設定
+	dxCommon_->GetCommandList()->IASetVertexBuffers(0, 2, vbvs_); // VBVを設定
+	dxCommon_->GetCommandList()->IASetIndexBuffer(&indexBufferView_);
+
+	/// CBVの設定
+
+	// viewProjection
+	dxCommon_->GetCommandList()->SetGraphicsRootConstantBufferView(4, viewProjection.constBuff_->GetGPUVirtualAddress());
+	dxCommon_->GetCommandList()->SetGraphicsRootConstantBufferView(5, cameraPosResource_.Get()->GetGPUVirtualAddress());
+
+	/// DescriptorTableの設定
+	// texture
+	SrvManager::GetInstance()->SetGraphicsRootDesctiptorTable(2, texHandle_);
+	// material
+	dxCommon_->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialResource_.Get()->GetGPUVirtualAddress());
+	// ライティング
+	dxCommon_->GetCommandList()->SetGraphicsRootConstantBufferView(3, DirectionalLight::GetInstance()->GetDirectionalLightResource()->GetGPUVirtualAddress());
+	dxCommon_->GetCommandList()->SetGraphicsRootConstantBufferView(6, PointLight::GetInstance()->GetPointLightResource()->GetGPUVirtualAddress());
+	dxCommon_->GetCommandList()->SetGraphicsRootConstantBufferView(7, SpotLight::GetInstance()->GetSpotLightResource()->GetGPUVirtualAddress());
+	dxCommon_->GetCommandList()->DrawIndexedInstanced(UINT(modelData_.indices.size()), 1, 0, 0, 0);
+
+	//// jointの座標を代入
+	//for (int i = 0; i < skeletonLine_.size(); i++) {
+	//	// 親子関係のあるノードを検索
+	//	if (skeleton_.joints[i].children.size() != 0) {
+	//		for (int j = 0; j < skeleton_.joints[i].children.size(); j++) {
+	//			int index = skeleton_.joints[i].children[j];
+	//			skeletonLine_[index]->startPos_ = skeleton_.joints[index].transform.translate;
+	//		}
+	//	}
+	//	//skeletonLine_[i]->startPos_ = skeleton_.joints[i].transform.translate;
+	//	//skeletonLine_[i]->endPos_ = skeleton_.joints[i + 1].transform.translate;
+	//}
+	//// スケルトンの描画
+	//for (int i = 0; i < skeletonLine_.size(); i++) {
+
+	//	skeletonLine_[i]->Draw(viewProjection);
+	//}
+	//// jointの描画
+	//for (int i = 0; i < jointSphere_.size(); i++) {
+	//	jointSphere_[i]->worldTransform.transform.translate = skeleton_.joints[i].transform.translate;
+	//	//jointSphere_[i]->worldTransform.transform.rotate = skeleton_.joints[i].transform.rotate;
+	//	jointSphere_[i]->worldTransform.transform.scale = Multiply(0.1f, skeleton_.joints[i].transform.scale);
+	//}
+	//for (int i = 0; i < jointSphere_.size(); i++) {
+	//	jointSphere_[i]->Draw(1, viewProjection);
+	//}
 }
 
 void Model::AdjustParameter() {
@@ -83,34 +217,77 @@ void Model::AdjustParameter() {
 	ImGui::End();
 }
 
+void Model::SkeletonLineInit() {
+	// メモリーを確保
+	skeletonLine_.resize(skeleton_.joints.size());
+
+	// 初期化
+	for (int i = 0; i < skeletonLine_.size(); i++) {
+		skeletonLine_[i] = new Line();
+		skeletonLine_[i]->Initialize();
+	}
+
+	// jointの座標を代入
+	for (int i = 0; i < skeletonLine_.size(); i++) {
+		// 親子関係のあるノードを検索
+		if (skeleton_.joints[i].children.size() != 0) {
+			for (int j = 0; j < skeleton_.joints[i].children.size(); j++) {
+				int index = skeleton_.joints[i].children[j];
+				skeletonLine_[index]->startPos_ = skeleton_.joints[index].transform.translate;
+			}
+		}
+		//skeletonLine_[i]->startPos_ = skeleton_.joints[i].transform.translate;
+		//skeletonLine_[i]->endPos_ = skeleton_.joints[i + 1].transform.translate;
+	}
+
+
+}
+
+void Model::JointSphereInit() {
+	// メモリーを確保
+	jointSphere_.resize(skeleton_.joints.size());
+
+	// 初期化
+	for (int i = 0; i < jointSphere_.size(); i++) {
+		jointSphere_[i] = new Sphere();
+		jointSphere_[i]->Initialize();
+	}
+
+	for (int i = 0; i < jointSphere_.size(); i++) {
+		jointSphere_[i]->worldTransform.transform.translate = skeleton_.joints[i].transform.translate;
+		//jointSphere_[i]->worldTransform.transform.rotate = skeleton_.joints[i].transform.rotate;
+		jointSphere_[i]->worldTransform.transform.scale = Multiply(0.1f,skeleton_.joints[i].transform.scale);
+	}
+}
+
 #pragma region プライベートな関数
 
-Microsoft::WRL::ComPtr<ID3D12Resource> Model::CreateBufferResource(const Microsoft::WRL::ComPtr<ID3D12Device>& device, size_t sizeInBytes) {
-	HRESULT hr;
-	// 頂点リソース用のヒープの設定
-	D3D12_HEAP_PROPERTIES uploadHeapProperties{};
-	uploadHeapProperties.Type = D3D12_HEAP_TYPE_UPLOAD; // UploadHeapを使う
-	// 頂点リソースの設定
-	D3D12_RESOURCE_DESC vertexResourceDesc{};
-	// バッファソース。テクスチャの場合はまた別の設定をする
-	vertexResourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
-	vertexResourceDesc.Width = sizeInBytes; // リソースのサイズ。今回はVector4を3頂点分
-	// バッファの場合はこれからは1にする決まり
-	vertexResourceDesc.Height = 1;
-	vertexResourceDesc.DepthOrArraySize = 1;
-	vertexResourceDesc.MipLevels = 1;
-	vertexResourceDesc.SampleDesc.Count = 1;
-	// バッファの場合はこれにする決まり
-	vertexResourceDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
-
-	Microsoft::WRL::ComPtr<ID3D12Resource> vertexResource;
-	// 実際に頂点リソースを作る
-	hr = device.Get()->CreateCommittedResource(&uploadHeapProperties, D3D12_HEAP_FLAG_NONE,
-		&vertexResourceDesc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(&vertexResource));
-	assert(SUCCEEDED(hr));
-
-	return vertexResource;
-}
+//Microsoft::WRL::ComPtr<ID3D12Resource> Model::CreateBufferResource(const Microsoft::WRL::ComPtr<ID3D12Device>& device, size_t sizeInBytes) {
+//	HRESULT hr;
+//	// 頂点リソース用のヒープの設定
+//	D3D12_HEAP_PROPERTIES uploadHeapProperties{};
+//	uploadHeapProperties.Type = D3D12_HEAP_TYPE_UPLOAD; // UploadHeapを使う
+//	// 頂点リソースの設定
+//	D3D12_RESOURCE_DESC vertexResourceDesc{};
+//	// バッファソース。テクスチャの場合はまた別の設定をする
+//	vertexResourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
+//	vertexResourceDesc.Width = sizeInBytes; // リソースのサイズ。今回はVector4を3頂点分
+//	// バッファの場合はこれからは1にする決まり
+//	vertexResourceDesc.Height = 1;
+//	vertexResourceDesc.DepthOrArraySize = 1;
+//	vertexResourceDesc.MipLevels = 1;
+//	vertexResourceDesc.SampleDesc.Count = 1;
+//	// バッファの場合はこれにする決まり
+//	vertexResourceDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+//
+//	Microsoft::WRL::ComPtr<ID3D12Resource> vertexResource;
+//	// 実際に頂点リソースを作る
+//	hr = device.Get()->CreateCommittedResource(&uploadHeapProperties, D3D12_HEAP_FLAG_NONE,
+//		&vertexResourceDesc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(&vertexResource));
+//	assert(SUCCEEDED(hr));
+//
+//	return vertexResource;
+//}
 
 void Model::CreateVertexResource() {
 	vertexResource_ = CreateBufferResource(DirectXCommon::GetInstance()->GetDevice(), sizeof(VertexData) * modelData_.vertices.size()).Get();
@@ -133,10 +310,10 @@ void Model::CreateMaterialResource() {
 	materialResource_->Map(0, nullptr, reinterpret_cast<void**>(&materialData_));
 }
 
-ModelData Model::LoadObjFile(const std::string& directoryPath, const std::string& filename) {
+ModelData Model::LoadModelFile(const std::string& directoryPath, const std::string& filename) {
 	ModelData modelData;
 	Assimp::Importer importer;
-	std::string filePath = directoryPath + "/" + filename;
+	std::string filePath = "Engine/resources/" + directoryPath + "/" + filename;
 	const aiScene* scene = importer.ReadFile(filePath.c_str(), aiProcess_FlipWindingOrder | aiProcess_FlipUVs);
 	assert(scene->HasMeshes());
 
@@ -144,24 +321,46 @@ ModelData Model::LoadObjFile(const std::string& directoryPath, const std::string
 		aiMesh* mesh = scene->mMeshes[meshIndex];
 		assert(mesh->HasNormals());
 		assert(mesh->HasTextureCoords(0));
-		// 面の解析
+		// 頂点数分のメモリを確保
+		modelData.vertices.resize(mesh->mNumVertices);
+		for (uint32_t vertexIndex = 0; vertexIndex < mesh->mNumVertices; ++vertexIndex) {
+			aiVector3D& position = mesh->mVertices[vertexIndex];
+			aiVector3D& normal = mesh->mNormals[vertexIndex];
+			aiVector3D& texcoord = mesh->mTextureCoords[0][vertexIndex];
+
+			modelData.vertices[vertexIndex].position = { -position.x, position.y, position.z, 1.0f };
+			modelData.vertices[vertexIndex].normal = { -normal.x, normal.y, normal.z };
+			modelData.vertices[vertexIndex].texcoord = { texcoord.x, texcoord.y };
+		}
+		// 面からindexの解析
 		for (uint32_t faceIndex = 0; faceIndex < mesh->mNumFaces; ++faceIndex) {
 			aiFace& face = mesh->mFaces[faceIndex];
 			assert(face.mNumIndices == 3);
 			// 頂点を解析
 			for (uint32_t element = 0; element < face.mNumIndices; ++element) {
 				uint32_t vertexIndex = face.mIndices[element];
-				aiVector3D& position = mesh->mVertices[vertexIndex];
-				aiVector3D& normal = mesh->mNormals[vertexIndex];
-				aiVector3D& texcoord = mesh->mTextureCoords[0][vertexIndex];
-				VertexData vertex;
-				vertex.position = { position.x, position.y, position.z, 1.0f };
-				vertex.normal = { normal.x, normal.y, normal.z };
-				vertex.texcoord = { texcoord.x, texcoord.y };
-				// 右手座標から左手座標に変換されるので対処する
-				vertex.position.x *= -1.0f;
-				vertex.normal.x *= -1.0f;
-				modelData.vertices.push_back(vertex);
+				modelData.indices.push_back(vertexIndex);
+			}
+		}
+		// skinClusterの解析
+		for (uint32_t boneIndex = 0; boneIndex < mesh->mNumBones; ++boneIndex) {
+			// jointごとの格納領域を作成
+			aiBone* bone = mesh->mBones[boneIndex];
+			std::string jointName = bone->mName.C_Str();
+			JointWeightData& jointWeightData = modelData.skinClusterData[jointName];
+
+			// InverseBindPoseMatrixの抽出
+			aiMatrix4x4 bindPoseMatrixAssimp = bone->mOffsetMatrix.Inverse();
+			aiVector3D scale;
+			aiVector3D translate;
+			aiQuaternion rotate;
+			bindPoseMatrixAssimp.Decompose(scale, rotate, translate);
+			Matrix4x4 bindPoseMatrix = MakeAffineMatrix({ scale.x, scale.y, scale.z }, { rotate.x, -rotate.y, -rotate.z, rotate.w }, { -translate.x,translate.y, translate.z });
+			jointWeightData.inverseBindPoseMatrix = Inverse(bindPoseMatrix);
+
+			// weight情報を取り出す
+			for (uint32_t weightIndex = 0; weightIndex < bone->mNumWeights;++weightIndex) {
+				jointWeightData.vertexWeights.push_back({ bone->mWeights[weightIndex].mWeight, bone->mWeights[weightIndex].mVertexId });
 			}
 		}
 	}
@@ -172,7 +371,7 @@ ModelData Model::LoadObjFile(const std::string& directoryPath, const std::string
 		if (material->GetTextureCount(aiTextureType_DIFFUSE) != 0) {
 			aiString textureFilePath;
 			material->GetTexture(aiTextureType_DIFFUSE, 0, &textureFilePath);
-			modelData.material.textureFilePath = directoryPath + "/" + textureFilePath.C_Str();
+			modelData.material.textureFilePath = "Engine/resources/" + directoryPath + "/" + textureFilePath.C_Str();
 		}
 	}
 

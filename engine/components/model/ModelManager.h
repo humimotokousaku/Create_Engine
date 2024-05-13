@@ -11,7 +11,7 @@ public:
 	// 初期化
 	void Initialize();
 
-	void LoadModel(const std::string& filePath);
+	void LoadModel(const std::string& directoryPath, const std::string& filePath);
 
 	// 終了
 	void Finalize();
@@ -27,12 +27,12 @@ public:
 	/// </summary>
 	/// <param name="filePath">モデルのファイルパス</param>
 	/// <returns>モデル</returns>
-	Model* FindModel(const std::string& filePath);
+	Model* FindModel(const std::string& directoryPath, const std::string& filePath);
 
 	/// Setter
 
 	// モデルをセット
-	Model* SetModel(const std::string& filePath);
+	Model* SetModel(const std::string& directoryPath, const std::string& filePath);
 
 private:
 	static ModelManager* instance;
@@ -42,6 +42,9 @@ private:
 	ModelManager& operator = (const ModelManager& obj) = default;
 
 private:
+	// エンジン機能
+	TextureManager* texManager_;
+
 	// モデルデータ
 	std::map<std::string, std::unique_ptr<Model>> models_;
 };

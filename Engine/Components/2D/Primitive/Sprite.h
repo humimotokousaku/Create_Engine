@@ -14,20 +14,20 @@
 class Sprite
 {
 public:
-	Sprite(std::string textureFilePath);
+	Sprite(const std::string& directoryPath, std::string textureFilePath);
 	~Sprite() = default;
 
 	/// <summary>
 	/// インスタンスの生成
 	/// </summary>
 	/// <param name="size">画像の縦幅、横幅</param>
-	static Sprite* Create(std::string textureFilePath);
+	static Sprite* Create(const std::string& directoryPath, std::string textureFilePath);
 
 	/// <summary>
 	/// 初期化
 	/// </summary>
 	/// <param name="size">画像の縦幅、横幅</param>
-	void Initialize(std::string textureFilePath);
+	void Initialize(const std::string& directoryPath, std::string textureFilePath);
 
 	//void update();
 
@@ -74,7 +74,7 @@ public:
 	void ResetTextureSize() { textureSize_ = { 512.0f,512.0f }; }
 
 	// テクスチャのサイズをスプライトに合わせる
-	void AdjustTextureSize(std::string textureFilePath);
+	void AdjustTextureSize(const std::string& directoryPath, std::string textureFilePath);
 
 	// このスプライトを背景として扱う
 	void SetIsBackGround() { worldTransform_.transform.translate.z = 100000; }

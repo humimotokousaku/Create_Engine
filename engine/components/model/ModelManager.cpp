@@ -11,22 +11,22 @@ ModelManager* ModelManager::GetInstance() {
 }
 
 void ModelManager::Initialize() {
-
+	texManager_ = TextureManager::GetInstance();
 }
 
-void ModelManager::LoadModel(const std::string& filePath) {
+void ModelManager::LoadModel(const std::string& directoryPath, const std::string& filePath) {
 	// 読み込み済みモデルを検索
-	if (models_.contains(filePath)) {
+	if (models_.contains("Engine/resources" + directoryPath + "/" + filePath)) {
 		// 読み込み済みなら
 		return;
 	}
 
 	// モデル生成とファイル読み込み
 	std::unique_ptr<Model> model = std::make_unique<Model>();
-	model->Initialize("engine/resources", filePath);
+	model->Initialize(directoryPath, filePath);
 
 	// モデルをmapコンテナに格納
-	models_.insert(std::make_pair(filePath, std::move(model)));
+	models_.insert(std::make_pair("Engine/resources" + directoryPath + "/" + filePath, std::move(model)));
 }
 
 void ModelManager::Finalize() {
@@ -34,11 +34,11 @@ void ModelManager::Finalize() {
 	instance = nullptr;
 }
 
-Model* ModelManager::FindModel(const std::string& filePath) {
+Model* ModelManager::FindModel(const std::string& directoryPath, const std::string& filePath) {
 	// 読み込み済みモデルを検索
-	if (models_.contains(filePath)) {
+	if (models_.contains("Engine/resources" + directoryPath + "/" + filePath)) {
 		// 読み込み済みモデルを返す
-		return models_.at(filePath).get();
+		return models_.at("Engine/resources" + directoryPath + "/" + filePath).get();
 	}
 
 	// 該当ファイルなし
@@ -46,6 +46,6 @@ Model* ModelManager::FindModel(const std::string& filePath) {
 	return nullptr;
 }
 
-Model* ModelManager::SetModel(const std::string& filePath) {
-	return ModelManager::GetInstance()->FindModel(filePath);
+Model* ModelManager::SetModel(const std::string& directoryPath, const std::string& filePath) {
+	return ModelManager::GetInstance()->FindModel(directoryPath, filePath);
 }

@@ -12,7 +12,7 @@ void Enemy::Initialize(Camera* camera) {
 
 	model_ = std::make_unique<Object3D>();
 	model_->Initialize();
-	model_->SetModel("block.obj");
+	model_->SetModel("", "block.obj");
 	model_->SetCamera(camera);
 }
 

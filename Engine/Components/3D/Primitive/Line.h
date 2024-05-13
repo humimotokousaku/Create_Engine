@@ -21,7 +21,8 @@ public:
 	// 初期化
 	void Initialize();
 	// 描画処理
-	void Draw(Vector3 start, Vector3 end);
+	void Draw();
+	void Draw(ViewProjection viewProjection);
 	// 解放処理
 	//void Release();
 
@@ -50,7 +51,13 @@ private:// プライベートなメンバ関数
 
 	void CreateMaterialResource();
 
-private:
+public:// パブリックなメンバ変数
+	// 開始座標
+	Vector3 startPos_;
+	// 終了座標
+	Vector3 endPos_;
+
+private:// プライベートなメンバ変数
 	// Material
 	Vector4* materialData_;
 	Microsoft::WRL::ComPtr<ID3D12Resource> materialResource_;

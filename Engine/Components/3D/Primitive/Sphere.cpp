@@ -109,11 +109,13 @@ void Sphere::Initialize() {
 	materialData_->uvTransform = MakeIdentity4x4();
 	materialData_->shininess = 20;
 
-	// particleの座標指定
-	vertexIndex;
+	// ワールド座標の初期化
+	worldTransform.Initialize();
 }
 
-void Sphere::Draw(uint32_t textureHandle, const WorldTransform& worldTransform, const ViewProjection& viewProjection) {
+void Sphere::Draw(uint32_t textureHandle, const ViewProjection& viewProjection) {
+	worldTransform.UpdateMatrix();
+
 	uvTransformMatrix_ = MakeScaleMatrix(uvTransform_.scale);
 	uvTransformMatrix_ = Multiply(uvTransformMatrix_, MakeRotateZMatrix(uvTransform_.rotate.z));
 	uvTransformMatrix_ = Multiply(uvTransformMatrix_, MakeTranslateMatrix(uvTransform_.translate));

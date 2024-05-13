@@ -19,7 +19,7 @@ void Object3D::Draw(uint32_t textureNum) {
 	// ワールド座標の更新
 	worldTransform.UpdateMatrix();
 	// nodeを含み計算
-	worldTransform.matWorld_ = Multiply(model_->GetAnimationMatrix(), Multiply(model_->GetModelData().rootNode.localMatrix, worldTransform.matWorld_));
+	//worldTransform.matWorld_ = Multiply(model_->GetModelData().rootNode.localMatrix, worldTransform.matWorld_);
 	worldTransform.TransferMatrix();
 
 	/// コマンドを積む
@@ -31,4 +31,30 @@ void Object3D::Draw(uint32_t textureNum) {
 	
 	// 見た目を描画
 	model_->Draw(camera_->GetViewProjection(), textureNum);
+}
+
+void Object3D::Draw() {
+	// カメラ
+	if (camera_) {
+		camera_->Update();
+	}
+
+	// ワールド座標の更新
+	worldTransform.UpdateMatrix();
+	// nodeを含み計算
+	//worldTransform.matWorld_ = Multiply(model_->GetModelData().rootNode.localMatrix, worldTransform.matWorld_);
+	worldTransform.TransferMatrix();
+
+	/// コマンドを積む
+	// RootSignatureを設定。PSOに設定しているけど別途設定が必要
+	DirectXCommon::GetInstance()->GetCommandList()->SetGraphicsRootSignature(PipelineManager::GetInstance()->GetRootSignature()[1].Get());
+	DirectXCommon::GetInstance()->GetCommandList()->SetPipelineState(PipelineManager::GetInstance()->GetGraphicsPipelineState()[1].Get()); // PSOを設定
+
+	// 形状を設定
+	DirectXCommon::GetInstance()->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	// worldTransform
+	DirectXCommon::GetInstance()->GetCommandList()->SetGraphicsRootConstantBufferView(1, worldTransform.constBuff_->GetGPUVirtualAddress());
+
+	// 見た目を描画
+	model_->Draw(camera_->GetViewProjection());
 }

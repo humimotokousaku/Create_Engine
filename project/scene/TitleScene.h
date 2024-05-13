@@ -42,12 +42,10 @@ public:
 private:
 	std::unique_ptr<Object3D> plane_;
 	std::unique_ptr<Object3D> axis_;
-	std::unique_ptr<Sprite> sprite_;
-	std::unique_ptr<Sprite> sprite_2;
-	std::unique_ptr<Particles> particles_;
-	std::unique_ptr<Particles> particles_1;
+	std::unique_ptr<Object3D> human_;
+
+
 	std::unique_ptr<Animation> anim_;
-	std::unique_ptr<Plane> testWater_;
 	std::unique_ptr<CollisionManager> collisionManager_;
 	std::unique_ptr<Player> player_;
 	std::array<std::unique_ptr<Enemy> , 2u> enemy_;

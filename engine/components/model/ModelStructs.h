@@ -1,12 +1,17 @@
 #pragma once
 #include "MathStructs.h"
 #include <map>
+#include <optional>
 #include <vector>
+#include <array>
+#include <span>
 #include <fstream>
 #include <string>
 #include <sstream>
 #include <stdint.h>
 #include <assimp/scene.h>
+#include <d3d12.h>
+#include <wrl.h>
 
 struct TransformationMatrix {
 	Matrix4x4 matWorld;
@@ -15,6 +20,16 @@ struct TransformationMatrix {
 struct Transform {
 	Vector3 scale;
 	Vector3 rotate;
+	Vector3 translate;
+};
+struct EulerTransform {
+	Vector3 scale;
+	Vector3 rotate;
+	Vector3 translate;
+};
+struct QuaternionTransform {
+	Vector3 scale;
+	Quaternion rotate;
 	Vector3 translate;
 };
 
@@ -38,15 +53,6 @@ struct MaterialData {
 MaterialData LoadMaterialTemplateFile(const std::string& directoryPath, const std::string& filename);
 
 #pragma region ノード
-//struct KeyframeVector3 {
-//	Vector3 value;
-//	float time;
-//};
-//struct KeyframeQuaternion {
-//	Quaternion value;
-//	float time;
-//};
-
 template<typename tValue>
 struct Keyframe {
 	float time;
@@ -74,11 +80,13 @@ struct Motion {
 // アニメーションの読み込み
 Motion LoadAnimationFile(const std::string& directoryPath, const std::string& filename);
 // 任意の時刻の値を取得
-Vector3 CalculateValue(const std::vector<KeyframeVector3>& keyframes, float time);
-Quaternion CalculateValue(const std::vector<KeyframeQuaternion>& keyframes, float time);
+Vector3 CalculateTranslateValue(const std::vector<KeyframeVector3>& keyframes, float time);
+Quaternion CalculateQuaternionValue(const std::vector<KeyframeQuaternion>& keyframes, float time);
+Vector3 CalculateScaleValue(const std::vector<KeyframeVector3>& keyframes, float time);
 
 // ノード
 struct Node {
+	QuaternionTransform transform;
 	Matrix4x4 localMatrix;
 	std::string name;
 	std::vector<Node> children;
@@ -87,8 +95,72 @@ struct Node {
 Node ReadNode(aiNode* node);
 #pragma endregion
 
+#pragma region SkeletonとJoint
+struct Joint {
+	QuaternionTransform transform;
+	Matrix4x4 localMatrix;
+	Matrix4x4 skeletonSpaceMatrix;
+	std::string name;
+	std::vector<int32_t> children;
+	int32_t index;
+	std::optional<int32_t> parent;
+};
+// Jointを作成
+int32_t CreateJoint(const Node& node, const std::optional<int32_t>& parent, std::vector<Joint>& joints);
+
+struct Skeleton {
+	int32_t root;
+	std::map<std::string, int32_t> jointMap;
+	std::vector<Joint> joints;
+};
+// スケルトンを作成
+Skeleton CreateSkeleton(const Node& rootNode);
+// スケルトンの更新処理
+void SkeletonUpdate(Skeleton& skeleton);
+// スケルトンに対してアニメーションを適用
+void ApplyAnimation(Skeleton& skeleton, const Motion& animation, float animationTime);
+#pragma endregion
+
+const uint32_t kNumMaxInfluence = 4;
+struct VertexInfluence {
+	std::array<float, kNumMaxInfluence> weights;
+	std::array<int32_t, kNumMaxInfluence> jointIndices;
+};
+
+struct WellForGPU {
+	Matrix4x4 skeletonSpaceMatrix;
+	Matrix4x4 skeletonSpaceInverseTransposeMatrix;
+};
+struct VertexWeightData {
+	float weight;
+	uint32_t vertexIndex;
+};
+struct JointWeightData {
+	Matrix4x4 inverseBindPoseMatrix;
+	std::vector<VertexWeightData> vertexWeights;
+};
+
+struct SkinCluster {
+	std::vector<Matrix4x4> inverseBindPoseMatrices;
+	Microsoft::WRL::ComPtr<ID3D12Resource> influenceResource;
+	D3D12_VERTEX_BUFFER_VIEW influenceBufferView;
+	std::span<VertexInfluence> mappedInfluence;
+	Microsoft::WRL::ComPtr<ID3D12Resource> paletteResource;
+	std::span<WellForGPU> mappedPalette;
+	std::pair<D3D12_CPU_DESCRIPTOR_HANDLE, D3D12_GPU_DESCRIPTOR_HANDLE> paletteSrvHandle;
+};
 struct ModelData {
+	std::map<std::string, JointWeightData> skinClusterData;
 	std::vector<VertexData> vertices;
+	std::vector<uint32_t> indices;
 	MaterialData material;
 	Node rootNode;
 };
+
+// skinClusterの作成
+SkinCluster CreateSkinCluster(const Skeleton& skeleton, const ModelData& modelData);
+
+// skinClusterの更新
+void SkinClusterUpdate(SkinCluster& skinCluster, const Skeleton& skeleton);
+
+Microsoft::WRL::ComPtr<ID3D12Resource> CreateBufferResource(const Microsoft::WRL::ComPtr<ID3D12Device>& device, size_t sizeInBytes);

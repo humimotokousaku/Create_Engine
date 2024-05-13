@@ -20,6 +20,8 @@ TextureManager* TextureManager::GetInstance() {
 void TextureManager::Initialize(SrvManager* srvManager) {
 	srvManager_ = srvManager;
 	textureDatas_.reserve(DirectXCommon::kMaxSRVCount);
+	// モデルを読み込んだ際にテクスチャがないなら白い画像を送る
+	LoadTexture("Engine/resources/DefaultTexture/white.png");
 }
 
 void TextureManager::Finalize() {
@@ -37,7 +39,11 @@ void TextureManager::ComUninit() {
 void TextureManager::LoadTexture(const std::string& filePath) {
 	// 読み込み済みテクスチャを検索
 	if (textureDatas_.contains(filePath)) {
-
+		return;
+	}
+	// 何も読み込んでいなかったら終了
+	if (filePath.size() == 0) {
+		return;
 	}
 	// テクスチャ枚数の上限チェック
 	assert(srvManager_->GetIsLimit());
@@ -64,6 +70,40 @@ void TextureManager::LoadTexture(const std::string& filePath) {
 	srvManager_->CreateSRVforTexture2D(textureData.srvIndex, textureData.resource.Get(), textureData.metdata.format, textureData.metdata.mipLevels);
 }
 
+void TextureManager::LoadTexture(const std::string& directoryPath, const std::string& fileName) {
+	// 読み込み済みテクスチャを検索
+	if (textureDatas_.contains("Engine/resources" + directoryPath + "/" + fileName)) {
+		return;
+	}
+	// 何も読み込んでいなかったら終了
+	if (fileName.size() == 0) {
+		return;
+	}
+	// テクスチャ枚数の上限チェック
+	assert(srvManager_->GetIsLimit());
+
+	// テクスチャファイルを読んでプログラムで扱えるようにする
+	DirectX::ScratchImage image{};
+	std::wstring filePathW = ConvertString("Engine/resources" + directoryPath + "/" + fileName);
+	HRESULT hr = DirectX::LoadFromWICFile(filePathW.c_str(), DirectX::WIC_FLAGS_FORCE_SRGB, nullptr, image);
+	assert(SUCCEEDED(hr));
+
+	// ミニマップの生成
+	DirectX::ScratchImage mipImages{};
+	hr = DirectX::GenerateMipMaps(image.GetImages(), image.GetImageCount(), image.GetMetadata(), DirectX::TEX_FILTER_SRGB, 0, mipImages);
+	assert(SUCCEEDED(hr));
+
+	// 追加したテクスチャデータの参照を取得
+	TextureData& textureData = textureDatas_["Engine/resources" + directoryPath + "/" + fileName];
+	textureData.metdata = mipImages.GetMetadata();
+	textureData.resource = CreateTextureResource(textureData.metdata);
+	textureData.intermediateResource = UploadTextureData(textureData.resource, mipImages);
+	textureData.srvIndex = srvManager_->Allocate();
+	textureData.srvHandleCPU = srvManager_->GetCPUDescriptorHandle(textureData.srvIndex);
+	textureData.srvHandleGPU = srvManager_->GetGPUDescriptorHandle(textureData.srvIndex);
+	srvManager_->CreateSRVforTexture2D(textureData.srvIndex, textureData.resource.Get(), textureData.metdata.format, textureData.metdata.mipLevels);
+}
+
 uint32_t TextureManager::GetTextureIndexByFilePath(const std::string& filePath) {
 	// 読み込み済みテクスチャデータを検索
 	if (textureDatas_.contains(filePath)) {
@@ -73,17 +113,38 @@ uint32_t TextureManager::GetTextureIndexByFilePath(const std::string& filePath) 
 	assert(0);
 	return 0;
 }
-
-D3D12_GPU_DESCRIPTOR_HANDLE TextureManager::GetSrvHandleGPU(const std::string& filePath) {
-	// 範囲外指定をチェック
-	assert(textureDatas_.size() + kSRVIndexTop < DirectXCommon::kMaxSRVCount);
-	
-	TextureData& textureData = textureDatas_[filePath];
-	return textureData.srvHandleGPU;
+uint32_t TextureManager::GetTextureIndexByFilePath(const std::string& directoryPath, const std::string& fileName) {
+	// 読み込み済みテクスチャデータを検索
+	if (textureDatas_.contains("Engine/resources" + directoryPath + "/" + fileName)) {
+		TextureData& textureData = textureDatas_["Engine/resources" + directoryPath + "/" + fileName];
+		return textureData.srvIndex;
+	}
+	assert(0);
+	return 0;
 }
+
+//D3D12_GPU_DESCRIPTOR_HANDLE TextureManager::GetSrvHandleGPU(const std::string& directoryPath, const std::string& fileName) {
+//	// 範囲外指定をチェック
+//	assert(textureDatas_.size() + kSRVIndexTop < DirectXCommon::kMaxSRVCount);
+//	
+//	TextureData& textureData = textureDatas_[filePath];
+//	return textureData.srvHandleGPU;
+//}
 
 uint32_t TextureManager::GetSrvIndex(const std::string& filePath) {
 	TextureData& textureData = textureDatas_[filePath];
+	// 何も書いてないならデフォルトテクスチャの番号を返す
+	if (filePath.size() == 0) {
+		textureData = textureDatas_["Engine/resources/DefaultTexture/white.png"];
+	}
+	return textureData.srvIndex;
+}
+uint32_t TextureManager::GetSrvIndex(const std::string& directoryPath, const std::string& fileName) {
+	TextureData& textureData = textureDatas_["Engine/resources" + directoryPath + "/" + fileName];
+	// 何も書いてないならデフォルトテクスチャの番号を返す
+	if (fileName.size() == 0) {
+		textureData = textureDatas_["Engine/resources/DefaultTexture/white.png"];
+	}
 	return textureData.srvIndex;
 }
 
@@ -92,7 +153,6 @@ D3D12_CPU_DESCRIPTOR_HANDLE TextureManager::GetCPUDescriptorHandle(const Microso
 	handleCPU.ptr += (descriptorSize * index);
 	return handleCPU;
 }
-
 D3D12_GPU_DESCRIPTOR_HANDLE TextureManager::GetGPUDescriptorHandle(const Microsoft::WRL::ComPtr<ID3D12DescriptorHeap>& descriptorHeap, uint32_t descriptorSize, uint32_t index) {
 	D3D12_GPU_DESCRIPTOR_HANDLE handleGPU = descriptorHeap.Get()->GetGPUDescriptorHandleForHeapStart();
 	handleGPU.ptr += (descriptorSize * index);

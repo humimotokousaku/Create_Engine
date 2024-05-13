@@ -10,12 +10,12 @@ void Line::Initialize() {
 	// 書き込むためのアドレスを取得
 	vertexResource_->Map(0, nullptr, reinterpret_cast<void**>(&vertexData_));
 
-	*materialData_ = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
+	*materialData_ = Vector4(1.0f, 0.0f, 0.0f, 1.0f);
 }
 
-void Line::Draw(Vector3 start, Vector3 end) {
-	vertexData_[0] = { start.x,start.y ,start.z ,1 };
-	vertexData_[1] = { end.x,end.y ,end.z ,1 };
+void Line::Draw() {
+	vertexData_[0] = { startPos_.x,startPos_.y ,startPos_.z ,1 };
+	vertexData_[1] = { endPos_.x,endPos_.y ,endPos_.z ,1 };
 
 	/// コマンドを積む
 	// 使用するPSO
@@ -24,6 +24,29 @@ void Line::Draw(Vector3 start, Vector3 end) {
 	DirectXCommon::GetInstance()->GetCommandList()->SetGraphicsRootConstantBufferView(1,camera_->GetViewProjection().constBuff_->GetGPUVirtualAddress());
 	// マテリアルCBufferの場所を設定
 	DirectXCommon::GetInstance()->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialResource_.Get()->GetGPUVirtualAddress());
+	DirectXCommon::GetInstance()->GetCommandList()->DrawInstanced(2, 1, 0, 0);
+}
+
+void Line::Draw(ViewProjection viewProjection) {
+	vertexData_[0] = { startPos_.x,startPos_.y ,startPos_.z ,1 };
+	vertexData_[1] = { endPos_.x,endPos_.y ,endPos_.z ,1 };
+	
+	//worldTransform.UpdateMatrix();
+	// RootSignatureを設定。PSOに設定しているけど別途設定が必要
+	DirectXCommon::GetInstance()->GetCommandList()->SetGraphicsRootSignature(LinePSO::GetInstance()->GetRootSignature().Get());
+	DirectXCommon::GetInstance()->GetCommandList()->SetPipelineState(LinePSO::GetInstance()->GetGraphicsPipelineState().Get()); // PSOを設定
+
+	// コマンドを積む
+	DirectXCommon::GetInstance()->GetCommandList()->IASetVertexBuffers(0, 1, &vertexBufferView_); // VBVを設定
+
+	DirectXCommon::GetInstance()->GetCommandList()->SetGraphicsRootConstantBufferView(1, viewProjection.constBuff_->GetGPUVirtualAddress());
+
+	// 形状を設定。PSOに設定しているものとはまた別。同じものを設定すると考えておけば良い
+	DirectXCommon::GetInstance()->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_LINELIST);
+
+	// マテリアルCBufferの場所を設定
+	DirectXCommon::GetInstance()->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialResource_.Get()->GetGPUVirtualAddress());
+
 	DirectXCommon::GetInstance()->GetCommandList()->DrawInstanced(2, 1, 0, 0);
 }
 

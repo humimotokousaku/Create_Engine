@@ -33,40 +33,67 @@ private:
 	};
 
 public:
-	// シングルトン
+	// シングルトン(ユーザー使用禁止)
 	static TextureManager* GetInstance();
 
 	// デストラクタ
 	~TextureManager() = default;
 
-	// 初期化
+	// 初期化(ユーザー使用禁止)
 	void Initialize(SrvManager* srvManager);
 
-	// 解放処理
+	// 解放処理(ユーザー使用禁止)
 	void Finalize();
 
-	// COMの終了処理
+	// COMの終了処理(ユーザー使用禁止)
 	void ComUninit();
-	// COMの初期化
+	// COMの初期化(ユーザー使用禁止)
 	void ComInit();
 
 	// Textureを読む
 	void LoadTexture(const std::string& filePath);
+	void LoadTexture(const std::string& directoryPath, const std::string& fileName);
 
 	/// Getter
+	//D3D12_GPU_DESCRIPTOR_HANDLE GetSrvHandleGPU(uint32_t textureIndex);
+	//D3D12_GPU_DESCRIPTOR_HANDLE GetSrvHandleGPU(const std::string& directoryPath, const std::string& fileName);
 	D3D12_CPU_DESCRIPTOR_HANDLE GetCPUDescriptorHandle(const Microsoft::WRL::ComPtr<ID3D12DescriptorHeap>& descriptorHeap, uint32_t descriptorSize, uint32_t index);
 	D3D12_GPU_DESCRIPTOR_HANDLE GetGPUDescriptorHandle(const Microsoft::WRL::ComPtr<ID3D12DescriptorHeap>& descriptorHeap, uint32_t descriptorSize, uint32_t index);
-	//D3D12_GPU_DESCRIPTOR_HANDLE GetSrvHandleGPU(uint32_t textureIndex);
-	D3D12_GPU_DESCRIPTOR_HANDLE GetSrvHandleGPU(const std::string& filePath);
-	// メタデータの取得
-	//const DirectX::TexMetadata& GetMetaData(const std::string& filePath);
-	// SRVインデックスの取得
+
+
+
+
+	/// <summary>
+	/// SRVインデックスの取得
+	/// </summary>
+	/// <param name="filePath">Engine/resource~~テクスチャの名前までの全てのパス</param>
+	/// <returns></returns>
 	uint32_t GetSrvIndex(const std::string& filePath);
-	// GPUハンドルの取得
+	/// <summary>
+	/// SRVインデックスの取得
+	/// </summary>
+	/// <param name="directoryPath">テクスチャの入っているフォルダの名前(Engine/resources/は書く必要なし)</param>
+	/// <param name="fileName">テクスチャの名前</param>
+	/// <returns></returns>
+	uint32_t GetSrvIndex(const std::string& directoryPath, const std::string& fileName);
+
+	/// <summary>
+	/// SRVインデックスの取得
+	/// </summary>
+	/// <param name="filePath">Engine/resource~~テクスチャの名前までの全てのパス</param>
+	/// <returns></returns>
 	uint32_t GetTextureIndexByFilePath(const std::string& filePath);
-	// textureResource
-	Microsoft::WRL::ComPtr<ID3D12Resource> GetTextureResource(const std::string& filePath) {
-		TextureData& textureData = textureDatas_[filePath];
+	/// <summary>
+	/// テクスチャの名前からGPUハンドルを取得
+	/// </summary>
+	/// <param name="directoryPath">テクスチャの入っているフォルダの名前(Engine/resources/は書く必要なし)</param>
+	/// <param name="fileName">テクスチャの名前</param>
+	/// <returns></returns>
+	uint32_t GetTextureIndexByFilePath(const std::string& directoryPath, const std::string& fileName);
+
+	// textureResource(ユーザー使用禁止)
+	Microsoft::WRL::ComPtr<ID3D12Resource> GetTextureResource(const std::string& directoryPath, const std::string& fileName) {
+		TextureData& textureData = textureDatas_["Engine/resources/" + directoryPath + "/" + fileName];
 		return textureData.resource;
 	}
 
