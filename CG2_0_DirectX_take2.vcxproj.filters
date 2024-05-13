@@ -560,5 +560,6 @@
     <FxCompile Include="Engine\resources\sharder\BlurPS.hlsl" />
     <FxCompile Include="Engine\resources\sharder\HighIntensityPS.hlsl" />
     <FxCompile Include="Engine\resources\sharder\BloomPS.hlsl" />
+    <FxCompile Include="Engine\resources\sharder\Vignette.PS.hlsl" />
   </ItemGroup>
 </Project>

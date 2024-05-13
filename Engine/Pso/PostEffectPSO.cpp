@@ -242,13 +242,13 @@ void PostEffectPSO::PixelSharder() {
 		L"ps_6_0", dxcUtils_, dxcCompiler_, includeHandler_);
 	assert(pixelShaderBlob_ != nullptr);
 	// 高輝度
-	pixelShaderBlob_[1] = CompileShader(L"engine/resources/sharder/HighIntensityPS.hlsl",
+	pixelShaderBlob_[1] = CompileShader(L"engine/resources/sharder/Vignette.PS.hlsl",
 		L"ps_6_0", dxcUtils_, dxcCompiler_, includeHandler_);
 	assert(pixelShaderBlob_ != nullptr);
-	// ブラー
-	pixelShaderBlob_[2] = CompileShader(L"engine/resources/sharder/BlurPS.hlsl",
-		L"ps_6_0", dxcUtils_, dxcCompiler_, includeHandler_);
-	assert(pixelShaderBlob_ != nullptr);
+	//// ブラー
+	//pixelShaderBlob_[1] = CompileShader(L"engine/resources/sharder/HighIntensityPS.hlsl",
+	//	L"ps_6_0", dxcUtils_, dxcCompiler_, includeHandler_);
+	//assert(pixelShaderBlob_ != nullptr);
 	//// ブルーム
 	//pixelShaderBlob_[3] = CompileShader(L"engine/resources/sharder/BloomPS.hlsl",
 	//	L"ps_6_0", dxcUtils_, dxcCompiler_, includeHandler_);
@@ -256,7 +256,7 @@ void PostEffectPSO::PixelSharder() {
 }
 
 void PostEffectPSO::VertexSharder() {
-	for (int i = 0; i < 3; i++) {
+	for (int i = 0; i < COUNT; i++) {
 		// Shaderをコンパイルする
 		vertexShaderBlob_[i] = CompileShader(L"engine/resources/sharder/PostEffectTestVS.hlsl",
 			L"vs_6_0", dxcUtils_, dxcCompiler_, includeHandler_);
