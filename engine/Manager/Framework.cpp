@@ -41,8 +41,8 @@ void Framework::Initialize() {
 	// 線のPSO
 
 	// ポストエフェクトのPSO
-	postEffectPSO_ = PostEffectPSO::GetInstance();
-	postEffectPSO_->Initialize();
+	//postEffectPSO_ = PostEffectPSO::GetInstance();
+	//postEffectPSO_->Initialize();
 
 
 

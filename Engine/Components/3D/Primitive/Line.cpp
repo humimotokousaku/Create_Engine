@@ -33,8 +33,7 @@ void Line::Draw(ViewProjection viewProjection) {
 	
 	//worldTransform.UpdateMatrix();
 	// RootSignatureを設定。PSOに設定しているけど別途設定が必要
-	DirectXCommon::GetInstance()->GetCommandList()->SetGraphicsRootSignature(LinePSO::GetInstance()->GetRootSignature().Get());
-	DirectXCommon::GetInstance()->GetCommandList()->SetPipelineState(LinePSO::GetInstance()->GetGraphicsPipelineState().Get()); // PSOを設定
+	LinePSO::GetInstance()->SetCommand();
 
 	// コマンドを積む
 	DirectXCommon::GetInstance()->GetCommandList()->IASetVertexBuffers(0, 1, &vertexBufferView_); // VBVを設定
