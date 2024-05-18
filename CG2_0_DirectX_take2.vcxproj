@@ -216,6 +216,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" </Command>
     <ClCompile Include="Engine\Components\3D\Object3D.cpp" />
     <ClCompile Include="Engine\Base\SrvManager.cpp" />
     <ClCompile Include="Engine\math\Quaternion.cpp" />
+    <ClCompile Include="Engine\Pso\SkinningPSO.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Engine\Pso\PostEffectPSO.h" />
@@ -281,6 +282,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" </Command>
     <ClInclude Include="Engine\Components\3D\Object3D.h" />
     <ClInclude Include="Engine\Base\SrvManager.h" />
     <ClInclude Include="Engine\math\Quaternion.h" />
+    <ClInclude Include="Engine\Pso\SkinningPSO.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="externals\ImGui\LICENSE.txt" />

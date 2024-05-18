@@ -40,9 +40,10 @@ public:
 	/// 
 
 private:
-	std::unique_ptr<Object3D> plane_;
+	std::array<std::unique_ptr<Object3D>, 2> plane_;
 	std::unique_ptr<Object3D> axis_;
-	std::unique_ptr<Object3D> human_;
+	std::array<std::unique_ptr<Object3D>, 2> box_;
+	std::array<std::unique_ptr<Object3D>, 2> human_;
 
 
 	std::unique_ptr<Animation> anim_;

@@ -94,56 +94,40 @@ Vector3 RotateVector(const Vector3& vector, Quaternion quaternion) {
 
 Matrix4x4 MakeRotateMatrix(const Quaternion& quaternion) {
 	Matrix4x4 result;
+
 	result.m[0][0] = (quaternion.w * quaternion.w) + (quaternion.x * quaternion.x) - (quaternion.y * quaternion.y) - (quaternion.z * quaternion.z);
-	result.m[0][1] = 2 * ((quaternion.x * quaternion.y) + (quaternion.w * quaternion.z));
-	result.m[0][2] = 2 * ((quaternion.x * quaternion.z) - (quaternion.w * quaternion.y));
-	result.m[0][3] = 0;
+	result.m[0][1] = 2.0f * ((quaternion.x * quaternion.y) + (quaternion.w * quaternion.z));
+	result.m[0][2] = 2.0f * ((quaternion.x * quaternion.z) - (quaternion.w * quaternion.y));
+	result.m[0][3] = 0.0f;
 
-	result.m[1][0] = 2 * ((quaternion.x * quaternion.y) - (quaternion.w * quaternion.z));
+	result.m[1][0] = 2.0f * ((quaternion.x * quaternion.y) - (quaternion.w * quaternion.z));
 	result.m[1][1] = (quaternion.w * quaternion.w) - (quaternion.x * quaternion.x) + (quaternion.y * quaternion.y) - (quaternion.z * quaternion.z);
-	result.m[1][2] = 2 * ((quaternion.y * quaternion.z) + (quaternion.w * quaternion.x));
-	result.m[1][3] = 0;
+	result.m[1][2] = 2.0f * ((quaternion.y * quaternion.z) + (quaternion.w * quaternion.x));
+	result.m[1][3] = 0.0f;
 
-	result.m[2][0] = 2 * ((quaternion.x * quaternion.z) + (quaternion.w * quaternion.y));
-	result.m[2][1] = 2 * ((quaternion.y * quaternion.z) - (quaternion.w * quaternion.x));
+	result.m[2][0] = 2.0f * ((quaternion.x * quaternion.z) + (quaternion.w * quaternion.y));
+	result.m[2][1] = 2.0f * ((quaternion.y * quaternion.z) - (quaternion.w * quaternion.x));
 	result.m[2][2] = (quaternion.w * quaternion.w) - (quaternion.x * quaternion.x) - (quaternion.y * quaternion.y) + (quaternion.z * quaternion.z);
-	result.m[2][3] = 0;
+	result.m[2][3] = 0.0f;
 
-	result.m[3][0] = 0;
-	result.m[3][1] = 0;
-	result.m[3][2] = 0;
-	result.m[3][3] = 1;
+	result.m[3][0] = 0.0f;
+	result.m[3][1] = 0.0f;
+	result.m[3][2] = 0.0f;
+	result.m[3][3] = 1.0f;
 
 	return result;
 }
 
 Matrix4x4 MakeAffineMatrix(const Vector3& scale, const Quaternion& q, const Vector3& translate) {
-	// 計算結果
-	Matrix4x4 result{};
-
+	// スケーリング行列
+	Matrix4x4 scaleMatrix = MakeScaleMatrix(scale);
 	// quaternionから回転行列を作成
-	Matrix4x4 rotateMatrix = MakeRotateMatrix(q);
+	Matrix4x4 rotateMatrix = MakeRotateMatrix(Normalize(q));
+	// 平行移動行列
+	Matrix4x4 transformMatrix = MakeTranslateMatrix(translate);
 
 	// アフィン変換行列の計算
-	result.m[0][0] = scale.x * rotateMatrix.m[0][0];
-	result.m[0][1] = scale.x * rotateMatrix.m[0][1];
-	result.m[0][2] = scale.x * rotateMatrix.m[0][2];
-	result.m[0][3] = 0.0f;
-
-	result.m[1][0] = scale.y * rotateMatrix.m[1][0];
-	result.m[1][1] = scale.y * rotateMatrix.m[1][1];
-	result.m[1][2] = scale.y * rotateMatrix.m[1][2];
-	result.m[1][3] = 0.0f;
-
-	result.m[2][0] = scale.z * rotateMatrix.m[2][0];
-	result.m[2][1] = scale.z * rotateMatrix.m[2][1];
-	result.m[2][2] = scale.z * rotateMatrix.m[2][2];
-	result.m[2][3] = 0.0f;
-
-	result.m[3][0] = translate.x;
-	result.m[3][1] = translate.y;
-	result.m[3][2] = translate.z;
-	result.m[3][3] = 1.0f;
+	Matrix4x4 result = Multiply(scaleMatrix, Multiply(rotateMatrix, transformMatrix));
 
 	return result;
 }
@@ -155,17 +139,24 @@ Quaternion Slerp(const Quaternion& q0, const Quaternion& q1, float t) {
 		quaternion0 = Quaternion{ -q0.x, -q0.y, -q0.z ,-q0.w };
 		dot = -dot;
 	}
+	Quaternion result;
+	if (dot >= 1.0f - std::numeric_limits<float>::epsilon()) {
+		result.x = (1.0f - t) * q0.x + t * q1.x;
+		result.y = (1.0f - t) * q0.y + t * q1.y;
+		result.z = (1.0f - t) * q0.z + t * q1.z;
+		result.w = (1.0f - t) * q0.w + t * q1.w;
+		return result;
+	}
+
 	// なす角を求める
 	float theta = std::acos(dot);
 	float scale0 = sinf((1 - t) * theta) / sin(theta);
 	float scale1 = sin(t * theta) / sin(theta);
 
-	Quaternion result = {
-		scale0 * quaternion0.x + scale1 * q1.x,
-		scale0 * quaternion0.y + scale1 * q1.y,
-		scale0 * quaternion0.z + scale1 * q1.z,
-		scale0 * quaternion0.w + scale1 * q1.w
-	};
+	result.x = scale0 * quaternion0.x + scale1 * q1.x;
+	result.y = scale0 * quaternion0.y + scale1 * q1.y;
+	result.z = scale0 * quaternion0.z + scale1 * q1.z;
+	result.w = scale0 * quaternion0.w + scale1 * q1.w;
 
 	return result;
 }

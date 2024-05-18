@@ -5,6 +5,7 @@
 #include "TextureManager.h"
 
 #include "Object3dPSO.h"
+#include "SkinningPSO.h"
 #include "LinePSO.h"
 #include "ParticlePSO.h"
 #include "PostEffectPSO.h"
@@ -73,6 +74,7 @@ private:
 
 	// PSO
 	Object3dPSO* object3dPSO_;
+	SkinningPSO* skinningPSO_;
 	LinePSO* linePSO_;
 	ParticlePSO* particlePSO_;
 	PostEffectPSO* postEffectPSO_;

@@ -75,24 +75,18 @@ void Model::Initialize(const std::string& directoryPath, const std::string& file
 }
 
 void Model::Draw(const ViewProjection& viewProjection, uint32_t textureHandle) {
-#pragma region アニメーション
-	animationTime_ += 1.0f / 60.0f;
-	animationTime_ = std::fmod(animationTime_, animation_.duration);
-
-	// スケルトンに対してアニメーションを適用
-	ApplyAnimation(skeleton_, animation_, animationTime_);
-	// 骨の更新処理
-	SkeletonUpdate(skeleton_);
-	// スキンクラスタの更新
-	SkinClusterUpdate(skinCluster_, skeleton_);
-
-#pragma endregion
-	D3D12_VERTEX_BUFFER_VIEW vbvs[2] = {
-		vertexBufferView_,
-		skinCluster_.influenceBufferView
-	};
-	// 形状を設定
-	dxCommon_->GetCommandList()->IASetVertexBuffers(0, 2, vbvs); // VBVを設定
+	if (modelData_.isSkinClusterData) {
+		D3D12_VERTEX_BUFFER_VIEW vbvs[2] = {
+			vertexBufferView_,
+			skinCluster_.influenceBufferView
+		};
+		dxCommon_->GetCommandList()->IASetVertexBuffers(0, 2, vbvs); // VBVを設定
+		// MatrixPalette
+		SrvManager::GetInstance()->SetGraphicsRootDesctiptorTable(8, skinCluster_.srvIndex);
+	}
+	else {
+		dxCommon_->GetCommandList()->IASetVertexBuffers(0, 1, &vertexBufferView_); // VBVを設定
+	}
 	dxCommon_->GetCommandList()->IASetIndexBuffer(&indexBufferView_);
 
 	/// CBVの設定
@@ -101,40 +95,33 @@ void Model::Draw(const ViewProjection& viewProjection, uint32_t textureHandle) {
 	dxCommon_->GetCommandList()->SetGraphicsRootConstantBufferView(4, viewProjection.constBuff_->GetGPUVirtualAddress());
 	dxCommon_->GetCommandList()->SetGraphicsRootConstantBufferView(5, cameraPosResource_.Get()->GetGPUVirtualAddress());
 
-	/// DescriptorTableの設定
-	// texture
-	SrvManager::GetInstance()->SetGraphicsRootDesctiptorTable(2, textureHandle);
-	// MatrixPalette
-	SrvManager::GetInstance()->SetGraphicsRootDesctiptorTable(8, skinCluster_.srvIndex);
-
-	// material
-	dxCommon_->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialResource_.Get()->GetGPUVirtualAddress());
 	// ライティング
 	dxCommon_->GetCommandList()->SetGraphicsRootConstantBufferView(3, DirectionalLight::GetInstance()->GetDirectionalLightResource()->GetGPUVirtualAddress());
 	dxCommon_->GetCommandList()->SetGraphicsRootConstantBufferView(6, PointLight::GetInstance()->GetPointLightResource()->GetGPUVirtualAddress());
 	dxCommon_->GetCommandList()->SetGraphicsRootConstantBufferView(7, SpotLight::GetInstance()->GetSpotLightResource()->GetGPUVirtualAddress());
+	/// DescriptorTableの設定
+	// texture
+	SrvManager::GetInstance()->SetGraphicsRootDesctiptorTable(2, textureHandle);
+
+	// material
+	dxCommon_->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialResource_.Get()->GetGPUVirtualAddress());
+
 	dxCommon_->GetCommandList()->DrawIndexedInstanced(UINT(modelData_.indices.size()), 1, 0, 0, 0);
 }
 
 void Model::Draw(const ViewProjection& viewProjection) {
-#pragma region アニメーション
-	animationTime_ += 1.0f / 60.0f;
-	animationTime_ = std::fmod(animationTime_, animation_.duration);
-
-	// スケルトンに対してアニメーションを適用
-	ApplyAnimation(skeleton_, animation_, animationTime_);
-	// 骨の更新処理
-	SkeletonUpdate(skeleton_);
-	// スキンクラスタの更新
-	SkinClusterUpdate(skinCluster_, skeleton_);
-#pragma endregion
-
-	// 形状を設定
-	D3D12_VERTEX_BUFFER_VIEW vbvs[2] = {
-		vertexBufferView_,
-		skinCluster_.influenceBufferView
-	};
-	dxCommon_->GetCommandList()->IASetVertexBuffers(0, 2, vbvs); // VBVを設定
+	if (modelData_.isSkinClusterData) {
+		D3D12_VERTEX_BUFFER_VIEW vbvs[2] = {
+			vertexBufferView_,
+			skinCluster_.influenceBufferView
+		};
+		dxCommon_->GetCommandList()->IASetVertexBuffers(0, 2, vbvs); // VBVを設定
+		// MatrixPalette
+		SrvManager::GetInstance()->SetGraphicsRootDesctiptorTable(8, skinCluster_.srvIndex);
+	}
+	else {
+		dxCommon_->GetCommandList()->IASetVertexBuffers(0, 1, &vertexBufferView_); // VBVを設定
+	}
 	dxCommon_->GetCommandList()->IASetIndexBuffer(&indexBufferView_);
 
 	/// CBVの設定
@@ -146,8 +133,6 @@ void Model::Draw(const ViewProjection& viewProjection) {
 	/// DescriptorTableの設定
 	// texture
 	SrvManager::GetInstance()->SetGraphicsRootDesctiptorTable(2, texHandle_);
-	// MatrixPalette
-	SrvManager::GetInstance()->SetGraphicsRootDesctiptorTable(8, skinCluster_.srvIndex);
 
 	// material
 	dxCommon_->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialResource_.Get()->GetGPUVirtualAddress());
@@ -186,8 +171,6 @@ void Model::SkeletonLineInit() {
 		//skeletonLine_[i]->startPos_ = skeleton_.joints[i].transform.translate;
 		//skeletonLine_[i]->endPos_ = skeleton_.joints[i + 1].transform.translate;
 	}
-
-
 }
 
 void Model::JointSphereInit() {
@@ -208,33 +191,6 @@ void Model::JointSphereInit() {
 }
 
 #pragma region プライベートな関数
-
-//Microsoft::WRL::ComPtr<ID3D12Resource> Model::CreateBufferResource(const Microsoft::WRL::ComPtr<ID3D12Device>& device, size_t sizeInBytes) {
-//	HRESULT hr;
-//	// 頂点リソース用のヒープの設定
-//	D3D12_HEAP_PROPERTIES uploadHeapProperties{};
-//	uploadHeapProperties.Type = D3D12_HEAP_TYPE_UPLOAD; // UploadHeapを使う
-//	// 頂点リソースの設定
-//	D3D12_RESOURCE_DESC vertexResourceDesc{};
-//	// バッファソース。テクスチャの場合はまた別の設定をする
-//	vertexResourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
-//	vertexResourceDesc.Width = sizeInBytes; // リソースのサイズ。今回はVector4を3頂点分
-//	// バッファの場合はこれからは1にする決まり
-//	vertexResourceDesc.Height = 1;
-//	vertexResourceDesc.DepthOrArraySize = 1;
-//	vertexResourceDesc.MipLevels = 1;
-//	vertexResourceDesc.SampleDesc.Count = 1;
-//	// バッファの場合はこれにする決まり
-//	vertexResourceDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
-//
-//	Microsoft::WRL::ComPtr<ID3D12Resource> vertexResource;
-//	// 実際に頂点リソースを作る
-//	hr = device.Get()->CreateCommittedResource(&uploadHeapProperties, D3D12_HEAP_FLAG_NONE,
-//		&vertexResourceDesc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(&vertexResource));
-//	assert(SUCCEEDED(hr));
-//
-//	return vertexResource;
-//}
 
 void Model::CreateVertexResource() {
 	vertexResource_ = CreateBufferResource(DirectXCommon::GetInstance()->GetDevice(), sizeof(VertexData) * modelData_.vertices.size()).Get();
@@ -310,7 +266,15 @@ ModelData Model::LoadModelFile(const std::string& directoryPath, const std::stri
 				jointWeightData.vertexWeights.push_back({ bone->mWeights[weightIndex].mWeight, bone->mWeights[weightIndex].mVertexId });
 			}
 		}
+		if (modelData.skinClusterData.size() == 0) {
+			modelData.isSkinClusterData = false;
+		}
+		else {
+			modelData.isSkinClusterData = true;
+		}
 	}
+
+	
 
 	// マテリアルの解析
 	for (uint32_t materialIndex = 0; materialIndex < scene->mNumMaterials; ++materialIndex) {

@@ -32,9 +32,9 @@ Motion LoadAnimationFile(const std::string& directoryPath, const std::string& fi
 	std::string filePath = "Engine/resources/" + directoryPath + "/" + filename;
 	const aiScene* scene = importer.ReadFile(filePath.c_str(), 0);
 	if (scene->mAnimations == 0) {
+		animation.isActive = false;
 		return animation;
 	}
-	//assert(scene->mAnimations != 0);
 
 	aiAnimation* animationAssimp = scene->mAnimations[0];
 	animation.duration = float(animationAssimp->mDuration / animationAssimp->mTicksPerSecond); // 時間の単位を秒に変換
@@ -73,10 +73,7 @@ Motion LoadAnimationFile(const std::string& directoryPath, const std::string& fi
 }
 
 Vector3 CalculateTranslateValue(const std::vector<KeyframeVector3>& keyframes, float time) {
-	if (keyframes.empty()) {
-		return Vector3{ 0,0,0 };
-	}
-
+	assert(!keyframes.empty());
 	// キーが一つか、時刻がキーフレーム前なら最初の値にする
 	if (keyframes.size() == 1 || time <= keyframes[0].time) {
 		return keyframes[0].value;
@@ -95,10 +92,7 @@ Vector3 CalculateTranslateValue(const std::vector<KeyframeVector3>& keyframes, f
 	return (*keyframes.rbegin()).value;
 }
 Quaternion CalculateQuaternionValue(const std::vector<KeyframeQuaternion>& keyframes, float time) {
-	if (keyframes.empty()) {
-		return Quaternion{ 0,0,0,1 };
-	}
-
+	assert(!keyframes.empty());
 	// キーが一つか、時刻がキーフレーム前なら最初の値にする
 	if (keyframes.size() == 1 || time <= keyframes[0].time) {
 		return keyframes[0].value;
@@ -118,9 +112,9 @@ Quaternion CalculateQuaternionValue(const std::vector<KeyframeQuaternion>& keyfr
 }
 Vector3 CalculateScaleValue(const std::vector<KeyframeVector3>& keyframes, float time) {
 	if (keyframes.empty()) {
-		return Vector3{ 1,1,1 };
+		return { 1,1,1 };
 	}
-
+	//assert(!keyframes.empty());
 	// キーが一つか、時刻がキーフレーム前なら最初の値にする
 	if (keyframes.size() == 1 || time <= keyframes[0].time) {
 		return keyframes[0].value;
@@ -203,19 +197,13 @@ void SkeletonUpdate(Skeleton& skeleton) {
 	}
 }
 
-void ApplyAnimation(Skeleton& skeleton, const Motion& animation, float animationTime) {
+void ApplyAnimation(Skeleton& skeleton, Motion& animation, float animationTime) {
 	for (Joint& joint : skeleton.joints) {
 		if (auto it = animation.nodeAnimations.find(joint.name); it != animation.nodeAnimations.end()) {
 			const NodeAnimation& rootNodeAnimation = (*it).second;
+			joint.transform.scale = CalculateScaleValue(rootNodeAnimation.scale.keyframes, animationTime);
 			joint.transform.translate = CalculateTranslateValue(rootNodeAnimation.translate.keyframes, animationTime);
 			joint.transform.rotate = CalculateQuaternionValue(rootNodeAnimation.rotate.keyframes, animationTime);
-			joint.transform.scale = CalculateScaleValue(rootNodeAnimation.scale.keyframes, animationTime);
-		}
-		// Skeletonがない場合デフォルトの数値を代入
-		else {
-			joint.transform.translate = { 0,0,0 };
-			joint.transform.rotate = { 0,0,0,1 };
-			joint.transform.scale = { 1,1,1 };
 		}
 	}
 }
@@ -275,6 +263,8 @@ SkinCluster CreateSkinCluster(const Skeleton& skeleton, const ModelData& modelDa
 	}
 #pragma endregion
 
+	SkinClusterUpdate(skinCluster, skeleton);
+
 	return skinCluster;
 }
 
@@ -284,6 +274,25 @@ void SkinClusterUpdate(SkinCluster& skinCluster, const Skeleton& skeleton) {
 		skinCluster.mappedPalette[jointIndex].skeletonSpaceMatrix = Multiply(skinCluster.inverseBindPoseMatrices[jointIndex], skeleton.joints[jointIndex].skeletonSpaceMatrix);
 		skinCluster.mappedPalette[jointIndex].skeletonSpaceInverseTransposeMatrix = Transpose(Inverse(skinCluster.mappedPalette[jointIndex].skeletonSpaceMatrix));
 	}
+}
+
+void AnimationUpdate(SkinCluster& skinCluster, Skeleton& skeleton, Motion& animation, float& animationTime) {
+	// アニメーションがなければ早期リターン
+	if (animation.nodeAnimations.size() == 0) {
+		animation.isActive = false;
+		return;
+	}
+
+
+	// スケルトンに対してアニメーションを適用
+	ApplyAnimation(skeleton, animation, animationTime);
+	// 骨の更新処理
+	SkeletonUpdate(skeleton);
+	// スキンクラスタの更新
+	SkinClusterUpdate(skinCluster, skeleton);
+
+	animationTime += 1.0f / 60.0f;
+	animationTime = std::fmod(animationTime, animation.duration);
 }
 
 Microsoft::WRL::ComPtr<ID3D12Resource> CreateBufferResource(const Microsoft::WRL::ComPtr<ID3D12Device>& device, size_t sizeInBytes) {

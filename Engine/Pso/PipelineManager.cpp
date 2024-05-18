@@ -15,8 +15,12 @@ void PipelineManager::Initialize() {
 
 	// 3Dのオブジェクトに使用するPSO
 	object3dPSO_ = Object3dPSO::GetInstance();
-	object3dPSO_->Init(dxcUtils_, dxcCompiler_, includeHandler_,"SkinningObject3d.VS.hlsl","Object3d.PS.hlsl");
+	object3dPSO_->Init(dxcUtils_, dxcCompiler_, includeHandler_,"Object3d.VS.hlsl","Object3d.PS.hlsl");
 	object3dPSO_->CreatePSO();
+	// スキニングを使用しているオブジェクトに使用する
+	skinningPSO_ = SkinningPSO::GetInstance();
+	skinningPSO_->Init(dxcUtils_, dxcCompiler_, includeHandler_, "SkinningObject3d.VS.hlsl", "Object3d.PS.hlsl");
+	skinningPSO_->CreatePSO();
 	// 3Dの線に使用するPSO
 	linePSO_ = LinePSO::GetInstance();
 	linePSO_->Init(dxcUtils_, dxcCompiler_, includeHandler_,"LineVS.hlsl", "LinePS.hlsl");

@@ -56,6 +56,13 @@ public:
 	Material* materialData_;
 	Matrix4x4 animationLocalMatrix_;
 	Matrix4x4 skeletonSpaceMatrix;
+
+	// アニメーション
+	Motion animation_;
+	// スケルトン
+	Skeleton skeleton_;
+	// スキンクラスタ
+	SkinCluster skinCluster_;
 private:
 #pragma region エンジン機能
 	// DirectX
@@ -83,19 +90,13 @@ private:
 
 	// モデルデータ
 	ModelData modelData_;
-	// アニメーション
-	Motion animation_;
-	// スケルトン
-	Skeleton skeleton_;
-	// スキンクラスタ
-	SkinCluster skinCluster_;
 
+	//float animationTime_ = 0.0f;
 	// スケルトン描画用の線
 	std::vector<Line*> skeletonLine_;
 	// joint描画用の球
 	std::vector<Sphere*> jointSphere_;
-
-	float animationTime_ = 0.0f;
+	
 
 	// カメラの座標
 	Microsoft::WRL::ComPtr<ID3D12Resource> cameraPosResource_;

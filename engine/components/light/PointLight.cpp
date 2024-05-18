@@ -19,7 +19,7 @@ void PointLight::Initialize() {
 	pointLightData_->color = { 1.0f, 1.0f, 1.0f, 1.0f };
 	pointLightData_->pos = { 0.0f, 2.0f, 0.0f };
 	pointLightData_->intensity = 1.0f;
-	pointLightData_->radius = 5.0f;
+	pointLightData_->radius = 300.0f;
 	pointLightData_->decay = 1.0f;
 }
 

@@ -46,12 +46,26 @@ public:
 	void SetCamera(Camera* camera) { camera_ = camera; }
 
 	// モデルのセット
-	void SetModel(const std::string& directoryPath, const std::string& filePath) { model_ = ModelManager::GetInstance()->FindModel(directoryPath, filePath); }
+	void SetModel(const std::string& directoryPath, const std::string& filePath) { 
+		model_ = ModelManager::GetInstance()->FindModel(directoryPath, filePath);
+		// アニメーション
+		animation_ = model_->animation_;
+		// スケルトン
+		skeleton_ = model_->skeleton_;
+		// スキンクラスタ
+		skinCluster_ = model_->skinCluster_;
+	}
 
 public:
 	WorldTransform worldTransform;
 	Camera* camera_;
 	Model* model_;
 private:
-
+	// アニメーション
+	Motion animation_;
+	// スケルトン
+	Skeleton skeleton_;
+	// スキンクラスタ
+	SkinCluster skinCluster_;
+	float animationTime_ = 0.0f;
 };
