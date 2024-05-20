@@ -82,10 +82,6 @@ void TitleScene::Initialize() {
 	axis_->SetModel("", "axis.obj");
 	axis_->SetCamera(camera_.get());
 	axis_->worldTransform.transform.translate = { -2,0,5 };
-
-	// アニメーション
-	//anim_ = std::make_unique<Animation>();
-	//anim_->SetAnimData(&plane_->worldTransform.transform.translate, Vector3{ 0,0,0 }, Vector3{ 10,0,0 }, 60, "PlaneAnim0", Easings::EaseOutBack);
 }
 
 void TitleScene::Update() {
@@ -114,11 +110,7 @@ void TitleScene::Update() {
 	//ImGui::DragFloat3("scale", &axis_->worldTransform.transform.scale.x, 0.01f, -100, 100);
 	//ImGui::DragFloat3("rotate", &axis_->worldTransform.transform.rotate.x, 0.01f, -6.28f, 6.28f);
 	//ImGui::End();
-	//ImGui::Begin("human");
-	//ImGui::DragFloat3("translation", &human_[0]->worldTransform.transform.translate.x, 0.01f, -100, 100);
-	//ImGui::DragFloat3("scale", &human_[0]->worldTransform.transform.scale.x, 0.01f, -100, 100);
-	//ImGui::DragFloat3("rotate", &human_[0]->worldTransform.transform.rotate.x, 0.01f, -6.28f, 6.28f);
-	//ImGui::End();
+	human_[0]->ImGuiParameter("Human_Walk");
 
 #pragma endregion
 }

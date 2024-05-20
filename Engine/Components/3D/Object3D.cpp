@@ -19,6 +19,13 @@ void Object3D::Draw(uint32_t textureNum) {
 	// ワールド座標の更新
 	worldTransform.UpdateMatrix();
 
+	// アニメーション
+	model_->animation_ = animation_;
+	// スケルトン
+	model_->skeleton_ = skeleton_;
+	// スキンクラスタ
+	model_->skinCluster_ = skinCluster_;
+
 	/// コマンドを積む
 	if (model_->GetModelData().isSkinClusterData) {
 		// 使用するPSO
@@ -39,8 +46,19 @@ void Object3D::Draw(uint32_t textureNum) {
 			Vector3 scale = CalculateScaleValue(rootNodeAnimation.scale.keyframes, animationTime_);
 			Matrix4x4 localMatrix = MakeAffineMatrix(scale, rotate, translate);
 			worldTransform.matWorld_ = Multiply(localMatrix, worldTransform.matWorld_);
-			animationTime_ += 1.0f / 60.0f;
-			animationTime_ = std::fmod(animationTime_, animation_.duration);
+			animationTime_ += 1.0f / 60.0f * animation_.playBackSpeed;
+
+			// ループ再生の場合
+			if (animation_.isLoop) {
+				// 通常
+				if (animation_.playBackSpeed >= 0.001f) {
+					animationTime_ = std::fmod(animationTime_, animation_.duration);
+				}
+				// 逆再生
+				else if (animation_.playBackSpeed <= 0.0f) {
+					animationTime_ = Custom_fmod(animationTime_, 0, animation_.duration);
+				}
+			}
 		}
 		worldTransform.TransferMatrix();
 	}
@@ -98,4 +116,16 @@ void Object3D::Draw() {
 
 	// 見た目を描画
 	model_->Draw(camera_->GetViewProjection());
+}
+
+void Object3D::ImGuiParameter(const char* name) {
+	ImGui::Begin(name);
+	ImGui::DragFloat3("translation", &worldTransform.transform.translate.x, 0.01f, -100, 100);
+	ImGui::DragFloat3("scale", &worldTransform.transform.scale.x, 0.01f, -100, 100);
+	ImGui::DragFloat3("rotate", &worldTransform.transform.rotate.x, 0.01f, -6.28f, 6.28f);
+	ImGui::DragFloat("playBackSpeed", &animation_.playBackSpeed, 0.01f, -10.0f, 10.0f);
+	ImGui::Checkbox("isAnimation", &animation_.isActive);
+	ImGui::DragFloat("duration", &animation_.duration, 0,-10.10);
+	ImGui::DragFloat("animTime", &animationTime_,0,-100,100);
+	ImGui::End();
 }

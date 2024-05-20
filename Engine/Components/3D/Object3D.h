@@ -38,6 +38,8 @@ public:
 	/// Default Method
 	/// 
 
+	void ImGuiParameter(const char* name);
+
 	/// Getter
 
 
@@ -60,12 +62,13 @@ public:
 	WorldTransform worldTransform;
 	Camera* camera_;
 	Model* model_;
-private:
 	// アニメーション
 	Motion animation_;
+	float animationTime_ = 0.0f;
+private:
 	// スケルトン
 	Skeleton skeleton_;
 	// スキンクラスタ
 	SkinCluster skinCluster_;
-	float animationTime_ = 0.0f;
+
 };

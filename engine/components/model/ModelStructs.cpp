@@ -36,6 +36,11 @@ Motion LoadAnimationFile(const std::string& directoryPath, const std::string& fi
 		return animation;
 	}
 
+	// アニメーションの再生速度
+	animation.playBackSpeed = 1.0f;
+	// ループ再生
+	animation.isLoop = true;
+
 	aiAnimation* animationAssimp = scene->mAnimations[0];
 	animation.duration = float(animationAssimp->mDuration / animationAssimp->mTicksPerSecond); // 時間の単位を秒に変換
 
@@ -277,12 +282,11 @@ void SkinClusterUpdate(SkinCluster& skinCluster, const Skeleton& skeleton) {
 }
 
 void AnimationUpdate(SkinCluster& skinCluster, Skeleton& skeleton, Motion& animation, float& animationTime) {
-	// アニメーションがなければ早期リターン
-	if (animation.nodeAnimations.size() == 0) {
+	// アニメーションがないか、止めているなら早期リターン
+	if (animation.nodeAnimations.size() == 0 || !animation.isActive) {
 		animation.isActive = false;
 		return;
 	}
-
 
 	// スケルトンに対してアニメーションを適用
 	ApplyAnimation(skeleton, animation, animationTime);
@@ -291,8 +295,19 @@ void AnimationUpdate(SkinCluster& skinCluster, Skeleton& skeleton, Motion& anima
 	// スキンクラスタの更新
 	SkinClusterUpdate(skinCluster, skeleton);
 
-	animationTime += 1.0f / 60.0f;
-	animationTime = std::fmod(animationTime, animation.duration);
+	animationTime += 1.0f / 60.0f * animation.playBackSpeed;
+	// ループ再生の場合
+	if (animation.isLoop) {
+		// 通常
+		if (animation.playBackSpeed >= 0.001f) {
+			animationTime = std::fmod(animationTime, animation.duration);
+		}
+		// 逆再生
+		else if (animation.playBackSpeed <= 0.0f) {
+			animationTime = Custom_fmod(animationTime, 0, animation.duration);
+		}
+
+	}
 }
 
 Microsoft::WRL::ComPtr<ID3D12Resource> CreateBufferResource(const Microsoft::WRL::ComPtr<ID3D12Device>& device, size_t sizeInBytes) {
@@ -320,4 +335,12 @@ Microsoft::WRL::ComPtr<ID3D12Resource> CreateBufferResource(const Microsoft::WRL
 	assert(SUCCEEDED(hr));
 
 	return vertexResource;
+}
+
+float Custom_fmod(float dividend, float divisor, float initValue = 0) {
+	float result = std::fmod(dividend, divisor);
+	if (result <= 0) {
+		result = initValue;
+	}
+	return result;
 }
