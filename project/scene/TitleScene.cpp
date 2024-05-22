@@ -121,16 +121,16 @@ void TitleScene::Update() {
 }
 
 void TitleScene::Draw() {
-	//axis_->Draw(uvcheckerTexture_);
-	/*for (int i = 0; i < 2; i++) {
+	axis_->Draw(uvcheckerTexture_);
+	for (int i = 0; i < 2; i++) {
 		plane_[i]->Draw(uvcheckerTexture_);
 		box_[i]->Draw(uvcheckerTexture_);
 		human_[i]->Draw(uvcheckerTexture_);
-	}*/
-
-	for (Object3D* object : levelObjects_) {
-		object->Draw(uvcheckerTexture_);
 	}
+
+	/*for (Object3D* object : levelObjects_) {
+		object->Draw(uvcheckerTexture_);
+	}*/
 }
 
 void TitleScene::Finalize() {

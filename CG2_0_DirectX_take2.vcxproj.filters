@@ -587,5 +587,6 @@
     <FxCompile Include="Engine\resources\sharder\PostEffectTestVS.hlsl">
       <Filter>リソース ファイル</Filter>
     </FxCompile>
+    <FxCompile Include="engine\resources\sharder\Smoothing.PS.hlsl" />
   </ItemGroup>
 </Project>
