@@ -82,6 +82,11 @@ void TitleScene::Initialize() {
 	axis_->SetModel("", "axis.obj");
 	axis_->SetCamera(camera_.get());
 	axis_->worldTransform.transform.translate = { -2,0,5 };
+
+	/*LoadJSONFile("level/TL1_test_levelEditor.json");
+	for (Object3D* object : levelObjects_) {
+		object->SetCamera(camera_.get());
+	}*/
 }
 
 void TitleScene::Update() {
@@ -117,10 +122,14 @@ void TitleScene::Update() {
 
 void TitleScene::Draw() {
 	//axis_->Draw(uvcheckerTexture_);
-	for (int i = 0; i < 2; i++) {
+	/*for (int i = 0; i < 2; i++) {
 		plane_[i]->Draw(uvcheckerTexture_);
 		box_[i]->Draw(uvcheckerTexture_);
 		human_[i]->Draw(uvcheckerTexture_);
+	}*/
+
+	for (Object3D* object : levelObjects_) {
+		object->Draw(uvcheckerTexture_);
 	}
 }
 

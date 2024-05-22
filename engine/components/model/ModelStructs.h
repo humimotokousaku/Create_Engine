@@ -151,6 +151,7 @@ MaterialData LoadMaterialTemplateFile(const std::string& directoryPath, const st
 
 // アニメーションの読み込み
 Motion LoadAnimationFile(const std::string& directoryPath, const std::string& filename);
+Motion LoadAnimationFile(const std::string& filename);
 
 // 任意の時刻の値を取得
 Vector3 CalculateTranslateValue(const std::vector<KeyframeVector3>& keyframes, float time);

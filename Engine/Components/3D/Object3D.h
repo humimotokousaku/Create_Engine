@@ -57,6 +57,15 @@ public:
 		// スキンクラスタ
 		skinCluster_ = model_->skinCluster_;
 	}
+	void SetModel(Model* model) {
+		model_ = model;
+		// アニメーション
+		animation_ = model_->animation_;
+		// スケルトン
+		skeleton_ = model_->skeleton_;
+		// スキンクラスタ
+		skinCluster_ = model_->skinCluster_;
+	}
 
 public:
 	WorldTransform worldTransform;
@@ -70,5 +79,4 @@ private:
 	Skeleton skeleton_;
 	// スキンクラスタ
 	SkinCluster skinCluster_;
-
 };

@@ -19,12 +19,12 @@ void Object3D::Draw(uint32_t textureNum) {
 	// ワールド座標の更新
 	worldTransform.UpdateMatrix();
 
-	// アニメーション
-	model_->animation_ = animation_;
-	// スケルトン
-	model_->skeleton_ = skeleton_;
-	// スキンクラスタ
-	model_->skinCluster_ = skinCluster_;
+	//// アニメーション
+	//model_->animation_ = animation_;
+	//// スケルトン
+	//model_->skeleton_ = skeleton_;
+	//// スキンクラスタ
+	//model_->skinCluster_ = skinCluster_;
 
 	/// コマンドを積む
 	if (model_->GetModelData().isSkinClusterData) {

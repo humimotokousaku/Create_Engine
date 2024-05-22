@@ -163,6 +163,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" </Command>
     <ClCompile Include="Engine\Pso\IPSO.cpp" />
     <ClCompile Include="Engine\Pso\Object3dPSO.cpp" />
     <ClCompile Include="Engine\Pso\ParticlePSO.cpp" />
+    <ClCompile Include="engine\utility\LevelData.cpp" />
     <ClCompile Include="Project\GameObject\Enemy.cpp" />
     <ClCompile Include="Engine\Components\Animation\Animation.cpp" />
     <ClCompile Include="Engine\Components\3D\Primitive\Plane.cpp" />
@@ -224,6 +225,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" </Command>
     <ClInclude Include="Engine\Pso\IPSO.h" />
     <ClInclude Include="Engine\Pso\Object3dPSO.h" />
     <ClInclude Include="Engine\Pso\ParticlePSO.h" />
+    <ClInclude Include="engine\utility\LevelData.h" />
     <ClInclude Include="Project\GameObject\Enemy.h" />
     <ClInclude Include="Engine\Components\Animation\Animation.h" />
     <ClInclude Include="Engine\Components\3D\Primitive\Plane.h" />

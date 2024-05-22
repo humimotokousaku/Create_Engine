@@ -1,5 +1,6 @@
 #include "ModelManager.h"
 #include "WinApp.h"
+#include "Object3D.h"
 
 ModelManager* ModelManager::instance = nullptr;
 

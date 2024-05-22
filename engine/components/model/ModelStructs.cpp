@@ -76,6 +76,56 @@ Motion LoadAnimationFile(const std::string& directoryPath, const std::string& fi
 
 	return animation;
 }
+Motion LoadAnimationFile(const std::string& filename) {
+	Motion animation;
+	Assimp::Importer importer;
+	std::string filePath = "Engine/resources/" + filename;
+	const aiScene* scene = importer.ReadFile(filePath.c_str(), 0);
+	if (scene->mAnimations == 0) {
+		animation.isActive = false;
+		return animation;
+	}
+
+	// アニメーションの再生速度
+	animation.playBackSpeed = 1.0f;
+	// ループ再生
+	animation.isLoop = true;
+
+	aiAnimation* animationAssimp = scene->mAnimations[0];
+	animation.duration = float(animationAssimp->mDuration / animationAssimp->mTicksPerSecond); // 時間の単位を秒に変換
+
+	// それぞれのNodeAnimationの情報を取得
+	for (uint32_t channelIndex = 0; channelIndex < animationAssimp->mNumChannels; ++channelIndex) {
+		aiNodeAnim* nodeAnimationAssimp = animationAssimp->mChannels[channelIndex];
+		NodeAnimation& nodeAnimation = animation.nodeAnimations[nodeAnimationAssimp->mNodeName.C_Str()];
+		// Translateの解析
+		for (uint32_t keyIndex = 0; keyIndex < nodeAnimationAssimp->mNumPositionKeys; ++keyIndex) {
+			aiVectorKey& keyAssimp = nodeAnimationAssimp->mPositionKeys[keyIndex];
+			KeyframeVector3 keyframe;
+			keyframe.time = float(keyAssimp.mTime / animationAssimp->mTicksPerSecond);
+			keyframe.value = { -keyAssimp.mValue.x, keyAssimp.mValue.y, keyAssimp.mValue.z }; // 左手座標から右手座標に変換
+			nodeAnimation.translate.keyframes.push_back(keyframe);
+		}
+		// Rotateの解析
+		for (uint32_t keyIndex = 0; keyIndex < nodeAnimationAssimp->mNumRotationKeys; ++keyIndex) {
+			aiQuatKey& keyAssimp = nodeAnimationAssimp->mRotationKeys[keyIndex];
+			KeyframeQuaternion keyframe;
+			keyframe.time = float(keyAssimp.mTime / animationAssimp->mTicksPerSecond);
+			keyframe.value = { keyAssimp.mValue.x, -keyAssimp.mValue.y, -keyAssimp.mValue.z, keyAssimp.mValue.w }; // 左手座標から右手座標に変換
+			nodeAnimation.rotate.keyframes.push_back(keyframe);
+		}
+		// Scaleの解析
+		for (uint32_t keyIndex = 0; keyIndex < nodeAnimationAssimp->mNumScalingKeys; ++keyIndex) {
+			aiVectorKey& keyAssimp = nodeAnimationAssimp->mScalingKeys[keyIndex];
+			KeyframeVector3 keyframe;
+			keyframe.time = float(keyAssimp.mTime / animationAssimp->mTicksPerSecond);
+			keyframe.value = { keyAssimp.mValue.x, keyAssimp.mValue.y, keyAssimp.mValue.z };
+			nodeAnimation.translate.keyframes.push_back(keyframe);
+		}
+	}
+
+	return animation;
+}
 
 Vector3 CalculateTranslateValue(const std::vector<KeyframeVector3>& keyframes, float time) {
 	assert(!keyframes.empty());

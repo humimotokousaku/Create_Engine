@@ -1,5 +1,6 @@
 #pragma once
 #include "Model.h"
+#include "LevelData.h"
 #include <memory>
 #include <map>
 
@@ -36,16 +37,17 @@ public:
 
 private:
 	static ModelManager* instance;
-	ModelManager() = default;
-	~ModelManager() = default;
-	ModelManager(const ModelManager& obj) = default;
-	ModelManager& operator = (const ModelManager& obj) = default;
+	//ModelManager() = default;
+	//~ModelManager() = default;
+	//ModelManager(const ModelManager& obj) = default;
+	//ModelManager& operator = (const ModelManager& obj) = default;
+
+public:
+	// モデルデータ
+	std::map<std::string, std::unique_ptr<Model>> models_;
 
 private:
 	// エンジン機能
 	TextureManager* texManager_;
-
-	// モデルデータ
-	std::map<std::string, std::unique_ptr<Model>> models_;
 };
 

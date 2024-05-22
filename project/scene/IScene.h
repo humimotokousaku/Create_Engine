@@ -1,4 +1,7 @@
 #pragma once
+#include "Object3D.h"
+#include <string>
+#include <vector>
 
 enum Scene {
 	TITLE_SCENE,
@@ -15,7 +18,14 @@ public:
 	virtual void Update() = 0;
 	virtual void Draw() = 0;
 	virtual void Finalize() = 0;
+
+	/// <summary>
+	/// JSONファイルの読み込み
+	/// </summary>
+	void LoadJSONFile(const std::string fileName);
+
 	int GetSceneNum() { return sceneNum; }
 protected:
 	static int sceneNum;
+	std::vector<Object3D*> levelObjects_;
 };

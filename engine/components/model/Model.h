@@ -16,6 +16,7 @@ public:
 	~Model();
 
 	void Initialize(const std::string& directoryPath, const std::string& filename);
+	void Initialize(const std::string& filename);
 
 	void Draw(const ViewProjection& viewProjection, uint32_t textureHandle);
 	void Draw(const ViewProjection& viewProjection);
@@ -50,6 +51,7 @@ private:
 	void CreateMaterialResource();
 
 	ModelData LoadModelFile(const std::string& directoryPath, const std::string& filename);
+	ModelData LoadModelFile(const std::string& filename);
 
 public:
 	// Material
