@@ -21,6 +21,8 @@ float Norm(const Quaternion& quaternion);
 Quaternion Normalize(const Quaternion& quaternion);
 // 逆Quaternionを返す
 Quaternion Inverse(const Quaternion& quaternion);
+// 内積
+float Dot(Quaternion q0, Quaternion q1);
 // 任意軸回転を表すQuaternionの生成
 Quaternion MakeRotateAxisAngleQuaternion(const Vector3& axis, float angle);
 // ベクトルをQuaternionで回転させた結果のベクトルを求める

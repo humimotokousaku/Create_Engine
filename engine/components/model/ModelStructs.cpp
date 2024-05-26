@@ -31,11 +31,13 @@ Motion LoadAnimationFile(const std::string& directoryPath, const std::string& fi
 	Assimp::Importer importer;
 	std::string filePath = "Engine/resources/" + directoryPath + "/" + filename;
 	const aiScene* scene = importer.ReadFile(filePath.c_str(), 0);
+
+	// アニメーションを再生しない
+	animation.isActive = false;
+	// アニメーションがないならリターン
 	if (scene->mAnimations == 0) {
-		animation.isActive = false;
 		return animation;
 	}
-
 	// アニメーションの再生速度
 	animation.playBackSpeed = 1.0f;
 	// ループ再生
@@ -70,7 +72,7 @@ Motion LoadAnimationFile(const std::string& directoryPath, const std::string& fi
 			KeyframeVector3 keyframe;
 			keyframe.time = float(keyAssimp.mTime / animationAssimp->mTicksPerSecond);
 			keyframe.value = { keyAssimp.mValue.x, keyAssimp.mValue.y, keyAssimp.mValue.z };
-			nodeAnimation.translate.keyframes.push_back(keyframe);
+			nodeAnimation.scale.keyframes.push_back(keyframe);
 		}
 	}
 
@@ -81,11 +83,13 @@ Motion LoadAnimationFile(const std::string& filename) {
 	Assimp::Importer importer;
 	std::string filePath = "Engine/resources/" + filename;
 	const aiScene* scene = importer.ReadFile(filePath.c_str(), 0);
+
+	// アニメーションを再生しない
+	animation.isActive = false;
+	// アニメーションがないならリターン
 	if (scene->mAnimations == 0) {
-		animation.isActive = false;
 		return animation;
 	}
-
 	// アニメーションの再生速度
 	animation.playBackSpeed = 1.0f;
 	// ループ再生
@@ -120,7 +124,7 @@ Motion LoadAnimationFile(const std::string& filename) {
 			KeyframeVector3 keyframe;
 			keyframe.time = float(keyAssimp.mTime / animationAssimp->mTicksPerSecond);
 			keyframe.value = { keyAssimp.mValue.x, keyAssimp.mValue.y, keyAssimp.mValue.z };
-			nodeAnimation.translate.keyframes.push_back(keyframe);
+			nodeAnimation.scale.keyframes.push_back(keyframe);
 		}
 	}
 
@@ -163,13 +167,10 @@ Quaternion CalculateQuaternionValue(const std::vector<KeyframeQuaternion>& keyfr
 		}
 	}
 
-	return (*keyframes.rbegin()).value;
+	return keyframes.rbegin()->value;
 }
 Vector3 CalculateScaleValue(const std::vector<KeyframeVector3>& keyframes, float time) {
-	if (keyframes.empty()) {
-		return { 1,1,1 };
-	}
-	//assert(!keyframes.empty());
+	assert(!keyframes.empty());
 	// キーが一つか、時刻がキーフレーム前なら最初の値にする
 	if (keyframes.size() == 1 || time <= keyframes[0].time) {
 		return keyframes[0].value;
@@ -349,12 +350,12 @@ void AnimationUpdate(SkinCluster& skinCluster, Skeleton& skeleton, Motion& anima
 	// ループ再生の場合
 	if (animation.isLoop) {
 		// 通常
-		if (animation.playBackSpeed >= 0.001f) {
-			animationTime = std::fmod(animationTime, animation.duration);
+		if (animation.playBackSpeed > 0.0f) {
+			animationTime = Custom_fmod(animationTime, animation.duration, 0);
 		}
 		// 逆再生
-		else if (animation.playBackSpeed <= 0.0f) {
-			animationTime = Custom_fmod(animationTime, 0, animation.duration);
+		else {
+			animationTime = Custom_fmod(animationTime, animation.duration, animation.duration);
 		}
 
 	}
@@ -387,10 +388,22 @@ Microsoft::WRL::ComPtr<ID3D12Resource> CreateBufferResource(const Microsoft::WRL
 	return vertexResource;
 }
 
-float Custom_fmod(float dividend, float divisor, float initValue = 0) {
-	float result = std::fmod(dividend, divisor);
-	if (result <= 0) {
+float Custom_fmod(float dividend, float divisor, float initValue) {
+	float result;
+
+	// 既定数値以上になったら指定した値に初期化
+
+	// divisorが-の場合
+	if (dividend < 0.0f || dividend >= divisor) {
 		result = initValue;
+		return result;
 	}
+	// divisorが+の場合
+	//if () {
+	//	result = initValue;
+	//	return result;
+	//}
+
+	result = dividend;
 	return result;
 }

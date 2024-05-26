@@ -51,7 +51,7 @@ public:
 	void SetModel(const std::string& directoryPath, const std::string& filePath) { 
 		model_ = ModelManager::GetInstance()->FindModel(directoryPath, filePath);
 		// アニメーション
-		animation_ = model_->animation_;
+		animation_.push_back(model_->animation_);
 		// スケルトン
 		skeleton_ = model_->skeleton_;
 		// スキンクラスタ
@@ -60,21 +60,35 @@ public:
 	void SetModel(Model* model) {
 		model_ = model;
 		// アニメーション
-		animation_ = model_->animation_;
+		animation_.push_back(model_->animation_);
 		// スケルトン
 		skeleton_ = model_->skeleton_;
 		// スキンクラスタ
 		skinCluster_ = model_->skinCluster_;
 	}
 
+	// アニメーション追加
+	void AddAnimation(const std::string& directoryPath, const std::string& filePath){ 
+		// アニメーション
+		model_ = ModelManager::GetInstance()->FindModel(directoryPath, filePath);
+		animation_.push_back(model_->animation_);
+	}
+	void AddAnimation(Model* model) {
+		// アニメーション
+		animation_.push_back(model->animation_);
+	}
+
+	//void StartAnim()
+
+
 public:
 	WorldTransform worldTransform;
 	Camera* camera_;
 	Model* model_;
-	// アニメーション
-	Motion animation_;
-	float animationTime_ = 0.0f;
 private:
+	// アニメーション
+	std::vector<Motion> animation_;
+	float animationTime_ = 0.0f;
 	// スケルトン
 	Skeleton skeleton_;
 	// スキンクラスタ

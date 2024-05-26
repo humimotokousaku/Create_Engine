@@ -73,10 +73,13 @@ struct NodeAnimation {
 // アニメーション
 struct Motion {
 	float duration;	// アニメーション全体の尺(秒)
+	float time;		// アニメーションの経過時間
 	float playBackSpeed; // アニメーションの再生速度
 	bool isActive;	// アニメーションの再生
 	bool isLoop;    // ループ再生
 	std::map<std::string, NodeAnimation> nodeAnimations;
+	// アニメーションの再生開始
+	void Play() { isActive = true; }
 	// アニメーションを止める
 	void Stop() { isActive = false; }
 };

@@ -11,7 +11,7 @@ void TitleScene::Initialize() {
 	// カメラの初期化
 	camera_ = std::make_unique<Camera>();
 	camera_->Initialize();
-	camera_->SetTranslate(Vector3{ 0,0,0 });
+	camera_->SetTranslate(Vector3{ 0,0,-10 });
 
 	// テクスチャの読み込み
 	TextureManager::GetInstance()->LoadTexture("", "uvChecker.png");
@@ -62,6 +62,8 @@ void TitleScene::Initialize() {
 	human_[1]->SetCamera(camera_.get());
 	human_[1]->worldTransform.transform.translate = { 2,-2,5 };
 
+	human_[0]->AddAnimation(human_[1]->model_);
+
 	// 
 	box_[0] = std::make_unique<Object3D>();
 	box_[0]->Initialize();
@@ -83,7 +85,8 @@ void TitleScene::Initialize() {
 	axis_->SetCamera(camera_.get());
 	axis_->worldTransform.transform.translate = { -2,0,5 };
 
-	/*LoadJSONFile("level/TL1_test_levelEditor.json");
+	// Blender
+	/*LoadJSONFile("level/TL1_01_03.json");
 	for (Object3D* object : levelObjects_) {
 		object->SetCamera(camera_.get());
 	}*/
@@ -96,27 +99,12 @@ void TitleScene::Update() {
 	}
 
 #ifdef _DEBUG
-
-
-
 	ImGui::Begin("Current Scene");
 	ImGui::Text("TITLE");
 	ImGui::Text("SPACE:scene change");
 	ImGui::End();
-#endif
-	//ImGui::Begin("plane");
-	//ImGui::DragFloat3("translation", &plane_->worldTransform.transform.translate.x, 0.01f, -100, 100);
-	//ImGui::DragFloat3("scale", &plane_->worldTransform.transform.scale.x, 0.01f, -100, 100);
-	//ImGui::DragFloat3("rotate", &plane_->worldTransform.transform.rotate.x, 0.01f, -6.28f, 6.28f);
-	//ImGui::End();
-
-	//ImGui::Begin("axis");
-	//ImGui::DragFloat3("translation", &axis_->worldTransform.transform.translate.x, 0.01f, -100, 100);
-	//ImGui::DragFloat3("scale", &axis_->worldTransform.transform.scale.x, 0.01f, -100, 100);
-	//ImGui::DragFloat3("rotate", &axis_->worldTransform.transform.rotate.x, 0.01f, -6.28f, 6.28f);
-	//ImGui::End();
 	human_[0]->ImGuiParameter("Human_Walk");
-
+#endif
 #pragma endregion
 }
 
@@ -128,9 +116,9 @@ void TitleScene::Draw() {
 		human_[i]->Draw(uvcheckerTexture_);
 	}
 
-	/*for (Object3D* object : levelObjects_) {
+	for (Object3D* object : levelObjects_) {
 		object->Draw(uvcheckerTexture_);
-	}*/
+	}
 }
 
 void TitleScene::Finalize() {

@@ -11,6 +11,7 @@
 enum PostEffectType {
 	NORMAL,
 	SMOOTHING,
+	//GAUSSIAN,
 	/*HIGHINTENSITY,
 	BLUR,*/
 	COUNT

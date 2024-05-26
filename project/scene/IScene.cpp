@@ -79,9 +79,11 @@ void IScene::LoadJSONFile(const std::string fileName) {
 	for (auto& objectData : levelData->objects_) {
 		// ファイル名から登録済みモデルを検索
 		Model* model = new Model();
-		//model->Initialize(fileName);
 		decltype(ModelManager::GetInstance()->models_)::iterator it = ModelManager::GetInstance()->models_.find(objectData.fileName);
-		if (it != ModelManager::GetInstance()->models_.end()) { model = it->second.get(); }
+		if (it != ModelManager::GetInstance()->models_.end()) {		
+			model = it->second.get();
+		}
+		model->Initialize(objectData.fileName);
 		// モデルを指定して3Dオブジェクト生成
 		Object3D* newObject = new Object3D();
 		newObject->Initialize();

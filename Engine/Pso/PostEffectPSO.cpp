@@ -241,10 +241,14 @@ void PostEffectPSO::PixelSharder() {
 	pixelShaderBlob_[NORMAL] = CompileShader(L"engine/resources/sharder/PostEffectTestPS.hlsl",
 		L"ps_6_0", dxcUtils_, dxcCompiler_, includeHandler_);
 	assert(pixelShaderBlob_ != nullptr);
-	// smoothing
+	// Smoothing
 	pixelShaderBlob_[SMOOTHING] = CompileShader(L"engine/resources/sharder/Smoothing.PS.hlsl",
 		L"ps_6_0", dxcUtils_, dxcCompiler_, includeHandler_);
 	assert(pixelShaderBlob_ != nullptr);
+	//// GaussianFilter
+	//pixelShaderBlob_[GAUSSIAN] = CompileShader(L"engine/resources/sharder/GaussianFilter.PS.hlsl",
+	//	L"ps_6_0", dxcUtils_, dxcCompiler_, includeHandler_);
+	//assert(pixelShaderBlob_ != nullptr);
 	
 	//// 高輝度
 	//pixelShaderBlob_[1] = CompileShader(L"engine/resources/sharder/HighIntensityPS.hlsl",
