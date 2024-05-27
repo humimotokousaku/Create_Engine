@@ -1,6 +1,7 @@
 #include "Player.h"
 #include "TextureManager.h"
 #include "Collision/CollisionConfig.h"
+#include <numbers>
 
 Player::Player() {}
 Player::~Player() {
@@ -11,32 +12,65 @@ void Player::Initialize(Camera* camera) {
 	// colliderの設定
 	SetCollisionPrimitive(kCollisionOBB);
 
+	// モデル作成
 	model_ = std::make_unique<Object3D>();
 	model_->Initialize();
-	model_->SetModel("", "block.obj");
+	// モデルを設定
+	model_->SetModel("Human", "walk.gltf");
+	model_->SetAnimName("Walk");
 	model_->SetCamera(camera);
+	// しゃがみ歩きアニメーション追加
+	model_->AddAnimation("Human", "sneakWalk.gltf");
+
+	model_->StartAnim("Walk");
+	model_->worldTransform.transform.translate = { 0,-2,-15 };
+	model_->worldTransform.transform.rotate = { 0,std::numbers::inv_pi * 5.0f,0 };
+
+	//model_->animation_.isActive = true;
 }
 
 void Player::Update() {
-	//if (Input::GetInstance()->PressKey(DIK_A)) {
-	//	model_->worldTransform.translation_.x -= 0.1f;
-	//}
-	//if (Input::GetInstance()->PressKey(DIK_D)) {
-	//	model_->worldTransform.translation_.x += 0.1f;
-	//}
-	//if (Input::GetInstance()->PressKey(DIK_S)) {
-	//	model_->worldTransform.translation_.z -= 0.1f;
-	//}
-	//if (Input::GetInstance()->PressKey(DIK_W)) {
-	//	model_->worldTransform.translation_.z += 0.1f;
-	//}
+	if (Input::GetInstance()->PressKey(DIK_A)) {
+		model_->worldTransform.transform.translate.x -= 0.1f;
+	}
+	if (Input::GetInstance()->PressKey(DIK_D)) {
+		model_->worldTransform.transform.translate.x += 0.1f;
+	}
+	if (Input::GetInstance()->PressKey(DIK_S)) {
+		model_->worldTransform.transform.translate.z -= 0.1f;
+	}
+	if (Input::GetInstance()->PressKey(DIK_W)) {
+		model_->worldTransform.transform.translate.z += 0.1f;
+	}
 
-	//if (Input::GetInstance()->PressKey(DIK_LEFT)) {
-	//	model_->worldTransform.rotation_.y -= 0.01f;
-	//}
-	//if (Input::GetInstance()->PressKey(DIK_RIGHT)) {
-	//	model_->worldTransform.rotation_.y += 0.01f;
-	//}
+	if (Input::GetInstance()->PressKey(DIK_LEFT)) {
+		model_->worldTransform.transform.rotate.y -= 0.01f;
+	}
+	if (Input::GetInstance()->PressKey(DIK_RIGHT)) {
+		model_->worldTransform.transform.rotate.y += 0.01f;
+	}
+
+	XINPUT_STATE joyState;
+	if (Input::GetInstance()->GetJoystickState(0, joyState)) {
+		// デッドゾーンの設定
+		SHORT leftThumbX = Input::GetInstance()->ApplyDeadzone(joyState.Gamepad.sThumbLX);
+		SHORT leftThumbY = Input::GetInstance()->ApplyDeadzone(joyState.Gamepad.sThumbLY);
+		model_->worldTransform.transform.translate.x += (float)leftThumbX / SHRT_MAX * 0.02f;
+		model_->worldTransform.transform.translate.z += (float)leftThumbY / SHRT_MAX * 0.02f;
+		if (leftThumbX > 0.0f) {
+			model_->worldTransform.transform.rotate.y = std::numbers::inv_pi * 5.0f;
+		}
+		else if(leftThumbX < 0.0f) {
+			model_->worldTransform.transform.rotate.y = -std::numbers::inv_pi * 5.0f;
+		}
+	}
+
+	if (Input::GetInstance()->GamePadPress(XINPUT_GAMEPAD_RIGHT_SHOULDER)) {
+		model_->StartAnim("SneakWalk");
+	}
+	else {
+		model_->StartAnim("Walk");
+	}
 }
 
 void Player::Draw(uint32_t textureHandle) {

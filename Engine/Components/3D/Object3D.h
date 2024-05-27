@@ -77,9 +77,24 @@ public:
 		// アニメーション
 		animation_.push_back(model->animation_);
 	}
+	
+	// アニメーションの名前を設定
+	void SetAnimName(const char* animName) {
+		animation_[0].name = animName;
+		model_->animation_.name = animation_[0].name;
+	}
 
-	//void StartAnim()
-
+	// 指定したアニメーションを再生(ただしその他のアニメーションを強制的に止めてしまうので毎フレーム呼び出すのは禁止)
+	void StartAnim(const char* animName) {
+		for (int i = 0; i < animation_.size(); i++) {
+			if (animation_[i].name == animName) {
+				animation_[i].isActive = true;
+			}
+			else {
+				animation_[i].isActive = false;
+			}
+		}
+	}
 
 public:
 	WorldTransform worldTransform;
@@ -89,6 +104,7 @@ private:
 	// アニメーション
 	std::vector<Motion> animation_;
 	float animationTime_ = 0.0f;
+	bool isPreAnimActive_;
 	// スケルトン
 	Skeleton skeleton_;
 	// スキンクラスタ

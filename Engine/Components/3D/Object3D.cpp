@@ -19,8 +19,9 @@ void Object3D::Draw(uint32_t textureNum) {
 	// ワールド座標の更新
 	worldTransform.UpdateMatrix();
 
-	// アニメーション
+	// 現在使用しているアニメーション
 	Motion animation;
+	//int currentIndex;
 	for (int i = 0; i < animation_.size(); i++) {
 		if (animation_[i].isActive) {
 			model_->animation_ = animation_[i];
@@ -147,16 +148,63 @@ void Object3D::Draw() {
 }
 
 void Object3D::ImGuiParameter(const char* name) {
+	int index{};
+	ImGui::Begin(name);
+	//while (i < animation_.size()) {
 	for (int i = 0; i < animation_.size(); i++) {
-		std::string beginName = name + std::to_string(i);
-		ImGui::Begin(beginName.c_str());
-		ImGui::DragFloat3("translation", &worldTransform.transform.translate.x, 0.01f, -100, 100);
-		ImGui::DragFloat3("scale", &worldTransform.transform.scale.x, 0.01f, -100, 100);
-		ImGui::DragFloat3("rotate", &worldTransform.transform.rotate.x, 0.01f, -6.28f, 6.28f);
-		ImGui::DragFloat("playBackSpeed", &animation_[i].playBackSpeed, 0.01f, -10.0f, 10.0f);
-		ImGui::Checkbox("isAnimation", &animation_[i].isActive);
-		ImGui::DragFloat("duration", &animation_[i].duration, 0, -10.10);
-		ImGui::DragFloat("animTime", &animationTime_, 0, -100, 100);
-		ImGui::End();
+		// アニメーションの名前を設定していないとき
+		if (animation_[i].name[0] == '\0') {
+			std::string beginName = name + std::to_string(index);
+			if (ImGui::TreeNode(beginName.c_str())) {
+				ImGui::DragFloat3("translation", &worldTransform.transform.translate.x, 0.01f, -100, 100);
+				ImGui::DragFloat3("scale", &worldTransform.transform.scale.x, 0.01f, -100, 100);
+				ImGui::DragFloat3("rotate", &worldTransform.transform.rotate.x, 0.01f, -6.28f, 6.28f);
+				ImGui::DragFloat("playBackSpeed", &animation_[i].playBackSpeed, 0.01f, -10.0f, 10.0f);
+				ImGui::Checkbox("isAnimation", &animation_[i].isActive);
+				ImGui::DragFloat("duration", &animation_[i].duration, 0, -10.10);
+				ImGui::TreePop();
+				index++;
+			}
+		}
+		// アニメーションに名前を設定しているとき
+		else {
+			if (ImGui::TreeNode(animation_[i].name)) {
+				ImGui::DragFloat3("translation", &worldTransform.transform.translate.x, 0.01f, -100, 100);
+				ImGui::DragFloat3("scale", &worldTransform.transform.scale.x, 0.01f, -100, 100);
+				ImGui::DragFloat3("rotate", &worldTransform.transform.rotate.x, 0.01f, -6.28f, 6.28f);
+				ImGui::DragFloat("playBackSpeed", &animation_[i].playBackSpeed, 0.01f, -10.0f, 10.0f);
+				ImGui::Checkbox("isAnimation", &animation_[i].isActive);
+				ImGui::DragFloat("duration", &animation_[i].duration, 0, -10.10);
+				ImGui::TreePop();
+			}
+		}
 	}
+	//}
+	for (int i = 0; i < animation_.size(); i++) {
+		//std::string beginName = name + std::to_string(i);
+		//if (animation_[i].name[0] == '\0') {
+		//	// アニメーションに名前を付けているとき
+		//	if (ImGui::TreeNode(animation_[i].name)) {
+		//		ImGui::DragFloat3("translation", &worldTransform.transform.translate.x, 0.01f, -100, 100);
+		//		ImGui::DragFloat3("scale", &worldTransform.transform.scale.x, 0.01f, -100, 100);
+		//		ImGui::DragFloat3("rotate", &worldTransform.transform.rotate.x, 0.01f, -6.28f, 6.28f);
+		//		ImGui::DragFloat("playBackSpeed", &animation_[i].playBackSpeed, 0.01f, -10.0f, 10.0f);
+		//		ImGui::Checkbox("isAnimation", &animation_[i].isActive);
+		//		ImGui::DragFloat("duration", &animation_[i].duration, 0, -10.10);
+		//		ImGui::TreePop();
+		//	}
+		//}
+
+		//if (ImGui::TreeNode(beginName.c_str())) {
+		//	ImGui::DragFloat3("translation", &worldTransform.transform.translate.x, 0.01f, -100, 100);
+		//	ImGui::DragFloat3("scale", &worldTransform.transform.scale.x, 0.01f, -100, 100);
+		//	ImGui::DragFloat3("rotate", &worldTransform.transform.rotate.x, 0.01f, -6.28f, 6.28f);
+		//	ImGui::DragFloat("playBackSpeed", &animation_[i].playBackSpeed, 0.01f, -10.0f, 10.0f);
+		//	ImGui::Checkbox("isAnimation", &animation_[i].isActive);
+		//	ImGui::DragFloat("duration", &animation_[i].duration, 0, -10.10);
+		//	ImGui::TreePop();
+		//}
+	}
+	ImGui::DragFloat("animTime", &animationTime_, 0, -100, 100);
+	ImGui::End();
 }

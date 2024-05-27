@@ -77,6 +77,7 @@ struct Motion {
 	float playBackSpeed; // アニメーションの再生速度
 	bool isActive;	// アニメーションの再生
 	bool isLoop;    // ループ再生
+	const char* name;     // デバッグ用に名前を付ける
 	std::map<std::string, NodeAnimation> nodeAnimations;
 	// アニメーションの再生開始
 	void Play() { isActive = true; }

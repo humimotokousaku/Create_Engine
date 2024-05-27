@@ -28,7 +28,7 @@ public:
 	/// 
 
 	// 座標を指定
-	void SetWorldPosition(Vector3 pos) { model_->worldTransform.transform.translate = pos; }
+	//void SetWorldPosition(Vector3 pos) { model_->worldTransform.transform.translate = pos; }
 
 	///
 	/// 純粋仮想関数
@@ -42,6 +42,6 @@ public:
 	void OnCollision(Collider* collider)override;
 
 public:
-	std::unique_ptr<Object3D> model_;
+	//std::unique_ptr<Object3D> model_;
 };
 

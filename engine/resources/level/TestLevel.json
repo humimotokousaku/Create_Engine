@@ -68,50 +68,6 @@
             "file_name": "cube.obj"
         },
         {
-            "type": "MESH",
-            "name": "モンキー",
-            "transform": {
-                "translation": [
-                    -4.603793144226074,
-                    -1.763366460800171,
-                    3.6560404300689697
-                ],
-                "rotation": [
-                    0.0,
-                    0.0,
-                    -41.70539474487305
-                ],
-                "scaling": [
-                    1.0,
-                    1.0,
-                    1.0
-                ]
-            },
-            "file_name": "Suzanne.obj"
-        },
-        {
-            "type": "MESH",
-            "name": "ICO球",
-            "transform": {
-                "translation": [
-                    -3.4465856552124023,
-                    2.088679790496826,
-                    0.7113811373710632
-                ],
-                "rotation": [
-                    0.0,
-                    -0.0,
-                    0.0
-                ],
-                "scaling": [
-                    1.0,
-                    1.0,
-                    1.0
-                ]
-            },
-            "file_name": "ICO.obj"
-        },
-        {
             "type": "LIGHT",
             "name": "Light",
             "transform": {
