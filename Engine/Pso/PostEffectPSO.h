@@ -10,6 +10,7 @@
 /// </summary>
 enum PostEffectType {
 	NORMAL,
+	RADIALBLUR,
 	//SMOOTHING,
 	//GAUSSIAN,
 	/*HIGHINTENSITY,

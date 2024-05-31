@@ -61,3 +61,13 @@ Vector3 Normalize(const Vector3& v) {
 Vector3 Cross(const Vector3& v1, const Vector3& v2) {
 	return { v1.y * v2.z - v1.z * v2.y,v1.z * v2.x - v1.x * v2.z,v1.x * v2.y - v1.y * v2.x };
 }
+
+float Degree2Radian(float degree) {
+	float result = degree * (float)std::numbers::pi / 180;
+	return result;
+}
+
+float Radian2Degree(float radian) {
+	float result = radian * 180 / (float)std::numbers::pi;
+	return result;
+}

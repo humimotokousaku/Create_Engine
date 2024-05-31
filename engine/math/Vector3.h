@@ -1,4 +1,6 @@
 #pragma once
+#include <numbers> 
+
 struct Vector3 final {
 	float x;
 	float y;
@@ -24,3 +26,9 @@ Vector3 Normalize(const Vector3& v);
 
 // クロス積
 Vector3 Cross(const Vector3& v1, const Vector3& v2);
+
+// 度数から弧度に変換
+float Degree2Radian(float degree);
+
+// 弧度から度数に変換
+float Radian2Degree(float radian);

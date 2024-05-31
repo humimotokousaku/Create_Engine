@@ -30,26 +30,6 @@ void Player::Initialize(Camera* camera) {
 }
 
 void Player::Update() {
-	if (Input::GetInstance()->PressKey(DIK_A)) {
-		model_->worldTransform.transform.translate.x -= 0.1f;
-	}
-	if (Input::GetInstance()->PressKey(DIK_D)) {
-		model_->worldTransform.transform.translate.x += 0.1f;
-	}
-	if (Input::GetInstance()->PressKey(DIK_S)) {
-		model_->worldTransform.transform.translate.z -= 0.1f;
-	}
-	if (Input::GetInstance()->PressKey(DIK_W)) {
-		model_->worldTransform.transform.translate.z += 0.1f;
-	}
-
-	if (Input::GetInstance()->PressKey(DIK_LEFT)) {
-		model_->worldTransform.transform.rotate.y -= 0.01f;
-	}
-	if (Input::GetInstance()->PressKey(DIK_RIGHT)) {
-		model_->worldTransform.transform.rotate.y += 0.01f;
-	}
-
 	XINPUT_STATE joyState;
 	if (Input::GetInstance()->GetJoystickState(0, joyState)) {
 		// デッドゾーンの設定
@@ -71,6 +51,9 @@ void Player::Update() {
 	else {
 		model_->StartAnim("Walk");
 	}
+
+	// ImGui
+	model_->ImGuiParameter("Player");
 }
 
 void Player::Draw(uint32_t textureHandle) {

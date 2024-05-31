@@ -45,16 +45,18 @@ private:
 	std::array<std::unique_ptr<Object3D>, 2> box_;
 	std::array<std::unique_ptr<Object3D>, 2> human_;
 
-
 	std::unique_ptr<Animation> anim_;
 	std::unique_ptr<CollisionManager> collisionManager_;
 	std::unique_ptr<Player> player_;
 	//std::array<std::unique_ptr<Enemy> , 2u> enemy_;
+	// パーティクル
+	std::unique_ptr<Particles> particle_;
 
 	// テクスチャ
 	uint32_t uvcheckerTexture_;
 	uint32_t monsterBallTexture_;
 	uint32_t particleTexture_;
+	uint32_t blockTexture_;
 
 	int textureNum_;
 	Input* input_;

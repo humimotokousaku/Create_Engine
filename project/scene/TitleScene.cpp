@@ -17,10 +17,12 @@ void TitleScene::Initialize() {
 	TextureManager::GetInstance()->LoadTexture("", "uvChecker.png");
 	TextureManager::GetInstance()->LoadTexture("", "monsterBall.png");
 	TextureManager::GetInstance()->LoadTexture("", "circle.png");
+	TextureManager::GetInstance()->LoadTexture("", "block.png");
 	// srvの番号取得
 	uvcheckerTexture_ = TextureManager::GetInstance()->GetSrvIndex("", "uvChecker.png");
 	monsterBallTexture_ = TextureManager::GetInstance()->GetSrvIndex("", "monsterBall.png");
 	particleTexture_ = TextureManager::GetInstance()->GetSrvIndex("", "circle.png");
+	blockTexture_ = TextureManager::GetInstance()->GetSrvIndex("", "block.png");
 
 	/// モデル読み込み
 	/// 骨とアニメーションあり 
@@ -33,10 +35,7 @@ void TitleScene::Initialize() {
 
 	// objモデル
 	ModelManager::GetInstance()->LoadModel("", "axis.obj");
-
 	ModelManager::GetInstance()->LoadModel("", "block.obj");
-	ModelManager::GetInstance()->LoadModel("", "Suzanne.obj");
-	ModelManager::GetInstance()->LoadModel("", "ICO.obj");
 
 	// 平面(骨とアニメーションあり)
 	plane_[0] = std::make_unique<Object3D>();
@@ -96,31 +95,37 @@ void TitleScene::Initialize() {
 	axis_->worldTransform.transform.translate = { -2,0,5 };
 
 	// Blender
-	//LoadJSONFile("level/TestLevel.json");
-	//for (Object3D* object : levelObjects_) {
-	//	object->SetCamera(camera_.get());
-	//}
+	/*LoadJSONFile("sample_map.json");
+	for (Object3D* object : levelObjects_) {
+		object->SetCamera(camera_.get());
+	}*/
 
 
 	// 自機
 	player_ = std::make_unique<Player>();
 	player_->Initialize(camera_.get());
+
+	// パーティクル
+	particle_ = std::make_unique<Particles>();
+	particle_->Initialize();
+	particle_->SetCamera(camera_.get());
 }
 
 void TitleScene::Update() {
+	particle_->Update();
 	player_->Update();
 #pragma region パーティクル以外の処理
-	if (Input::GetInstance()->TriggerKey(DIK_SPACE)) {
+	if (Input::GetInstance()->TriggerKey(DIK_1)) {
 		sceneNum = GAME_SCENE;
 	}
 
 #ifdef _DEBUG
 	ImGui::Begin("Current Scene");
 	ImGui::Text("TITLE");
-	ImGui::Text("SPACE:scene change");
+	ImGui::Text("keyInfo\n1:scene change");
 	ImGui::End();
-	human_[0]->ImGuiParameter("Human");
-	box_[0]->ImGuiParameter("AnimCube");
+	//human_[0]->ImGuiParameter("Human");
+	//box_[0]->ImGuiParameter("AnimCube");
 #endif
 #pragma endregion
 }
@@ -133,11 +138,12 @@ void TitleScene::Draw() {
 		human_[i]->Draw(uvcheckerTexture_);
 	}*/
 
-	//for (Object3D* object : levelObjects_) {
-	//	object->Draw(uvcheckerTexture_);
-	//}
+	for (Object3D* object : levelObjects_) {
+		object->Draw(uvcheckerTexture_);
+	}
 
 	player_->Draw(uvcheckerTexture_);
+	//particle_->Draw(uvcheckerTexture_);
 }
 
 void TitleScene::Finalize() {

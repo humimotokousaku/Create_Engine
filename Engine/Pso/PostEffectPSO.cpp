@@ -241,6 +241,10 @@ void PostEffectPSO::PixelSharder() {
 	pixelShaderBlob_[NORMAL] = CompileShader(L"engine/resources/sharder/PostEffectTestPS.hlsl",
 		L"ps_6_0", dxcUtils_, dxcCompiler_, includeHandler_);
 	assert(pixelShaderBlob_ != nullptr);
+	// RadialBlur
+	pixelShaderBlob_[RADIALBLUR] = CompileShader(L"engine/resources/sharder/RadialBlur.PS.hlsl",
+		L"ps_6_0", dxcUtils_, dxcCompiler_, includeHandler_);
+	assert(pixelShaderBlob_ != nullptr);
 	// Smoothing
 	/*pixelShaderBlob_[SMOOTHING] = CompileShader(L"engine/resources/sharder/Smoothing.PS.hlsl",
 		L"ps_6_0", dxcUtils_, dxcCompiler_, includeHandler_);

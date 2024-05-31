@@ -131,7 +131,7 @@ Matrix4x4 MakeAffineMatrix(const Vector3& scale, const Quaternion& q, const Vect
 	Matrix4x4 transformMatrix = MakeTranslateMatrix(translate);
 
 	// アフィン変換行列の計算
-	Matrix4x4 result = Multiply(scaleMatrix, Multiply(rotateMatrix, transformMatrix));
+	Matrix4x4 result = Multiply(Multiply(scaleMatrix, rotateMatrix), transformMatrix);
 
 	return result;
 }

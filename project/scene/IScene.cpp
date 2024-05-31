@@ -4,9 +4,15 @@
 
 int IScene::sceneNum;
 
+IScene::~IScene() {
+	for (int i = 0; i < levelObjects_.size(); i++) {
+		//delete levelObjects_[i];
+	}
+}
+
 void IScene::LoadJSONFile(const std::string fileName) {
 	// ファイルのフルパス
-	const std::string fullPath = "engine/resources/" + fileName;
+	const std::string fullPath = "engine/resources/level/" + fileName;
 	// ファイルストリーム
 	std::ifstream file;
 	// ファイルを開く
@@ -58,17 +64,19 @@ void IScene::LoadJSONFile(const std::string fileName) {
 			// トランスフォームのパラメータ読み込み
 			nlohmann::json& transform = object["transform"];
 			// 平行移動
-			objectData.translate.x = (float)transform["translation"][1];
+			objectData.translate.x = (float)transform["translation"][0];
 			objectData.translate.y = (float)transform["translation"][2];
-			objectData.translate.z = -(float)transform["translation"][0];
+			objectData.translate.z = (float)transform["translation"][1];
 			// 回転角
-			objectData.rotate.x = -(float)transform["rotation"][1];
-			objectData.rotate.y = -(float)transform["rotation"][2];
-			objectData.rotate.z = (float)transform["rotation"][0];
+			Vector3 rotate = { Degree2Radian(-(float)transform["rotation"][0]) ,Degree2Radian(-(float)transform["rotation"][2]),Degree2Radian((float)transform["rotation"][1]) };
+			objectData.rotate = rotate;
+			//objectData.rotate.x = -(float)transform["rotation"][0];
+			//objectData.rotate.y = -(float)transform["rotation"][2];
+			//objectData.rotate.z = (float)transform["rotation"][1];
 			// スケーリング
-			objectData.scale.x = (float)transform["scaling"][1];
+			objectData.scale.x = (float)transform["scaling"][0];
 			objectData.scale.y = (float)transform["scaling"][2];
-			objectData.scale.z = (float)transform["scaling"][0];
+			objectData.scale.z = (float)transform["scaling"][1];
 		}
 
 		if (object.contains("children")) {
@@ -78,14 +86,17 @@ void IScene::LoadJSONFile(const std::string fileName) {
 
 	for (auto& objectData : levelData->objects_) {
 		// ファイル名から登録済みモデルを検索
+		//std::unique_ptr<Model> model_ptr = std::make_unique<Model>();
+
+		//std::unique_ptr<Model> model = std::make_unique<Model>();
 		Model* model = new Model();
 		decltype(ModelManager::GetInstance()->models_)::iterator it = ModelManager::GetInstance()->models_.find(objectData.fileName);
 		if (it != ModelManager::GetInstance()->models_.end()) {		
 			model = it->second.get();
 		}
-		model->Initialize(objectData.fileName);
+		model->Initialize("level/" + objectData.fileName);
 		// モデルを指定して3Dオブジェクト生成
-		Object3D* newObject = new Object3D();
+		Object3D* newObject = new Object3D();//new Object3D();
 		newObject->Initialize();
 		newObject->SetModel(model);
 		// 座標
@@ -98,7 +109,7 @@ void IScene::LoadJSONFile(const std::string fileName) {
 		objects.push_back(newObject);
 
 		// モデルをmapコンテナに格納
-		ModelManager::GetInstance()->models_.insert(std::make_pair("Engine/resources/" + fileName, std::move(model)));
+		ModelManager::GetInstance()->models_.insert(std::make_pair("engine/resources/level" + fileName, std::move(model)));
 	}
 
 	levelObjects_ = objects;

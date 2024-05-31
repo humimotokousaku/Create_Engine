@@ -148,7 +148,7 @@ Matrix4x4 MakeRotateMatrix(const Vector3& radian) {
 	rotateZ = MakeRotateZMatrix(radian.z);
 
 	Matrix4x4 result{};
-	result = Multiply(rotateX, Multiply(rotateY, rotateZ));
+	result = Multiply(Multiply(rotateX, rotateY), rotateZ);
 
 	return result;
 }
@@ -210,7 +210,7 @@ Matrix4x4 MakeAffineMatrix(const Vector3& scale, const Vector3& rotate, const Ve
 	Matrix4x4 translateMatrix = MakeTranslateMatrix(translate);
 
 	// アフィン変換行列の計算
-	Matrix4x4 result = Multiply(scaleMatrix, Multiply(rotateMatrix, translateMatrix));
+	Matrix4x4 result = Multiply(Multiply(scaleMatrix, rotateMatrix), translateMatrix);
 
 	return result;
 }

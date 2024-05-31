@@ -48,9 +48,11 @@ PixelShaderOutput main(VertexShaderOutput input) {
 	float32_t4 textureColor = gTexture.Sample(gSampler, transformedUV.xy);
 
 	// RGBカラー値をグレースケールに変換
-	output.color = gTexture.Sample(gSampler, input.texcoord);
-	float32_t value = dot(output.color.rgb, float32_t3(0.2125f, 0.7154f, 0.0721f));
-	output.color.rgb = float32_t3(value, value, value);
+	//output.color = gTexture.Sample(gSampler, input.texcoord);
+	//float32_t value = dot(output.color.rgb, float32_t3(0.2125f, 0.7154f, 0.0721f));
+	//output.color.rgb = float32_t3(value, value, value);
+
+	output.color = float32_t4(textureColor.rgb, 1);
 
 	return output;
 }

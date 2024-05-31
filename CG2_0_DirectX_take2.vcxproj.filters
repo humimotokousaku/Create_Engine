@@ -589,5 +589,6 @@
     </FxCompile>
     <FxCompile Include="engine\resources\sharder\Smoothing.PS.hlsl" />
     <FxCompile Include="engine\resources\sharder\GaussianFilter.PS.hlsl" />
+    <FxCompile Include="engine\resources\sharder\RadialBlur.PS.hlsl" />
   </ItemGroup>
 </Project>
