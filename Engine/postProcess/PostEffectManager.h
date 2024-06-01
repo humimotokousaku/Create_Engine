@@ -1,5 +1,7 @@
 #pragma once
 #include "PostEffect.h"
+#include "RadialBlur.h"
+#include "Bloom.h"
 #include "PostEffectPSO.h"
 
 class PostEffectManager
@@ -13,5 +15,5 @@ public:
 	void Draw();
 
 public:
-	PostEffect* postEffect_[PostEffectType::COUNT];
+	std::vector<IPostEffect*> postEffect_;
 };

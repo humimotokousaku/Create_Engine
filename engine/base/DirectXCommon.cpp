@@ -5,6 +5,7 @@
 #include <dxgi1_6.h>
 #include <cassert>
 #include <format>
+#include <thread>
 #pragma comment(lib,"d3d12.lib")
 #pragma comment(lib,"dxgi.lib")
 #include "../../externals/ImGui/imgui.h"

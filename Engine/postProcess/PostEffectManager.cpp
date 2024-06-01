@@ -1,20 +1,28 @@
 #include "PostEffectManager.h"
 
 PostEffectManager::~PostEffectManager() {
-	for (int i = 0; i < COUNT; i++) {
-		delete postEffect_[i];
+	for (IPostEffect* postEffect : postEffect_) {
+		delete postEffect;
 	}
+	postEffect_.clear();
 }
 
 void PostEffectManager::Initialize() {
-	for (int i = 0; i < PostEffectType::COUNT; i++) {
-		postEffect_[i] = new PostEffect();
-		postEffect_[i]->Initialize();
-	}
+	// 何もしない
+	PostEffect* normal = new PostEffect();
+	normal->Initialize();
+	postEffect_.push_back(normal);
+	// RadialBlur
+	RadialBlur* radialBlur = new RadialBlur();
+	radialBlur->Initialize();
+	postEffect_.push_back(radialBlur);
+	// Bloom
+	Bloom* bloom = new Bloom();
+	bloom->Initialize();
+	postEffect_.push_back(bloom);
 }
 
 void PostEffectManager::PreDraw() {
-
 	postEffect_[NORMAL]->PreDrawScene();
 }
 

@@ -348,6 +348,18 @@
     <ClCompile Include="engine\Pso\PostEffect\BloomPSO.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
+    <ClCompile Include="engine\Pso\PostEffect\OutlinePSO.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\PostProcess\IPostEffect.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\PostProcess\RadialBlur.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\PostProcess\Bloom.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="externals\ImGui\imconfig.h">
@@ -560,6 +572,18 @@
     <ClInclude Include="engine\Pso\PostEffect\BloomPSO.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
+    <ClInclude Include="engine\Pso\PostEffect\OutlinePSO.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\PostProcess\IPostEffect.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\PostProcess\RadialBlur.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\PostProcess\Bloom.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Text Include="externals\ImGui\LICENSE.txt">
@@ -621,5 +645,6 @@
     <FxCompile Include="engine\resources\sharder\GaussianFilter.PS.hlsl" />
     <FxCompile Include="engine\resources\sharder\RadialBlur.PS.hlsl" />
     <FxCompile Include="engine\resources\sharder\Dissolve.PS.hlsl" />
+    <FxCompile Include="engine\resources\sharder\Outline.PS.hlsl" />
   </ItemGroup>
 </Project>
