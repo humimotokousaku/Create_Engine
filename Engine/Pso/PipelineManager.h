@@ -8,6 +8,12 @@
 #include "SkinningPSO.h"
 #include "LinePSO.h"
 #include "ParticlePSO.h"
+
+#include "DissolvePSO.h"
+#include "GaussPSO.h"
+#include "SmoothingPSO.h"
+#include "RadialBlurPSO.h"
+#include "BloomPSO.h"
 #include "PostEffectPSO.h"
 
 #include <dxcapi.h>
@@ -44,7 +50,7 @@ public:
 	/// <summary>
 	/// デストラクタ
 	/// </summary>
-	~PipelineManager() = default;
+	~PipelineManager();
 
 	/// <summary>
 	/// 初期化
@@ -56,6 +62,15 @@ public:
 	/// </summary>
 	void PreDraw();
 	//void PostDraw();
+
+	/// Setter
+
+	// ポストエフェクトで使用するコマンドをセット
+	void SetPostEffectPSO(int index) { postEffect_[index]->SetCommand(); }
+	void SetObject3dPSO() { object3dPSO_->SetCommand(); }
+	void SetSkinningPSO() { skinningPSO_->SetCommand(); }
+	void SetLinePSO() { linePSO_->SetCommand(); }
+	void SetParticlePSO() { particlePSO_->SetCommand(); }
 
 private:// プライベートな関数
 	void DXCInitialize();
@@ -77,5 +92,8 @@ private:
 	SkinningPSO* skinningPSO_;
 	LinePSO* linePSO_;
 	ParticlePSO* particlePSO_;
-	PostEffectPSO* postEffectPSO_;
+	// ポストエフェクトで使用するPSO
+	std::vector<IPSO*> postEffect_;
+
+	std::vector<const char*> postEffectPSName;
 };

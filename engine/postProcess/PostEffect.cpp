@@ -13,7 +13,6 @@ PostEffect::PostEffect()
 void PostEffect::Initialize() {
 	// 基本機能
 	directXCommon_ = DirectXCommon::GetInstance();
-	postEffectPSO_ = PostEffectPSO::GetInstance();
 
 	HRESULT result;
 
@@ -102,10 +101,7 @@ void PostEffect::Draw(uint32_t psoNum) {
 	worldTransform_.UpdateMatrix();
 
 	/// コマンドを積む
-	// RootSignatureを設定。PSOに設定しているけど別途設定が必要
-	directXCommon_->GetCommandList()->SetGraphicsRootSignature(postEffectPSO_->GetRootSignature()[psoNum].Get());
-	directXCommon_->GetCommandList()->SetPipelineState(postEffectPSO_->GetGraphicsPipelineState()[psoNum].Get()); // PSOを設定
-	directXCommon_->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	PipelineManager::GetInstance()->SetPostEffectPSO(psoNum);
 
 	// VBVを設定
 	directXCommon_->GetCommandList()->IASetVertexBuffers(0, 1, &vertexBufferView_);
@@ -312,7 +308,7 @@ Microsoft::WRL::ComPtr<ID3D12Resource> PostEffect::CreateTextureBufferResource()
 		DXGI_FORMAT_R8G8B8A8_UNORM_SRGB,
 		WinApp::kClientWidth_,
 		(UINT)WinApp::kClientHeight_,
-		1, 0, 1, 0, D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET
+		2, 0, 1, 0, D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET
 	);
 
 	// テクスチャバッファの生成

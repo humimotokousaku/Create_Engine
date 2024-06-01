@@ -1,19 +1,15 @@
 #pragma once
 #include "IPSO.h"
 
-class Object3dPSO : public IPSO {
+class DissolvePSO : public IPSO
+{
 public:
-	enum class PSOTypes {
-		OffAnim, // アニメーションなし
-		OnAnim,	 // アニメーションあり
-		Count
-	};
+	///
+	/// Default Method
+	///
 
-public:// メンバ関数
-	/// <summary>
-	/// シングルトン
-	/// </summary>
-	static Object3dPSO* GetInstance();
+	DissolvePSO(IDxcUtils* dxcUtils, IDxcCompiler3* dxcCompiler, IDxcIncludeHandler* includeHandler, const std::string& VS_fileName, const std::string& PS_fileName);
+	~DissolvePSO() = default;
 
 	/// <summary>
 	/// 初期化
@@ -32,8 +28,9 @@ public:// メンバ関数
 
 	///** Getter **///
 
-
 	///** Setter **///
+
+	//void SetRootParameter
 
 	/// <summary>
 	/// 描画前に積むコマンド
@@ -45,8 +42,11 @@ public:// メンバ関数
 		dxCommon_->GetCommandList()->SetPipelineState(graphicsPipelineState_.Get());
 		// 形状を設定
 		dxCommon_->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+		// Dissolve用のテクスチャ
+		SrvManager::GetInstance()->SetGraphicsRootDesctiptorTable(4, dissolveTextureHandle_);
 	}
 
-private:// プライベートなメンバ変数
-
+private:// プライベートな変数
+	// dissolve用のテクスチャ
+	uint32_t dissolveTextureHandle_;
 };

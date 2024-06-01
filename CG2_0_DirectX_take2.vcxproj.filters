@@ -192,7 +192,7 @@
     <ClCompile Include="engine\Manager\TextureManager.cpp">
       <Filter>ソース ファイル\Engine\Manager</Filter>
     </ClCompile>
-    <ClCompile Include="engine\utility\ConvertString.cpp">
+    <ClCompile Include="engine\Utility\ConvertString.cpp">
       <Filter>ソース ファイル\Engine\Utility</Filter>
     </ClCompile>
     <ClCompile Include="project\scene\GameScene.cpp">
@@ -204,7 +204,7 @@
     <ClCompile Include="project\scene\TitleScene.cpp">
       <Filter>ソース ファイル\Project\Scene</Filter>
     </ClCompile>
-    <ClCompile Include="engine\utility\GlobalVariables.cpp">
+    <ClCompile Include="engine\Utility\GlobalVariables.cpp">
       <Filter>ソース ファイル\Engine\Utility</Filter>
     </ClCompile>
     <ClCompile Include="project\scene\GameClear.cpp">
@@ -216,7 +216,7 @@
     <ClCompile Include="engine\Components\Audio\Audio.cpp">
       <Filter>ソース ファイル\Engine\Components\Audio</Filter>
     </ClCompile>
-    <ClCompile Include="engine\Components\input\Input.cpp">
+    <ClCompile Include="engine\Components\Input\Input.cpp">
       <Filter>ソース ファイル\Engine\Components\Input</Filter>
     </ClCompile>
     <ClCompile Include="engine\Components\WorldTransform.cpp">
@@ -225,7 +225,7 @@
     <ClCompile Include="engine\Components\model\Model.cpp">
       <Filter>ソース ファイル\Engine\Components\Model</Filter>
     </ClCompile>
-    <ClCompile Include="engine\Components\camera\ViewProjection.cpp">
+    <ClCompile Include="engine\Components\Camera\ViewProjection.cpp">
       <Filter>ソース ファイル\Engine\Components\Camera</Filter>
     </ClCompile>
     <ClCompile Include="engine\Components\model\ModelStructs.cpp">
@@ -234,19 +234,19 @@
     <ClCompile Include="engine\math\Vector3.cpp">
       <Filter>ソース ファイル\Engine\Math</Filter>
     </ClCompile>
-    <ClCompile Include="engine\postProcess\PostEffect.cpp">
+    <ClCompile Include="engine\PostProcess\PostEffect.cpp">
       <Filter>ソース ファイル\Engine\PostProcess</Filter>
     </ClCompile>
     <ClCompile Include="Engine\Components\Particle\Particles.cpp">
       <Filter>ソース ファイル\Engine\Components\Particle</Filter>
     </ClCompile>
-    <ClCompile Include="engine\Components\light\PointLight.cpp">
+    <ClCompile Include="engine\Components\Light\PointLight.cpp">
       <Filter>ソース ファイル\Engine\Components\Light</Filter>
     </ClCompile>
-    <ClCompile Include="engine\Components\light\SpotLight.cpp">
+    <ClCompile Include="engine\Components\Light\SpotLight.cpp">
       <Filter>ソース ファイル\Engine\Components\Light</Filter>
     </ClCompile>
-    <ClCompile Include="engine\Components\light\DirectionalLight.cpp">
+    <ClCompile Include="engine\Components\Light\DirectionalLight.cpp">
       <Filter>ソース ファイル\Engine\Components\Light</Filter>
     </ClCompile>
     <ClCompile Include="engine\pso\LinePSO.cpp">
@@ -264,7 +264,7 @@
     <ClCompile Include="engine\Components\model\ModelManager.cpp">
       <Filter>ソース ファイル\Engine\Components\Model</Filter>
     </ClCompile>
-    <ClCompile Include="engine\Components\camera\Camera.cpp">
+    <ClCompile Include="engine\Components\Camera\Camera.cpp">
       <Filter>ソース ファイル\Engine\Components\Camera</Filter>
     </ClCompile>
     <ClCompile Include="Engine\Components\3D\Primitive\Triangle.cpp">
@@ -306,10 +306,10 @@
     <ClCompile Include="Project\GameObject\Enemy.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
-    <ClCompile Include="Engine\postProcess\PostEffectManager.cpp">
+    <ClCompile Include="engine\PostProcess\PostEffectManager.cpp">
       <Filter>ソース ファイル\Engine\PostProcess</Filter>
     </ClCompile>
-    <ClCompile Include="Engine\Pso\PostEffectPSO.cpp">
+    <ClCompile Include="engine\Pso\PostEffect\PostEffectPSO.cpp">
       <Filter>ソース ファイル\Engine\Pso</Filter>
     </ClCompile>
     <ClCompile Include="Engine\Base\SrvManager.cpp">
@@ -330,7 +330,22 @@
     <ClCompile Include="Engine\Pso\SkinningPSO.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
-    <ClCompile Include="engine\utility\LevelData.cpp">
+    <ClCompile Include="engine\Utility\LevelData.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\Pso\PostEffect\DissolvePSO.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\Pso\PostEffect\GaussPSO.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\Pso\PostEffect\SmoothingPSO.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\Pso\PostEffect\RadialBlurPSO.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\Pso\PostEffect\BloomPSO.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
   </ItemGroup>
@@ -386,7 +401,7 @@
     <ClInclude Include="engine\Manager\TextureManager.h">
       <Filter>ヘッダー ファイル\Engine\Manager</Filter>
     </ClInclude>
-    <ClInclude Include="engine\utility\ConvertString.h">
+    <ClInclude Include="engine\Utility\ConvertString.h">
       <Filter>ヘッダー ファイル\Engine\Utility</Filter>
     </ClInclude>
     <ClInclude Include="project\scene\GameScene.h">
@@ -398,10 +413,10 @@
     <ClInclude Include="project\scene\TitleScene.h">
       <Filter>ヘッダー ファイル\Project\Scene</Filter>
     </ClInclude>
-    <ClInclude Include="engine\utility\GlobalVariables.h">
+    <ClInclude Include="engine\Utility\GlobalVariables.h">
       <Filter>ヘッダー ファイル\Engine\Utility</Filter>
     </ClInclude>
-    <ClInclude Include="engine\Components\light\DirectionalLight.h">
+    <ClInclude Include="engine\Components\Light\DirectionalLight.h">
       <Filter>ヘッダー ファイル\Engine\Components\Light</Filter>
     </ClInclude>
     <ClInclude Include="project\scene\GameClear.h">
@@ -410,7 +425,7 @@
     <ClInclude Include="project\scene\GameOver.h">
       <Filter>ヘッダー ファイル\Project\Scene</Filter>
     </ClInclude>
-    <ClInclude Include="engine\Components\input\Input.h">
+    <ClInclude Include="engine\Components\Input\Input.h">
       <Filter>ヘッダー ファイル\Engine\Components\Input</Filter>
     </ClInclude>
     <ClInclude Include="engine\Components\Audio\Audio.h">
@@ -425,19 +440,19 @@
     <ClInclude Include="engine\Components\model\ModelStructs.h">
       <Filter>ヘッダー ファイル\Engine\Components\Model</Filter>
     </ClInclude>
-    <ClInclude Include="engine\Components\camera\ViewProjection.h">
+    <ClInclude Include="engine\Components\Camera\ViewProjection.h">
       <Filter>ヘッダー ファイル\Engine\Components\Camera</Filter>
     </ClInclude>
     <ClInclude Include="engine\math\MathStructs.h">
       <Filter>ヘッダー ファイル\Engine\Math</Filter>
     </ClInclude>
-    <ClInclude Include="engine\Components\light\SpotLight.h">
+    <ClInclude Include="engine\Components\Light\SpotLight.h">
       <Filter>ヘッダー ファイル\Engine\Components\Light</Filter>
     </ClInclude>
-    <ClInclude Include="engine\Components\light\PointLight.h">
+    <ClInclude Include="engine\Components\Light\PointLight.h">
       <Filter>ヘッダー ファイル\Engine\Components\Light</Filter>
     </ClInclude>
-    <ClInclude Include="engine\postProcess\PostEffect.h">
+    <ClInclude Include="engine\PostProcess\PostEffect.h">
       <Filter>ヘッダー ファイル\Engine\PostProcess</Filter>
     </ClInclude>
     <ClInclude Include="engine\pso\LinePSO.h">
@@ -458,7 +473,7 @@
     <ClInclude Include="Engine\Components\Particle\Particles.h">
       <Filter>ヘッダー ファイル\Engine\Components\Particle</Filter>
     </ClInclude>
-    <ClInclude Include="engine\Components\camera\Camera.h">
+    <ClInclude Include="engine\Components\Camera\Camera.h">
       <Filter>ヘッダー ファイル\Engine\Components\Camera</Filter>
     </ClInclude>
     <ClInclude Include="Engine\Components\3D\Primitive\Cube.h">
@@ -503,10 +518,10 @@
     <ClInclude Include="Project\GameObject\Enemy.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
-    <ClInclude Include="Engine\postProcess\PostEffectManager.h">
+    <ClInclude Include="engine\PostProcess\PostEffectManager.h">
       <Filter>ヘッダー ファイル\Engine\PostProcess</Filter>
     </ClInclude>
-    <ClInclude Include="Engine\Pso\PostEffectPSO.h">
+    <ClInclude Include="engine\Pso\PostEffect\PostEffectPSO.h">
       <Filter>ヘッダー ファイル\Engine\Pso</Filter>
     </ClInclude>
     <ClInclude Include="Engine\Base\SrvManager.h">
@@ -527,7 +542,22 @@
     <ClInclude Include="Engine\Pso\SkinningPSO.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
-    <ClInclude Include="engine\utility\LevelData.h">
+    <ClInclude Include="engine\Utility\LevelData.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\Pso\PostEffect\DissolvePSO.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\Pso\PostEffect\GaussPSO.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\Pso\PostEffect\SmoothingPSO.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\Pso\PostEffect\RadialBlurPSO.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\Pso\PostEffect\BloomPSO.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
   </ItemGroup>
@@ -590,5 +620,6 @@
     <FxCompile Include="engine\resources\sharder\Smoothing.PS.hlsl" />
     <FxCompile Include="engine\resources\sharder\GaussianFilter.PS.hlsl" />
     <FxCompile Include="engine\resources\sharder\RadialBlur.PS.hlsl" />
+    <FxCompile Include="engine\resources\sharder\Dissolve.PS.hlsl" />
   </ItemGroup>
 </Project>

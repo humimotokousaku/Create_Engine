@@ -1,19 +1,15 @@
 #pragma once
 #include "IPSO.h"
 
-class Object3dPSO : public IPSO {
+class GaussPSO : public IPSO
+{
 public:
-	enum class PSOTypes {
-		OffAnim, // アニメーションなし
-		OnAnim,	 // アニメーションあり
-		Count
-	};
+	///
+	/// Default Method
+	///
 
-public:// メンバ関数
-	/// <summary>
-	/// シングルトン
-	/// </summary>
-	static Object3dPSO* GetInstance();
+	GaussPSO(IDxcUtils* dxcUtils, IDxcCompiler3* dxcCompiler, IDxcIncludeHandler* includeHandler, const std::string& VS_fileName, const std::string& PS_fileName);
+	~GaussPSO() = default;
 
 	/// <summary>
 	/// 初期化
@@ -32,8 +28,9 @@ public:// メンバ関数
 
 	///** Getter **///
 
-
 	///** Setter **///
+
+	//void SetRootParameter
 
 	/// <summary>
 	/// 描画前に積むコマンド
@@ -47,6 +44,7 @@ public:// メンバ関数
 		dxCommon_->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	}
 
-private:// プライベートなメンバ変数
+private:// プライベートな変数
 
 };
+

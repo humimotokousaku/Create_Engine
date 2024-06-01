@@ -9,6 +9,13 @@ PipelineManager* PipelineManager::GetInstance() {
 	return &instance;
 }
 
+PipelineManager::~PipelineManager() {
+	for (IPSO* postEffect : postEffect_) {
+		delete postEffect;
+	}
+	postEffect_.clear();
+}
+
 void PipelineManager::Initialize() {
 	// DXCの初期化
 	DXCInitialize();
@@ -29,9 +36,28 @@ void PipelineManager::Initialize() {
 	particlePSO_ = ParticlePSO::GetInstance();
 	particlePSO_->Init(dxcUtils_, dxcCompiler_, includeHandler_,"Particle.VS.hlsl","Particle.PS.hlsl");
 	particlePSO_->CreatePSO();
-	// postEffectに使用するPSO
-	postEffectPSO_ = PostEffectPSO::GetInstance();
-	postEffectPSO_->Initialize();
+#pragma region postEffectに使用するPSO
+	// サイズを確保
+	//postEffectPSName.resize(COUNT);
+	//// PixelShaderの名前を決める
+	//postEffectPSName[0] = "PostEffectTestPS.hlsl";	// 通常
+	//postEffectPSName[1] = "RadialBlur.PS.hlsl";		// Radial
+	//postEffectPSName[2] = "Dissolve.PS.hlsl";		// Dissolve
+	//postEffectPSName[3] = "BloomPS.hlsl";			// Bloom
+
+	// 何もしない
+	PostEffectPSO* normal = new PostEffectPSO(dxcUtils_, dxcCompiler_, includeHandler_, "PostEffectTestVS.hlsl", "PostEffectTestPS.hlsl");
+	postEffect_.push_back(normal);
+	// RadialBlur
+	RadialBlurPSO* radialBlur = new RadialBlurPSO(dxcUtils_, dxcCompiler_, includeHandler_, "PostEffectTestVS.hlsl", "RadialBlur.PS.hlsl");
+	postEffect_.push_back(radialBlur);
+	// Dissolve
+	//DissolvePSO* dissolve = new DissolvePSO(dxcUtils_, dxcCompiler_, includeHandler_, "PostEffectTestVS.hlsl", "Dissolve.PS.hlsl");
+	//postEffect_.push_back(dissolve);
+	// Bloom
+	BloomPSO* bloom = new BloomPSO(dxcUtils_, dxcCompiler_, includeHandler_, "PostEffectTestVS.hlsl", "BloomPS.hlsl");
+	postEffect_.push_back(bloom);
+#pragma endregion
 
 	// ビューポートの生成
 	CreateViewport();
@@ -41,7 +67,7 @@ void PipelineManager::Initialize() {
 
 void PipelineManager::PreDraw() {
 	// ポストエフェクトの描画前処理
-	postEffectPSO_->PreDraw();
+	//postEffectPSO_->PreDraw();
 	DirectXCommon::GetInstance()->GetCommandList()->RSSetViewports(1, &viewport_); // Viewportを設定
 	DirectXCommon::GetInstance()->GetCommandList()->RSSetScissorRects(1, &scissorRect_); // Scirssorを設定
 }

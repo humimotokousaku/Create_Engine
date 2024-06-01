@@ -30,7 +30,6 @@ public:
 	/// <summary>
 	/// PSOの作成
 	/// </summary>
-
 	virtual void CreatePSO() = 0;
 
 	// シェーダのコンパイル
@@ -43,6 +42,17 @@ public:
 		IDxcUtils* dxcUtils,
 		IDxcCompiler3* dxcCompiler,
 		IDxcIncludeHandler* includeHandler);
+
+	/// Setter
+	// コマンドを積む
+	virtual void SetCommand() {
+		// シグネチャの設定
+		dxCommon_->GetCommandList()->SetGraphicsRootSignature(rootSignature_.Get());
+		// PSOを設定
+		dxCommon_->GetCommandList()->SetPipelineState(graphicsPipelineState_.Get());
+		// 形状を設定
+		dxCommon_->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	};
 
 protected:
 	// シェーダファイルまでのパス
@@ -74,4 +84,9 @@ protected:
 	D3D12_GRAPHICS_PIPELINE_STATE_DESC graphicsPipelineStateDescs_;
 
 	Microsoft::WRL::ComPtr<ID3D12PipelineState> graphicsPipelineState_;
+
+	std::vector<D3D12_ROOT_PARAMETER> rootParameters_;
+	std::vector<D3D12_INPUT_ELEMENT_DESC> inputElementDescs_;
+	std::vector<D3D12_DESCRIPTOR_RANGE> descriptorRange_;
+	std::vector<D3D12_STATIC_SAMPLER_DESC> staticSamplers_;
 };

@@ -16,6 +16,7 @@ void SkinningPSO::CreateRootSignature() {
 	descriptionRootSignature_.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
 
 #pragma region descriptorRange
+	descriptorRange_.resize(1);
 	descriptorRange_[0].BaseShaderRegister = 0;
 	descriptorRange_[0].NumDescriptors = 1;
 	descriptorRange_[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
@@ -23,6 +24,7 @@ void SkinningPSO::CreateRootSignature() {
 #pragma endregion
 
 #pragma region rootParameter
+	rootParameters_.resize(9);
 #pragma region VSShaderに送るデータ
 	// worldTransform
 	rootParameters_[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
@@ -36,8 +38,8 @@ void SkinningPSO::CreateRootSignature() {
 	rootParameters_[8].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
 	rootParameters_[8].ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;
 	rootParameters_[8].Descriptor.ShaderRegister = 0;
-	rootParameters_[8].DescriptorTable.pDescriptorRanges = descriptorRange_;
-	rootParameters_[8].DescriptorTable.NumDescriptorRanges = _countof(descriptorRange_);
+	rootParameters_[8].DescriptorTable.pDescriptorRanges = descriptorRange_.data();
+	rootParameters_[8].DescriptorTable.NumDescriptorRanges = static_cast<UINT>(descriptorRange_.size());
 #pragma endregion
 
 #pragma region PSShaderに送るデータ
@@ -48,8 +50,8 @@ void SkinningPSO::CreateRootSignature() {
 	// texture
 	rootParameters_[2].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
 	rootParameters_[2].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
-	rootParameters_[2].DescriptorTable.pDescriptorRanges = descriptorRange_;
-	rootParameters_[2].DescriptorTable.NumDescriptorRanges = _countof(descriptorRange_);
+	rootParameters_[2].DescriptorTable.pDescriptorRanges = descriptorRange_.data();
+	rootParameters_[2].DescriptorTable.NumDescriptorRanges = static_cast<UINT>(descriptorRange_.size());
 	// 平行光源
 	rootParameters_[3].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
 	rootParameters_[3].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
@@ -71,10 +73,11 @@ void SkinningPSO::CreateRootSignature() {
 #pragma endregion
 
 	// rootParameterの設定を入れる
-	descriptionRootSignature_.pParameters = rootParameters_;
-	descriptionRootSignature_.NumParameters = _countof(rootParameters_);
+	descriptionRootSignature_.pParameters = rootParameters_.data();
+	descriptionRootSignature_.NumParameters = static_cast<UINT>(rootParameters_.size());
 
 #pragma region sampler
+	staticSamplers_.resize(1);
 	staticSamplers_[0].Filter = D3D12_FILTER_MIN_MAG_MIP_LINEAR;
 	staticSamplers_[0].AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
 	staticSamplers_[0].AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
@@ -83,8 +86,8 @@ void SkinningPSO::CreateRootSignature() {
 	staticSamplers_[0].MaxLOD = D3D12_FLOAT32_MAX;
 	staticSamplers_[0].ShaderRegister = 0;
 	staticSamplers_[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
-	descriptionRootSignature_.pStaticSamplers = staticSamplers_;
-	descriptionRootSignature_.NumStaticSamplers = _countof(staticSamplers_);
+	descriptionRootSignature_.pStaticSamplers = staticSamplers_.data();
+	descriptionRootSignature_.NumStaticSamplers = static_cast<UINT>(staticSamplers_.size());
 #pragma endregion
 
 	// シリアライズしてバイナリにする
@@ -107,6 +110,7 @@ void SkinningPSO::CreatePSO() {
 	CreateRootSignature();
 
 #pragma region inputElement
+	inputElementDescs_.resize(5);
 	inputElementDescs_[0].SemanticName = "POSITION";
 	inputElementDescs_[0].SemanticIndex = 0;
 	inputElementDescs_[0].Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
@@ -134,8 +138,8 @@ void SkinningPSO::CreatePSO() {
 	inputElementDescs_[4].InputSlot = 1;
 	inputElementDescs_[4].AlignedByteOffset = D3D12_APPEND_ALIGNED_ELEMENT;
 
-	inputLayoutDesc_.pInputElementDescs = inputElementDescs_;
-	inputLayoutDesc_.NumElements = _countof(inputElementDescs_);
+	inputLayoutDesc_.pInputElementDescs = inputElementDescs_.data();
+	inputLayoutDesc_.NumElements = static_cast<UINT>(inputElementDescs_.size());
 #pragma endregion
 
 #pragma region blendState

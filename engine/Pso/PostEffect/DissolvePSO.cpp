@@ -1,69 +1,65 @@
-#include "Object3dPSO.h"
+#include "DissolvePSO.h"
+#include "ConvertString.h"
+#include <format>
+#include <cassert>
 
-Object3dPSO* Object3dPSO::GetInstance() {
-	static Object3dPSO instance;
-
-	return &instance;
+DissolvePSO::DissolvePSO(IDxcUtils* dxcUtils, IDxcCompiler3* dxcCompiler, IDxcIncludeHandler* includeHandler, const std::string& VS_fileName, const std::string& PS_fileName) {
+	// 初期化
+	Init(dxcUtils, dxcCompiler, includeHandler, VS_fileName, PS_fileName);
 }
 
-void Object3dPSO::Init(IDxcUtils* dxcUtils, IDxcCompiler3* dxcCompiler, IDxcIncludeHandler* includeHandler, const std::string& VS_fileName, const std::string& PS_fileName) {
+void DissolvePSO::Init(IDxcUtils* dxcUtils, IDxcCompiler3* dxcCompiler, IDxcIncludeHandler* includeHandler, const std::string& VS_fileName, const std::string& PS_fileName) {
 	// 基底クラスの初期化
 	IPSO::Init(dxcUtils, dxcCompiler, includeHandler, VS_fileName, PS_fileName);
+	// dissolveテクスチャを読み込む
+	TextureManager::GetInstance()->LoadTexture("", "noise.png");
+	dissolveTextureHandle_ = TextureManager::GetInstance()->GetSrvIndex("noise.png");
+	// PSO作成
+	CreatePSO();
 }
 
-void Object3dPSO::CreateRootSignature() {
+void DissolvePSO::CreateRootSignature() {
 	HRESULT hr;
 	descriptionRootSignature_.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
 
 #pragma region descriptorRange
-	descriptorRange_.resize(1);
+	descriptorRange_.resize(2);
+	// レンダリング画像
 	descriptorRange_[0].BaseShaderRegister = 0;
 	descriptorRange_[0].NumDescriptors = 1;
 	descriptorRange_[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
 	descriptorRange_[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+	// dissolve画像
+	descriptorRange_[1].BaseShaderRegister = 1;
+	descriptorRange_[1].NumDescriptors = 1;
+	descriptorRange_[1].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+	descriptorRange_[1].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
 #pragma endregion
 
 #pragma region rootParameter
-	rootParameters_.resize(8);
-#pragma region VSShaderに送るデータ
-	// worldTransform
-	rootParameters_[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
-	rootParameters_[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;
-	rootParameters_[1].Descriptor.ShaderRegister = 0;
-	// viewProjection
-	rootParameters_[4].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
-	rootParameters_[4].ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;
-	rootParameters_[4].Descriptor.ShaderRegister = 1;
-#pragma endregion
-
-#pragma region PSShaderに送るデータ
+	rootParameters_.resize(5);
 	// material
 	rootParameters_[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
 	rootParameters_[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
 	rootParameters_[0].Descriptor.ShaderRegister = 0;
 	// texture
-	rootParameters_[2].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
-	rootParameters_[2].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
-	rootParameters_[2].DescriptorTable.pDescriptorRanges = descriptorRange_.data();
-	rootParameters_[2].DescriptorTable.NumDescriptorRanges = static_cast<UINT>(descriptorRange_.size());
-	// 平行光源
+	rootParameters_[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+	rootParameters_[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+	rootParameters_[1].DescriptorTable.pDescriptorRanges = &descriptorRange_[0];
+	rootParameters_[1].DescriptorTable.NumDescriptorRanges = static_cast<UINT>(descriptorRange_.size());
+	// worldTransform
+	rootParameters_[2].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
+	rootParameters_[2].ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;
+	rootParameters_[2].Descriptor.ShaderRegister = 0;
+	// viewProjection
 	rootParameters_[3].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
-	rootParameters_[3].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+	rootParameters_[3].ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;
 	rootParameters_[3].Descriptor.ShaderRegister = 1;
-	// カメラ位置
-	rootParameters_[5].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
-	rootParameters_[5].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
-	rootParameters_[5].Descriptor.ShaderRegister = 2;
-	// 点光源
-	rootParameters_[6].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
-	rootParameters_[6].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
-	rootParameters_[6].Descriptor.ShaderRegister = 3;
-	// スポットライト
-	rootParameters_[7].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
-	rootParameters_[7].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
-	rootParameters_[7].Descriptor.ShaderRegister = 4;
-#pragma endregion
-
+	// dissolve用のtexture
+	rootParameters_[4].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+	rootParameters_[4].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+	rootParameters_[4].DescriptorTable.pDescriptorRanges = &descriptorRange_[1];
+	rootParameters_[4].DescriptorTable.NumDescriptorRanges = static_cast<UINT>(descriptorRange_.size());
 #pragma endregion
 
 	// rootParameterの設定を入れる
@@ -97,29 +93,22 @@ void Object3dPSO::CreateRootSignature() {
 	assert(SUCCEEDED(hr));
 }
 
-void Object3dPSO::CreatePSO() {
+void DissolvePSO::CreatePSO() {
 	HRESULT hr;
 
 	// rootSignatureの作成
 	CreateRootSignature();
 
 #pragma region inputElement
-	inputElementDescs_.resize(3);
+	inputElementDescs_.resize(2);
 	inputElementDescs_[0].SemanticName = "POSITION";
 	inputElementDescs_[0].SemanticIndex = 0;
 	inputElementDescs_[0].Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
 	inputElementDescs_[0].AlignedByteOffset = D3D12_APPEND_ALIGNED_ELEMENT;
-
 	inputElementDescs_[1].SemanticName = "TEXCOORD";
 	inputElementDescs_[1].SemanticIndex = 0;
 	inputElementDescs_[1].Format = DXGI_FORMAT_R32G32_FLOAT;
 	inputElementDescs_[1].AlignedByteOffset = D3D12_APPEND_ALIGNED_ELEMENT;
-
-	inputElementDescs_[2].SemanticName = "NORMAL";
-	inputElementDescs_[2].SemanticIndex = 0;
-	inputElementDescs_[2].Format = DXGI_FORMAT_R32G32B32_FLOAT;
-	inputElementDescs_[2].AlignedByteOffset = D3D12_APPEND_ALIGNED_ELEMENT;
-
 	inputLayoutDesc_.pInputElementDescs = inputElementDescs_.data();
 	inputLayoutDesc_.NumElements = static_cast<UINT>(inputElementDescs_.size());
 #pragma endregion
