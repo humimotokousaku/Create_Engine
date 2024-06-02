@@ -1,6 +1,7 @@
 #include "Player.h"
 #include "TextureManager.h"
 #include "Collision/CollisionConfig.h"
+#include "GameTime.h"
 #include <numbers>
 
 Player::Player() {}
@@ -35,8 +36,8 @@ void Player::Update() {
 		// デッドゾーンの設定
 		SHORT leftThumbX = Input::GetInstance()->ApplyDeadzone(joyState.Gamepad.sThumbLX);
 		SHORT leftThumbY = Input::GetInstance()->ApplyDeadzone(joyState.Gamepad.sThumbLY);
-		model_->worldTransform.transform.translate.x += (float)leftThumbX / SHRT_MAX * 0.02f;
-		model_->worldTransform.transform.translate.z += (float)leftThumbY / SHRT_MAX * 0.02f;
+		model_->worldTransform.transform.translate.x += (float)leftThumbX / SHRT_MAX * 0.02f * GameTimer::GetInstance()->GetDeltaTime();
+		model_->worldTransform.transform.translate.z += (float)leftThumbY / SHRT_MAX * 0.02f * GameTimer::GetInstance()->GetDeltaTime();
 		if (leftThumbX > 0.0f) {
 			model_->worldTransform.transform.rotate.y = std::numbers::inv_pi * 5.0f;
 		}

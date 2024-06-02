@@ -9,45 +9,26 @@ Audio* Audio::GetInstance() {
 	return &instance;
 }
 
-void Audio::Initialize(const SoundData& soundData) {
-	HRESULT result;
+void Audio::Initialize(uint32_t soundIndex) {
 	// Xaudio2エンジンのインスタンスを生成
 	XAudio2Create(&xAudio2_, 0, XAUDIO2_DEFAULT_PROCESSOR);
 	// マスターボイスを生成
 	xAudio2_->CreateMasteringVoice(&masterVoice_);
+}
 
-#pragma region サブミックスボイスの作成
-	xAudio2_->CreateSubmixVoice(&pSubmixVoice_, 2, 44100, XAUDIO2_VOICE_USEFILTER);
-#pragma region 音の編集
-	//// 一定の周波数以上の音を変更(今回はこもったような音になる)
-	//XAUDIO2_FILTER_PARAMETERS FilterParameters = { LowPassFilter, 1.0f, 1.0f };
-	//pSubmixVoice_->SetFilterParameters(&FilterParameters);
-	// 音量
-	//pSubmixVoice_->SetVolume(volume);
-#pragma endregion
+void Audio::Play(uint32_t soundIndex) {
+	
+}
 
-#pragma endregion
+void Audio::Stop(uint32_t soundIndex) {
 
-	// サブミックスを送る設定
-	XAUDIO2_SEND_DESCRIPTOR submixSend = { 0, pSubmixVoice_ };
-	XAUDIO2_VOICE_SENDS submixSendList = { 1, &submixSend };
-
-	// 波形フォーマットもとにSourceVoiceの生成
-	result = xAudio2_->CreateSourceVoice(&pSourceVoice_, &soundData.wfex, XAUDIO2_VOICE_USEFILTER, 2.0f, 0, &submixSendList);
-	assert(SUCCEEDED(result));
-
-	DWORD dwChannelMask;
-	masterVoice_->GetChannelMask(&dwChannelMask);
-
-	result = X3DAudioInitialize(dwChannelMask, 100, X3DInstance_);
-	assert(SUCCEEDED(result));
 }
 
 void Audio::Finalize() {
-	xAudio2_.Reset();
+	//xAudio2_.Reset();
 }
 
-SoundData Audio::SoundLoadWave(const char* filename) {
+uint32_t Audio::SoundLoadWave(const char* filename) {
 	// .wavファイルを開く
 	std::ifstream file;
 	// .wavファイルをバイナリモードで開く
@@ -100,118 +81,70 @@ SoundData Audio::SoundLoadWave(const char* filename) {
 	// Waveファイルを閉じる
 	file.close();
 
+	uint32_t index = index_;
 	// returnするための音声データ
 	SoundData soundData = {};
 	soundData.wfex = format.fmt;
 	soundData.pBuffer = reinterpret_cast<BYTE*>(pBuffer);
 	soundData.bufferSize = data.size;
+	soundData_.push_back(soundData);
+	// ソースボイスの作成
+	CreateSourceVoice(index);
 
-	return soundData;
+	index_++;
+	
+	return index;
 }
 
-void Audio::SoundUnload(SoundData* soundData) {
-	// バッファのメモリを解放
-	delete[] soundData->pBuffer;
+void Audio::SoundUnload(uint32_t soundIndex) {
+	for (SoundData& soundData : soundData_) {
+		// バッファのメモリを解放
+		delete[] soundData.pBuffer;
 
-	soundData->pBuffer = 0;
-	soundData->bufferSize = 0;
-	soundData->wfex = {};
+		soundData.pBuffer = 0;
+		soundData.bufferSize = 0;
+		soundData.wfex = {};
+	}
 }
 
-//void Audio::CreateSound(const SoundData& soundData,const char* filename) {
-//	HRESULT result;
-//
-//	// サウンドデータを読み込む
-//	SoundData soundData = SoundLoadWave(filename);
-//	soundData_.push_back(soundData);
-//
-//	//波形フォーマットもとにSourceVoiceの生成
-//	IXAudio2SourceVoice* pSourceVoice = nullptr;
-//	xAudio2_->CreateSourceVoice(&pSourceVoice, &soundData.wfex);
-//	assert(SUCCEEDED(result));
-//	pSourceVoice_->push_back(*pSourceVoice);
-//}
-
-void Audio::SoundPlayWave(const SoundData& soundData, X3DAUDIO_VECTOR emitterPos, float volume = 1.0f, float Semitones = 1.0f) {
+void Audio::SoundPlayWave(uint32_t soundIndex, float volume = 1.0f, float Semitones = 1.0f) {
 	HRESULT result;
 
 	// GetVoiceDetails メソッドを使用して詳細情報を取得
 	// マスターボイス
-	XAUDIO2_VOICE_DETAILS m_voiceDetails;
-	masterVoice_->GetVoiceDetails(&m_voiceDetails);
-	// 読み込んだ音声
-	XAUDIO2_VOICE_DETAILS voiceDetails;
-	pSourceVoice_->GetVoiceDetails(&voiceDetails);
-
-	// 発生源
-	X3DAUDIO_EMITTER emitter = {};
-	emitter.ChannelCount = 1;
-	emitter.CurveDistanceScaler = 1.0f;
-	emitter.DopplerScaler = 1.0f;
-	emitter.OrientFront = { 0,0,1 };
-	emitter.OrientTop = { 0,1,0 };
-	emitter.Position = emitterPos;
-	emitter.Velocity = { 0,0,0 };
-	emitter.CurveDistanceScaler = FLT_MIN;
-	// 聞く人の設定
-	X3DAUDIO_LISTENER listener = {};
-	listener.OrientFront = { 0.0f, 0.0f, 1.0f };
-	listener.OrientTop = { 0.0f, 1.0f, 0.0f };
-	listener.Position = { 0,0,0 };
-	listener.Velocity = { 0.0f, 0.0f, 0.0f };
-	// ドップラー効果の設定
-	X3DAUDIO_DSP_SETTINGS DSPSettings = { 0 };
-	//DSPSettings.SrcChannelCount = 2;
-	DSPSettings.DstChannelCount = m_voiceDetails.InputChannels;
-	FLOAT32* matrix = new FLOAT32[m_voiceDetails.InputChannels*2];
-	DSPSettings.pMatrixCoefficients = matrix;
-
-	for (uint32_t i = 0; i < m_voiceDetails.InputChannels*2; ++i) {
-		matrix[i] = 1.0f;
-	}
-
-	// エミッター等の設定を適用
-	X3DAudioCalculate(X3DInstance_, &listener, &emitter,
-		X3DAUDIO_CALCULATE_MATRIX | X3DAUDIO_CALCULATE_DOPPLER | X3DAUDIO_CALCULATE_LPF_DIRECT | X3DAUDIO_CALCULATE_REVERB,
-		&DSPSettings);
-
-	result = pSourceVoice_->SetOutputMatrix(masterVoice_, 2, m_voiceDetails.InputChannels, matrix);
-	assert(SUCCEEDED(result));
-	result = pSourceVoice_->SetFrequencyRatio(DSPSettings.DopplerFactor);
-	assert(SUCCEEDED(result));
-	//result = pSourceVoice_->SetOutputMatrix(pSubmixVoice_, 1, 1, &DSPSettings.ReverbLevel);
-	//assert(SUCCEEDED(result));
-	//XAUDIO2_FILTER_PARAMETERS FilterParameters3D = { LowPassFilter, 2.0f * sinf(X3DAUDIO_PI / 6.0f * DSPSettings.LPFDirectCoefficient), 1.0f };
-	//result = pSubmixVoice_->SetFilterParameters(&FilterParameters3D);
-	//assert(SUCCEEDED(result));
-
-	// 音量の設定
-	result = pSourceVoice_->SetVolume(volume);
-	// 音階の設定
-	result = pSourceVoice_->SetFrequencyRatio(Semitones);
+	//XAUDIO2_VOICE_DETAILS m_voiceDetails;
+	//masterVoice_->GetVoiceDetails(&m_voiceDetails);
+	// 一定の周波数以上の音を変更(今回はこもったような音になる)
+	XAUDIO2_FILTER_PARAMETERS FilterParameters = { LowPassFilter, 0.1f, 0.1f };
+	soundData_[soundIndex].pSubmixVoice_->SetFilterParameters(&FilterParameters);
 	// 再生する波形データの設定
 	XAUDIO2_BUFFER buf{};
-	buf.pAudioData = soundData.pBuffer;
-	buf.AudioBytes = soundData.bufferSize;
+	buf.pAudioData = soundData_[soundIndex].pBuffer;
+	buf.AudioBytes = soundData_[soundIndex].bufferSize;
 	buf.Flags = XAUDIO2_END_OF_STREAM;
+	// 音量の設定
+	result = soundData_[soundIndex].pSourceVoice_->SetVolume(volume);
+	// 音階の設定
+	result = soundData_[soundIndex].pSourceVoice_->SetFrequencyRatio(Semitones);
+
 	// 波形データの再生
-	result = pSourceVoice_->SubmitSourceBuffer(&buf);
+	result = soundData_[soundIndex].pSourceVoice_->SubmitSourceBuffer(&buf);
 	// 再生開始
-	result = pSourceVoice_->Start();
+	result = soundData_[soundIndex].pSourceVoice_->Start();
 }
 
-void Audio::SoundPlayLoopingWave(const SoundData& soundData, float volume) {
+void Audio::SoundPlayLoopingWave(uint32_t soundIndex, float volume) {
 	HRESULT result;
 
 	//波形フォーマットもとにSourceVoiceの生成
 	IXAudio2SourceVoice* pSourceVoice = nullptr;
-	result = xAudio2_->CreateSourceVoice(&pSourceVoice, &soundData.wfex);
+	result = xAudio2_->CreateSourceVoice(&pSourceVoice, &soundData_[soundIndex].wfex);
 	assert(SUCCEEDED(result));
 
 	// 再生する波形データの設定
 	XAUDIO2_BUFFER buf{};
-	buf.pAudioData = soundData.pBuffer;
-	buf.AudioBytes = soundData.bufferSize;
+	buf.pAudioData = soundData_[soundIndex].pBuffer;
+	buf.AudioBytes = soundData_[soundIndex].bufferSize;
 	buf.Flags = XAUDIO2_END_OF_STREAM;
 	buf.LoopCount = XAUDIO2_LOOP_INFINITE;
 
@@ -224,105 +157,105 @@ void Audio::SoundPlayLoopingWave(const SoundData& soundData, float volume) {
 }
 
 void Audio::SoundPlayWithMuffledEffect(const SoundData& soundData, float volume, float Semitones) {
-	HRESULT result;
-#pragma region サブミックスボイスの作成
-	IXAudio2SubmixVoice* pSubmixVoice;
-	xAudio2_->CreateSubmixVoice(&pSubmixVoice, 1, 44100, XAUDIO2_VOICE_USEFILTER, 0, 0, 0);
-#pragma region 音の編集
-	//// 一定の周波数以上の音を変更(今回はこもったような音になる)
-	//XAUDIO2_FILTER_PARAMETERS FilterParameters = { LowPassFilter, 0.2f, 1.0f };
-	//pSubmixVoice->SetFilterParameters(&FilterParameters);
-	//// 音量
-	//pSubmixVoice->SetVolume(volume);
-
-	// サブミックスを送る設定
-	XAUDIO2_SEND_DESCRIPTOR submixSend = { 0, pSubmixVoice };
-	XAUDIO2_VOICE_SENDS submixSendList = { 1, &submixSend };
-#pragma endregion
-
-#pragma endregion
-
-	// 波形フォーマットもとにSourceVoiceの生成
-	IXAudio2SourceVoice* pSourceVoice = nullptr;
-	result = xAudio2_->CreateSourceVoice(&pSourceVoice, &soundData.wfex, XAUDIO2_VOICE_USEFILTER, XAUDIO2_DEFAULT_FREQ_RATIO, nullptr, &submixSendList, nullptr);
-	assert(SUCCEEDED(result));
-
-#pragma region 実装途中
-
-	// GetVoiceDetails メソッドを使用して詳細情報を取得
-	XAUDIO2_VOICE_DETAILS voiceDetails;
-	pSourceVoice->GetVoiceDetails(&voiceDetails);
-
-	X3DAUDIO_EMITTER Emitter = {};
-	Emitter.ChannelCount = 1;
-	Emitter.CurveDistanceScaler = Emitter.DopplerScaler = 1.0f;
-	Emitter.OrientFront = { 0,0,1 };
-	Emitter.OrientTop = { 0,1,0 };
-	Emitter.Position = { -10,0,0 };
-	Emitter.Velocity = { 0,0,0 };
-	X3DAUDIO_LISTENER Listener = {};
-	Listener.OrientFront = { 0.0f, 0.0f, 0.0f };
-	Listener.OrientTop = { 0.0f, 0.0f, 1.0f };
-	Listener.Position = { 0.0f, 0.0f, 0.0f };
-	Listener.Velocity = { 0.0f, 0.0f, 0.0f };
-	X3DAUDIO_CONE innerCone = {};
-	innerCone.InnerAngle = X3DAUDIO_PI / 4.0f;  // 内部コーンの角度（45度）
-	innerCone.OuterAngle = X3DAUDIO_PI / 3.0f;  // 外部コーンの角度（60度）
-	innerCone.InnerVolume = 1.0f;  // 内部コーン内の音量（最大音量）
-	innerCone.OuterVolume = 0.5f;  // 外部コーン内の音量（半分の音量）
-	// エミッターにコーンの設定を適用
-	Listener.pCone = &innerCone;
-	// ドップラー効果の設定
-	X3DAUDIO_DSP_SETTINGS DSPSettings = {};
-	FLOAT32* matrix = new FLOAT32[voiceDetails.InputChannels];
-	DSPSettings.SrcChannelCount = 1;
-	DSPSettings.DstChannelCount = voiceDetails.InputChannels;
-	DSPSettings.pMatrixCoefficients = matrix;
-	// ミキサーアウトプットマトリックスの計算（例: モノラルソースをステレオ出力にマッピング）
-	for (UINT32 i = 0; i < voiceDetails.InputChannels; ++i) {
-		//DSPSettings.pMatrixCoefficients[i] = 1.0f / voiceDetails.InputChannels;
-	}
-	// ドップラーエフェクトの設定
-	DSPSettings.DopplerFactor = 10.0f;
-	// レバーデルエフェクトの設定
-	DSPSettings.ReverbLevel = 1.0f;  // レバーデルの効果を無効にする場合
-
-	X3DAudioCalculate(X3DInstance_, &Listener, &Emitter,
-		X3DAUDIO_CALCULATE_MATRIX | X3DAUDIO_CALCULATE_DOPPLER | X3DAUDIO_CALCULATE_LPF_DIRECT | X3DAUDIO_CALCULATE_REVERB,
-		&DSPSettings);
-
-
-	// 
-	IXAudio2SourceVoice* p3DSourceVoice = nullptr;
-	result = xAudio2_->CreateSourceVoice(&p3DSourceVoice, &soundData.wfex, 0, XAUDIO2_DEFAULT_FREQ_RATIO, nullptr, nullptr, nullptr);
-	assert(SUCCEEDED(result));
-	CreateXAPO(p3DSourceVoice);
-	result = pSourceVoice->SetOutputMatrix(p3DSourceVoice, 1, voiceDetails.InputChannels, DSPSettings.pMatrixCoefficients);
-	assert(SUCCEEDED(result));
-	//pSourceVoice->SetFrequencyRatio(DSPSettings.DopplerFactor);
-	result = p3DSourceVoice->SetOutputMatrix(pSubmixVoice, 1, voiceDetails.InputChannels, &DSPSettings.ReverbLevel);
-	assert(SUCCEEDED(result));
-
-
-	XAUDIO2_FILTER_PARAMETERS FilterParameters3D = { LowPassFilter, 2.0f * sinf(X3DAUDIO_PI / 6.0f * DSPSettings.LPFDirectCoefficient), 1.0f };
-	result = p3DSourceVoice->SetFilterParameters(&FilterParameters3D);
-	assert(SUCCEEDED(result));
-#pragma endregion
-
-	//xAudio2_->CommitChanges(XAUDIO2_COMMIT_ALL);
-
-	// 再生する波形データの設定
-	XAUDIO2_BUFFER buf{};
-	buf.pAudioData = soundData.pBuffer;
-	buf.AudioBytes = soundData.bufferSize;
-	buf.Flags = XAUDIO2_END_OF_STREAM;
-
-	// 波形データの再生
-	pSourceVoice->SubmitSourceBuffer(&buf);
-	// 音量の設定
-	//pSourceVoice->SetFrequencyRatio(XAudio2SemitonesToFrequencyRatio(Semitones));
-	// 再生開始
-	pSourceVoice->Start();
+//	HRESULT result;
+//#pragma region サブミックスボイスの作成
+//	IXAudio2SubmixVoice* pSubmixVoice;
+//	xAudio2_->CreateSubmixVoice(&pSubmixVoice, 1, 44100, XAUDIO2_VOICE_USEFILTER, 0, 0, 0);
+//#pragma region 音の編集
+//	//// 一定の周波数以上の音を変更(今回はこもったような音になる)
+//	//XAUDIO2_FILTER_PARAMETERS FilterParameters = { LowPassFilter, 0.2f, 1.0f };
+//	//pSubmixVoice->SetFilterParameters(&FilterParameters);
+//	//// 音量
+//	//pSubmixVoice->SetVolume(volume);
+//
+//	// サブミックスを送る設定
+//	XAUDIO2_SEND_DESCRIPTOR submixSend = { 0, pSubmixVoice };
+//	XAUDIO2_VOICE_SENDS submixSendList = { 1, &submixSend };
+//#pragma endregion
+//
+//#pragma endregion
+//
+//	// 波形フォーマットもとにSourceVoiceの生成
+//	IXAudio2SourceVoice* pSourceVoice = nullptr;
+//	result = xAudio2_->CreateSourceVoice(&pSourceVoice, &soundData.wfex, XAUDIO2_VOICE_USEFILTER, XAUDIO2_DEFAULT_FREQ_RATIO, nullptr, &submixSendList, nullptr);
+//	assert(SUCCEEDED(result));
+//
+//#pragma region 実装途中
+//
+//	// GetVoiceDetails メソッドを使用して詳細情報を取得
+//	XAUDIO2_VOICE_DETAILS voiceDetails;
+//	pSourceVoice->GetVoiceDetails(&voiceDetails);
+//
+//	X3DAUDIO_EMITTER Emitter = {};
+//	Emitter.ChannelCount = 1;
+//	Emitter.CurveDistanceScaler = Emitter.DopplerScaler = 1.0f;
+//	Emitter.OrientFront = { 0,0,1 };
+//	Emitter.OrientTop = { 0,1,0 };
+//	Emitter.Position = { -10,0,0 };
+//	Emitter.Velocity = { 0,0,0 };
+//	X3DAUDIO_LISTENER Listener = {};
+//	Listener.OrientFront = { 0.0f, 0.0f, 0.0f };
+//	Listener.OrientTop = { 0.0f, 0.0f, 1.0f };
+//	Listener.Position = { 0.0f, 0.0f, 0.0f };
+//	Listener.Velocity = { 0.0f, 0.0f, 0.0f };
+//	X3DAUDIO_CONE innerCone = {};
+//	innerCone.InnerAngle = X3DAUDIO_PI / 4.0f;  // 内部コーンの角度（45度）
+//	innerCone.OuterAngle = X3DAUDIO_PI / 3.0f;  // 外部コーンの角度（60度）
+//	innerCone.InnerVolume = 1.0f;  // 内部コーン内の音量（最大音量）
+//	innerCone.OuterVolume = 0.5f;  // 外部コーン内の音量（半分の音量）
+//	// エミッターにコーンの設定を適用
+//	Listener.pCone = &innerCone;
+//	// ドップラー効果の設定
+//	X3DAUDIO_DSP_SETTINGS DSPSettings = {};
+//	FLOAT32* matrix = new FLOAT32[voiceDetails.InputChannels];
+//	DSPSettings.SrcChannelCount = 1;
+//	DSPSettings.DstChannelCount = voiceDetails.InputChannels;
+//	DSPSettings.pMatrixCoefficients = matrix;
+//	// ミキサーアウトプットマトリックスの計算（例: モノラルソースをステレオ出力にマッピング）
+//	for (UINT32 i = 0; i < voiceDetails.InputChannels; ++i) {
+//		//DSPSettings.pMatrixCoefficients[i] = 1.0f / voiceDetails.InputChannels;
+//	}
+//	// ドップラーエフェクトの設定
+//	DSPSettings.DopplerFactor = 10.0f;
+//	// レバーデルエフェクトの設定
+//	DSPSettings.ReverbLevel = 1.0f;  // レバーデルの効果を無効にする場合
+//
+//	X3DAudioCalculate(X3DInstance_, &Listener, &Emitter,
+//		X3DAUDIO_CALCULATE_MATRIX | X3DAUDIO_CALCULATE_DOPPLER | X3DAUDIO_CALCULATE_LPF_DIRECT | X3DAUDIO_CALCULATE_REVERB,
+//		&DSPSettings);
+//
+//
+//	// 
+//	IXAudio2SourceVoice* p3DSourceVoice = nullptr;
+//	result = xAudio2_->CreateSourceVoice(&p3DSourceVoice, &soundData.wfex, 0, XAUDIO2_DEFAULT_FREQ_RATIO, nullptr, nullptr, nullptr);
+//	assert(SUCCEEDED(result));
+//	CreateXAPO(p3DSourceVoice);
+//	result = pSourceVoice->SetOutputMatrix(p3DSourceVoice, 1, voiceDetails.InputChannels, DSPSettings.pMatrixCoefficients);
+//	assert(SUCCEEDED(result));
+//	//pSourceVoice->SetFrequencyRatio(DSPSettings.DopplerFactor);
+//	result = p3DSourceVoice->SetOutputMatrix(pSubmixVoice, 1, voiceDetails.InputChannels, &DSPSettings.ReverbLevel);
+//	assert(SUCCEEDED(result));
+//
+//
+//	XAUDIO2_FILTER_PARAMETERS FilterParameters3D = { LowPassFilter, 2.0f * sinf(X3DAUDIO_PI / 6.0f * DSPSettings.LPFDirectCoefficient), 1.0f };
+//	result = p3DSourceVoice->SetFilterParameters(&FilterParameters3D);
+//	assert(SUCCEEDED(result));
+//#pragma endregion
+//
+//	//xAudio2_->CommitChanges(XAUDIO2_COMMIT_ALL);
+//
+//	// 再生する波形データの設定
+//	XAUDIO2_BUFFER buf{};
+//	buf.pAudioData = soundData.pBuffer;
+//	buf.AudioBytes = soundData.bufferSize;
+//	buf.Flags = XAUDIO2_END_OF_STREAM;
+//
+//	// 波形データの再生
+//	pSourceVoice->SubmitSourceBuffer(&buf);
+//	// 音量の設定
+//	//pSourceVoice->SetFrequencyRatio(XAudio2SemitonesToFrequencyRatio(Semitones));
+//	// 再生開始
+//	pSourceVoice->Start();
 }
 
 void Audio::CreateXAPO(IXAudio2SourceVoice* pSourceVoice) {
@@ -367,4 +300,25 @@ void Audio::CreateXAPO(IXAudio2SourceVoice* pSourceVoice) {
 	// パラメータを設定
 	pSourceVoice->SetEffectParameters(1, &reverbParameters, sizeof(reverbParameters));
 	pSourceVoice->EnableEffect(1);
+}
+
+void Audio::CreateSourceVoice(uint32_t soundIndex) {
+	HRESULT result;
+#pragma region サブミックスボイスの作成
+	xAudio2_->CreateSubmixVoice(&soundData_[soundIndex].pSubmixVoice_, 2, 44100, XAUDIO2_VOICE_USEFILTER);
+#pragma region 音の編集
+	//// 一定の周波数以上の音を変更(今回はこもったような音になる)
+	//XAUDIO2_FILTER_PARAMETERS FilterParameters = { LowPassFilter, 1.0f, 1.0f };
+	//soundData_[soundIndex].pSubmixVoice_->SetFilterParameters(&FilterParameters);
+#pragma endregion
+
+#pragma endregion
+
+	// サブミックスを送る設定
+	XAUDIO2_SEND_DESCRIPTOR submixSend = { 0, soundData_[soundIndex].pSubmixVoice_ };
+	XAUDIO2_VOICE_SENDS submixSendList = { 1, &submixSend };
+
+	// 波形フォーマットもとにSourceVoiceの生成
+	result = xAudio2_->CreateSourceVoice(&soundData_[soundIndex].pSourceVoice_, &soundData_[soundIndex].wfex, XAUDIO2_VOICE_USEFILTER, 2.0f, 0, &submixSendList);
+	assert(SUCCEEDED(result));
 }

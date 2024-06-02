@@ -8,7 +8,7 @@
 #pragma comment(lib, "xaudio2.lib")
 #include <fstream>
 #include <wrl.h>
-#include <list>
+#include <vector>
 
 
 // チャンクヘッダ
@@ -34,6 +34,9 @@ struct SoundData {
 	BYTE* pBuffer;
 	// バッファのサイズ
 	unsigned int bufferSize;
+
+	IXAudio2SourceVoice* pSourceVoice_;
+	IXAudio2SubmixVoice* pSubmixVoice_;
 };
 
 class Audio
@@ -42,26 +45,26 @@ public:
 	static Audio* GetInstance();
 
 	// 初期化
-	void Initialize(const SoundData& soundData);
+	void Initialize(uint32_t soundIndex);
 
 	// 音の読み込み
 	//void LoadSound(const SoundData& soundData, const char* filename);
 
-//	// 再生
-//	void Play();
-//
-//	// 停止
-//	void Stop();
-//
+	// 再生
+	void Play(uint32_t soundIndex);
+
+	// 停止
+	void Stop(uint32_t soundIndex);
+
 //private:
 	// 解放処理
 	void Finalize();
 
 	// 音声データの読み込み
-	SoundData SoundLoadWave(const char* filename);
+	uint32_t SoundLoadWave(const char* filename);
 
 	// 音声データ解放
-	void SoundUnload(SoundData* soundData);
+	void SoundUnload(uint32_t soundIndex);
 
 	/// <summary>
 	/// 音声再生
@@ -69,10 +72,10 @@ public:
 	/// <param name="soundData"></param>
 	/// <param name="volume">音量</param>
 	/// <param name="Semitones">音階</param>
-	void SoundPlayWave(const SoundData& soundData, X3DAUDIO_VECTOR emitterPos, float volume, float Semitones);
+	void SoundPlayWave(uint32_t soundIndex, float volume, float Semitones);
 
 	// 音声のループ再生
-	void SoundPlayLoopingWave(const SoundData& soundData, float volume = 0.5f);
+	void SoundPlayLoopingWave(uint32_t soundIndex, float volume = 0.5f);
 
 	// 
 	void SoundPlayWithMuffledEffect(const SoundData& soundData, float volume, float Semitones);
@@ -80,13 +83,16 @@ public:
 	// XAPOの作成
 	void CreateXAPO(IXAudio2SourceVoice* pSourceVoice);
 
+	void CreateSourceVoice(uint32_t soundIndex);
+
 private:
 	IXAudio2MasteringVoice* masterVoice_;
 	Microsoft::WRL::ComPtr<IXAudio2> xAudio2_;
-	X3DAUDIO_HANDLE X3DInstance_;
-	IXAudio2SourceVoice* pSourceVoice_ = nullptr;
-	IXAudio2SubmixVoice* pSubmixVoice_ = nullptr;
+	
+	//IXAudio2SourceVoice* pSourceVoice_ = nullptr;
+	//IXAudio2SubmixVoice* pSubmixVoice_ = nullptr;
 	//std::list<IXAudio2SourceVoice>* pSourceVoice_;
-	//std::list<SoundData> soundData_;
+	std::vector<SoundData> soundData_;
+	uint32_t index_;
 };
 

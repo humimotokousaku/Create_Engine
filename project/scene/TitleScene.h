@@ -63,4 +63,6 @@ private:
 	ViewProjection viewProjection_;
 	WorldTransform world_;
 	std::unique_ptr<Camera> camera_;
+
+	uint32_t bgm_[4];
 };

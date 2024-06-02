@@ -1,6 +1,7 @@
 #include "Framework.h"
 #include "ConvertString.h"
 #include "GlobalVariables.h"
+#include "GameTime.h"
 
 Framework::Framework() {
 
@@ -64,7 +65,7 @@ void Framework::Initialize() {
 	spotLight_ = SpotLight::GetInstance();
 	spotLight_->Initialize();
 	// Audioの初期化
-	audio_ = Audio::GetInstance();
+	//audio_ = Audio::GetInstance();
 	// 音声読み込み
 	//soundData1_ = audio_->SoundLoadWave("Engine/resources/fanfare.wav");
 
@@ -72,6 +73,7 @@ void Framework::Initialize() {
 }
 
 void Framework::Update() {
+	GameTimer::GetInstance()->Tick();
 	pointLight_->ImGuiAdjustParameter();
 }
 
@@ -113,7 +115,7 @@ void Framework::Run() {
 
 void Framework::Finalize() {
 	audio_->Finalize();
-	audio_->SoundUnload(&soundData1_);
+	//audio_->SoundUnload(&soundData1_);
 	ModelManager::GetInstance()->Finalize();
 	// ImGui
 	imGuiManager_->Finalize();
