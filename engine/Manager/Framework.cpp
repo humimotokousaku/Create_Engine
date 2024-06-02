@@ -65,11 +65,7 @@ void Framework::Initialize() {
 	spotLight_ = SpotLight::GetInstance();
 	spotLight_->Initialize();
 	// Audioの初期化
-	//audio_ = Audio::GetInstance();
-	// 音声読み込み
-	//soundData1_ = audio_->SoundLoadWave("Engine/resources/fanfare.wav");
-
-	//audio_->Initialize(soundData1_);
+	Audio::GetInstance()->Initialize();
 }
 
 void Framework::Update() {

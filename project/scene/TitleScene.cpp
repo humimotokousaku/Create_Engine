@@ -111,23 +111,17 @@ void TitleScene::Initialize() {
 	particle_->Initialize();
 	particle_->SetCamera(camera_.get());
 
-	Audio::GetInstance()->Initialize(0);
 	bgm_[0] = Audio::GetInstance()->SoundLoadWave("engine/resources/fanfare.wav");
 	bgm_[1] = Audio::GetInstance()->SoundLoadWave("engine/resources/fanfare.wav");
 	bgm_[2] = Audio::GetInstance()->SoundLoadWave("engine/resources/fanfare.wav");
 	bgm_[3] = Audio::GetInstance()->SoundLoadWave("engine/resources/fanfare.wav");
 
 	for (int i = 0; i < 4; i++) {
-		//Audio::GetInstance()->Play(bgm_[i]);
-		Audio::GetInstance()->SoundPlayWave(bgm_[i], 1, 1);
-		//Audio::GetInstance()->SoundPlayLoopingWave(bgm_[i], 1);
+		Audio::GetInstance()->SoundPlayWave(bgm_[i]);
 	}
 }
 
 void TitleScene::Update() {
-	for (int i = 0; i < 1; i++) {
-		//Audio::GetInstance()->SoundPlayWave(bgm_[i], 1, 0.2f * (i + 1));
-	}
 	particle_->Update();
 	player_->Update();
 #pragma region パーティクル以外の処理

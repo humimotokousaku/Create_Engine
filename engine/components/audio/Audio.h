@@ -45,18 +45,8 @@ public:
 	static Audio* GetInstance();
 
 	// 初期化
-	void Initialize(uint32_t soundIndex);
+	void Initialize();
 
-	// 音の読み込み
-	//void LoadSound(const SoundData& soundData, const char* filename);
-
-	// 再生
-	void Play(uint32_t soundIndex);
-
-	// 停止
-	void Stop(uint32_t soundIndex);
-
-//private:
 	// 解放処理
 	void Finalize();
 
@@ -64,7 +54,7 @@ public:
 	uint32_t SoundLoadWave(const char* filename);
 
 	// 音声データ解放
-	void SoundUnload(uint32_t soundIndex);
+	void SoundUnload();
 
 	/// <summary>
 	/// 音声再生
@@ -72,26 +62,14 @@ public:
 	/// <param name="soundData"></param>
 	/// <param name="volume">音量</param>
 	/// <param name="Semitones">音階</param>
-	void SoundPlayWave(uint32_t soundIndex, float volume, float Semitones);
-
-	// 音声のループ再生
-	void SoundPlayLoopingWave(uint32_t soundIndex, float volume = 0.5f);
-
-	// 
-	void SoundPlayWithMuffledEffect(const SoundData& soundData, float volume, float Semitones);
-
-	// XAPOの作成
-	void CreateXAPO(IXAudio2SourceVoice* pSourceVoice);
+	/// <param name="muffled">音のこもり具合(1がデフォルト)</param>
+	void SoundPlayWave(uint32_t soundIndex, float volume = 1.0f, float Semitones = 1.0f, float muffled = 1.0f);
 
 	void CreateSourceVoice(uint32_t soundIndex);
 
 private:
 	IXAudio2MasteringVoice* masterVoice_;
 	Microsoft::WRL::ComPtr<IXAudio2> xAudio2_;
-	
-	//IXAudio2SourceVoice* pSourceVoice_ = nullptr;
-	//IXAudio2SubmixVoice* pSubmixVoice_ = nullptr;
-	//std::list<IXAudio2SourceVoice>* pSourceVoice_;
 	std::vector<SoundData> soundData_;
 	uint32_t index_;
 };
