@@ -43,4 +43,5 @@ public:
 
 public:
 	std::unique_ptr<Object3D> model_;
+	float gameSpeed_;
 };

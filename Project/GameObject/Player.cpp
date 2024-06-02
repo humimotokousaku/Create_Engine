@@ -2,6 +2,7 @@
 #include "TextureManager.h"
 #include "Collision/CollisionConfig.h"
 #include "GameTime.h"
+#include "ImGuiManager.h"
 #include <numbers>
 
 Player::Player() {}
@@ -28,9 +29,12 @@ void Player::Initialize(Camera* camera) {
 	model_->worldTransform.transform.rotate = { 0,std::numbers::inv_pi * 5.0f,0 };
 
 	//model_->animation_.isActive = true;
+	gameSpeed_ = 1.0f;
 }
 
 void Player::Update() {
+
+	GameTimer::GetInstance()->SetDeltaTimeMultiply(gameSpeed_);
 	XINPUT_STATE joyState;
 	if (Input::GetInstance()->GetJoystickState(0, joyState)) {
 		// デッドゾーンの設定
@@ -55,6 +59,10 @@ void Player::Update() {
 
 	// ImGui
 	model_->ImGuiParameter("Player");
+
+	ImGui::Begin("gameSpeed");
+	ImGui::DragFloat("gameSpeed", &gameSpeed_, 0.01f, 0, 10);
+	ImGui::End();
 }
 
 void Player::Draw(uint32_t textureHandle) {
