@@ -4,8 +4,7 @@
 #include "Bloom.h"
 #include "PostEffectPSO.h"
 
-class PostEffectManager
-{
+class PostEffectManager {
 public:
 	PostEffectManager() = default;
 	~PostEffectManager();

@@ -34,13 +34,15 @@ public:
 	/// <summary>
 	/// 描画前に積むコマンド
 	/// </summary>
-	void SetCommand() {
+	void SetCommand(Microsoft::WRL::ComPtr<ID3D12Resource> resource = nullptr) {
 		// シグネチャの設定
 		dxCommon_->GetCommandList()->SetGraphicsRootSignature(rootSignature_.Get());
 		// PSOを設定
 		dxCommon_->GetCommandList()->SetPipelineState(graphicsPipelineState_.Get());
 		// 形状を設定
 		dxCommon_->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+		// BloomData
+		dxCommon_->GetCommandList()->SetGraphicsRootConstantBufferView(4, resource.Get()->GetGPUVirtualAddress());
 	}
 
 private:// プライベートな変数

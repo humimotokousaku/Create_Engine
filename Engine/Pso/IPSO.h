@@ -45,7 +45,7 @@ public:
 
 	/// Setter
 	// コマンドを積む
-	virtual void SetCommand() {
+	virtual void SetCommand(Microsoft::WRL::ComPtr<ID3D12Resource> resource = nullptr) {
 		// シグネチャの設定
 		dxCommon_->GetCommandList()->SetGraphicsRootSignature(rootSignature_.Get());
 		// PSOを設定

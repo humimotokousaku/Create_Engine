@@ -13,24 +13,24 @@ void Bloom::Initialize() {
 	// 基底クラスの初期化
 	IPostEffect::Initialize();
 #pragma region シェーダ内のパラメータを調整するための準備
-	//// ブラーの情報を書き込む
-	//blurResource_ = CreateBufferResource(DirectXCommon::GetInstance()->GetDevice(), sizeof(BlurData)).Get();
-	//// データを書き込む
-	//blurData_ = nullptr;
-	//// 書き込むためのアドレスを取得
-	//blurResource_.Get()->Map(0, nullptr, reinterpret_cast<void**>(&blurData_));
-
-	//// 高輝度テクスチャの情報を書き込む
-	//highIntensityResource_ = CreateBufferResource(DirectXCommon::GetInstance()->GetDevice(), sizeof(HighIntensityData)).Get();
-	//// データを書き込む
-	//highIntensityData_ = nullptr;
-	//// 書き込むためのアドレスを取得
-	//highIntensityResource_.Get()->Map(0, nullptr, reinterpret_cast<void**>(&highIntensityData_));
+	// ブラーの情報を書き込む
+	bloomResource_ = CreateBufferResource(DirectXCommon::GetInstance()->GetDevice(), sizeof(BloomData)).Get();
+	// 書き込むためのアドレスを取得
+	bloomResource_.Get()->Map(0, nullptr, reinterpret_cast<void**>(&bloomData_));
 #pragma endregion
+
+	bloomData_->isActive = true;
+	bloomData_->strength = 1.0f;
 }
 
-void Bloom::Draw(uint32_t psoNum) {
-	IPostEffect::Draw(psoNum);
+void Bloom::Draw(uint32_t psoNum, Microsoft::WRL::ComPtr<ID3D12Resource> resource) {
+#ifdef _DEBUG
+	ImGui::Begin("Bloom");
+	ImGui::DragFloat("strength", &bloomData_->strength, 0.01f, 0, 100);
+	ImGui::Checkbox("isActive", &bloomData_->isActive);
+	ImGui::End();
+#endif
+	IPostEffect::Draw(psoNum, bloomResource_);
 }
 
 void Bloom::PreDrawScene() {

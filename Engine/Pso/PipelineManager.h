@@ -66,7 +66,7 @@ public:
 	/// Setter
 
 	// ポストエフェクトで使用するコマンドをセット
-	void SetPostEffectPSO(int index) { postEffect_[index]->SetCommand(); }
+	void SetPostEffectPSO(int index, Microsoft::WRL::ComPtr<ID3D12Resource> resource) { postEffect_[index]->SetCommand(resource); }
 	void SetObject3dPSO() { object3dPSO_->SetCommand(); }
 	void SetSkinningPSO() { skinningPSO_->SetCommand(); }
 	void SetLinePSO() { linePSO_->SetCommand(); }

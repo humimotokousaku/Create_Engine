@@ -13,8 +13,6 @@ public:
 	/// </summary>
 	PostEffect();
 
-	//static PostEffect* GetInstance();
-
 	/// <summary>
 	/// 初期化
 	/// </summary>
@@ -28,7 +26,7 @@ public:
 	/// <summary>
 	/// 描画処理
 	/// </summary>
-	void Draw(uint32_t psoNum)override;
+	void Draw(uint32_t psoNum, Microsoft::WRL::ComPtr<ID3D12Resource> resource = nullptr)override;
 
 	/// <summary>
 	/// 描画前処理

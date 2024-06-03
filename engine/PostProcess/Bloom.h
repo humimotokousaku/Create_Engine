@@ -8,12 +8,19 @@
 
 class Bloom : public IPostEffect {
 private:// 構造体
-
+	struct BloomData {
+		bool isActive;	// 使用するか
+		float strength;	// ぼかしの強さ
+	};
 public:
 	/// <summary>
 	/// コンストラクタ
 	/// </summary>
 	Bloom();
+	/// <summary>
+	/// デストラクタ
+	/// </summary>
+	~Bloom()override = default;
 
 	/// <summary>
 	/// 初期化
@@ -28,7 +35,7 @@ public:
 	/// <summary>
 	/// 描画処理
 	/// </summary>
-	void Draw(uint32_t psoNum)override;
+	void Draw(uint32_t psoNum, Microsoft::WRL::ComPtr<ID3D12Resource> resource = nullptr)override;
 
 	/// <summary>
 	/// 描画前処理
@@ -40,5 +47,7 @@ public:
 	/// </summary>
 	void PostDrawScene()override;
 
-private:
+private:// プライベートなメンバ変数
+	BloomData* bloomData_;
+	Microsoft::WRL::ComPtr<ID3D12Resource> bloomResource_;
 };

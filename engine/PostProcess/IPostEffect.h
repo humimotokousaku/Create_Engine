@@ -18,6 +18,10 @@ public:
 	/// コンストラクタ
 	/// </summary>
 	IPostEffect() = default;
+	/// <summary>
+	/// デストラクタ
+	/// </summary>
+	virtual ~IPostEffect() = default;
 
 	/// <summary>
 	/// 初期化
@@ -32,7 +36,7 @@ public:
 	/// <summary>
 	/// 描画処理
 	/// </summary>
-	virtual void Draw(uint32_t psoNum);
+	virtual void Draw(uint32_t psoNum, Microsoft::WRL::ComPtr<ID3D12Resource> resource = nullptr);
 
 	/// <summary>
 	/// 描画前処理

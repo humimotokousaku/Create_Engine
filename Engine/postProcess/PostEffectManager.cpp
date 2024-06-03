@@ -20,6 +20,12 @@ void PostEffectManager::Initialize() {
 	Bloom* bloom = new Bloom();
 	bloom->Initialize();
 	postEffect_.push_back(bloom);
+#pragma region シェーダ内のパラメータを調整するための準備
+	//// ブラーの情報を書き込む
+	//bloomResource_ = CreateBufferResource(DirectXCommon::GetInstance()->GetDevice(), sizeof(BloomData)).Get();
+	//// 書き込むためのアドレスを取得
+	//bloomResource_.Get()->Map(0, nullptr, reinterpret_cast<void**>(&bloomData_));
+#pragma endregion
 }
 
 void PostEffectManager::PreDraw() {

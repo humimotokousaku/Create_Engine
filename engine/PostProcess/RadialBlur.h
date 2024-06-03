@@ -10,15 +10,19 @@ class RadialBlur : public IPostEffect {
 private:// 構造体
 	// ブラー
 	struct RadialBlurData {
-		uint32_t isActive;  // 使用するか
-		float strength;  // ブラーの強さ
+		bool isActive;	 // 使用するか
+		float blurWidth; // ブラーの強さ
+		Vector2 center;
 	};
-
 public:
 	/// <summary>
 	/// コンストラクタ
 	/// </summary>
 	RadialBlur();
+	/// <summary>
+	/// デストラクタ
+	/// </summary>
+	~RadialBlur()override = default;
 
 	/// <summary>
 	/// 初期化
@@ -33,7 +37,7 @@ public:
 	/// <summary>
 	/// 描画処理
 	/// </summary>
-	void Draw(uint32_t psoNum)override;
+	void Draw(uint32_t psoNum, Microsoft::WRL::ComPtr<ID3D12Resource> resource)override;
 
 	/// <summary>
 	/// 描画前処理
@@ -47,4 +51,5 @@ public:
 
 private:
 	RadialBlurData* radialBlurData_;
+	Microsoft::WRL::ComPtr<ID3D12Resource> radialBlurResource_;
 };
