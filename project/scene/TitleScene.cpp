@@ -95,13 +95,6 @@ void TitleScene::Initialize() {
 	axis_->SetCamera(camera_.get());
 	axis_->worldTransform.transform.translate = { -2,0,5 };
 
-	// Blender
-	/*LoadJSONFile("sample_map.json");
-	for (Object3D* object : levelObjects_) {
-		object->SetCamera(camera_.get());
-	}*/
-
-
 	// 自機
 	player_ = std::make_unique<Player>();
 	player_->Initialize(camera_.get());
@@ -111,13 +104,19 @@ void TitleScene::Initialize() {
 	particle_->Initialize();
 	particle_->SetCamera(camera_.get());
 
+	// 音の読み込み
 	bgm_[0] = Audio::GetInstance()->SoundLoadWave("engine/resources/fanfare.wav");
 	bgm_[1] = Audio::GetInstance()->SoundLoadWave("engine/resources/fanfare.wav");
 	bgm_[2] = Audio::GetInstance()->SoundLoadWave("engine/resources/fanfare.wav");
 	bgm_[3] = Audio::GetInstance()->SoundLoadWave("engine/resources/fanfare.wav");
-
 	for (int i = 0; i < 4; i++) {
 		Audio::GetInstance()->SoundPlayWave(bgm_[i]);
+	}
+
+	// Blender
+	LoadJSONFile("sample_map.json");
+	for (Object3D* object : levelObjects_) {
+		object->SetCamera(camera_.get());
 	}
 }
 
@@ -152,7 +151,7 @@ void TitleScene::Draw() {
 		object->Draw(uvcheckerTexture_);
 	}
 
-	player_->Draw(uvcheckerTexture_);
+	//player_->Draw(uvcheckerTexture_);
 	//particle_->Draw(uvcheckerTexture_);
 }
 

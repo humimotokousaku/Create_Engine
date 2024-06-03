@@ -68,11 +68,8 @@ void IScene::LoadJSONFile(const std::string fileName) {
 			objectData.translate.y = (float)transform["translation"][2];
 			objectData.translate.z = (float)transform["translation"][1];
 			// 回転角
-			Vector3 rotate = { Degree2Radian(-(float)transform["rotation"][0]) ,Degree2Radian(-(float)transform["rotation"][2]),Degree2Radian((float)transform["rotation"][1]) };
+			Vector3 rotate = { Degree2Radian(-(float)transform["rotation"][0]) ,Degree2Radian(-(float)transform["rotation"][2]),Degree2Radian(-(float)transform["rotation"][1]) };
 			objectData.rotate = rotate;
-			//objectData.rotate.x = -(float)transform["rotation"][0];
-			//objectData.rotate.y = -(float)transform["rotation"][2];
-			//objectData.rotate.z = (float)transform["rotation"][1];
 			// スケーリング
 			objectData.scale.x = (float)transform["scaling"][0];
 			objectData.scale.y = (float)transform["scaling"][2];
@@ -86,9 +83,6 @@ void IScene::LoadJSONFile(const std::string fileName) {
 
 	for (auto& objectData : levelData->objects_) {
 		// ファイル名から登録済みモデルを検索
-		//std::unique_ptr<Model> model_ptr = std::make_unique<Model>();
-
-		//std::unique_ptr<Model> model = std::make_unique<Model>();
 		Model* model = new Model();
 		decltype(ModelManager::GetInstance()->models_)::iterator it = ModelManager::GetInstance()->models_.find(objectData.fileName);
 		if (it != ModelManager::GetInstance()->models_.end()) {		
@@ -96,7 +90,7 @@ void IScene::LoadJSONFile(const std::string fileName) {
 		}
 		model->Initialize("level/" + objectData.fileName);
 		// モデルを指定して3Dオブジェクト生成
-		Object3D* newObject = new Object3D();//new Object3D();
+		Object3D* newObject = new Object3D();
 		newObject->Initialize();
 		newObject->SetModel(model);
 		// 座標
